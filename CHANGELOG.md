@@ -9,6 +9,10 @@ Updated `@types/react` and `@types/react-dom` from version 19.0.0 to 19.2.2 to i
 
 The pnpm overrides have been consolidated to the root `package.json` for better consistency across the monorepo.
 
+### Optimized pnpm dependency installation
+
+Added `onlyBuiltDependencies` configuration to pnpm settings to optimize installation time by only building Prisma-related packages (`@prisma/client`, `prisma`, and `prisma-zod-generator`) when needed. This reduces unnecessary rebuilds and speeds up dependency installation in the monorepo.
+
 ---
 
 ## 2025-11-03 v1.0.0
