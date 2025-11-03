@@ -41,9 +41,6 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
 	webpack: (config, { webpack, isServer }) => {
 		config.plugins.push(
 			new webpack.IgnorePlugin({

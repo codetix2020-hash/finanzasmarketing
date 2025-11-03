@@ -3,7 +3,7 @@
  * Auto-generated. Do not edit.
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 // File: TransactionIsolationLevel.schema.ts
 
 export const TransactionIsolationLevelSchema = z.enum(['ReadUncommitted', 'ReadCommitted', 'RepeatableRead', 'Serializable'])
@@ -278,8 +278,7 @@ export const PurchaseSchema = z.object({
   updatedAt: z.date(),
 });
 
-export type Purchase = z.infer<typeof PurchaseSchema>;
-
+export type PurchaseModel = z.infer<typeof PurchaseSchema>;
 
 // File: AiChat.schema.ts
 
