@@ -1,3 +1,4 @@
+import path from "node:path";
 import { withContentCollections } from "@content-collections/next";
 // @ts-expect-error - PrismaPlugin is not typed
 import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
@@ -54,9 +55,13 @@ const nextConfig: NextConfig = {
 
 		return config;
 	},
+	outputFileTracingRoot: path.join(__dirname, "../.."),
 	outputFileTracingIncludes: {
 		"/api/**/*": ["../../packages/database/prisma/generated/client/**/*"],
-		"/*": ["../../packages/database/prisma/generated/client/**/*"],
+		"/*": [
+			"../../packages/database/prisma/generated/client/**/*",
+			"../../node_modules/.pnpm/prisma@*/node_modules/prisma/libquery_engine-rhel-openssl-3.0.x.so.node",
+		],
 	},
 };
 
