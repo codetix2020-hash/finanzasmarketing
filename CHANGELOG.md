@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-11-03 v1.0.2
+
+### Updated dependencies
+
+---
 
 ## 2025-11-03 v1.0.1
 
