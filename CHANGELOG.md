@@ -1,5 +1,13 @@
 # Changelog
 
+## 2025-11-08 v1.0.3
+
+### Fixed schema error in addMessageToChat procedure
+
+Fixed a schema error in the `addMessageToChat` procedure that was causing the OpenAPI schema to be invalid.
+
+---
+
 ## 2025-11-03 v1.0.2
 
 ### Updated dependencies
