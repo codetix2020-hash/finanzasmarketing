@@ -1,5 +1,21 @@
 # Changelog
 
+## 2025-11-08 v1.0.4
+
+### Fixed AI chat component
+
+Fixed a type issue in the AI chat component.
+
+### Fixed Tailwind CSS wrapper component in mail templates
+
+As reported in #2173, some Tailwind CSS classes were not being applied correctly in the email wrapper.
+
+### Added typescript as dev dependency to web app
+
+Added typescript as dev dependency to fix the `pnpm type-check` command.
+
+---
+
 ## 2025-11-08 v1.0.3
 
 ### Fixed schema error in addMessageToChat procedure
