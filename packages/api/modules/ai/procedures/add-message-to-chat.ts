@@ -45,7 +45,9 @@ export const addMessageToChat = protectedProcedure
 
 		const response = streamText({
 			model: textModel,
-			messages: convertToModelMessages(messages as unknown as UIMessage[]),
+			messages: convertToModelMessages(
+				messages as unknown as UIMessage[],
+			),
 			async onFinish({ text }) {
 				await updateAiChat({
 					id: chatId,

@@ -62,7 +62,10 @@ export function AiChat({ organizationId }: { organizationId?: string }) {
 					await orpcClient.ai.chats.messages.add(
 						{
 							chatId,
-							messages: options.messages as unknown as Record<string, never>[],
+							messages: options.messages as unknown as Record<
+								string,
+								never
+							>[],
 						},
 						{ signal: options.abortSignal },
 					),
@@ -138,7 +141,8 @@ export function AiChat({ organizationId }: { organizationId?: string }) {
 		return (
 			chats?.sort(
 				(a, b) =>
-					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+					new Date(b.createdAt).getTime() -
+					new Date(a.createdAt).getTime(),
 			) ?? []
 		);
 	}, [chats]);
@@ -191,20 +195,25 @@ export function AiChat({ organizationId }: { organizationId?: string }) {
 								onClick={() => setChatId(chat.id)}
 								className={cn(
 									"block h-auto w-full py-2 text-left text-foreground hover:no-underline",
-									chat.id === chatId && "bg-primary/10 font-bold text-primary",
+									chat.id === chatId &&
+										"bg-primary/10 font-bold text-primary",
 								)}
 							>
 								<span className="w-full overflow-hidden">
 									<span className="block truncate">
 										{chat.title ??
-											(chat.messages?.at(0) as any)?.content ??
+											(chat.messages?.at(0) as any)
+												?.content ??
 											"Untitled chat"}
 									</span>
 									<small className="block font-normal">
-										{formatter.dateTime(new Date(chat.createdAt), {
-											dateStyle: "short",
-											timeStyle: "short",
-										})}
+										{formatter.dateTime(
+											new Date(chat.createdAt),
+											{
+												dateStyle: "short",
+												timeStyle: "short",
+											},
+										)}
 									</small>
 								</span>
 							</Button>
@@ -223,13 +232,17 @@ export function AiChat({ organizationId }: { organizationId?: string }) {
 							key={index}
 							className={cn(
 								"flex flex-col gap-2",
-								message.role === "user" ? "items-end" : "items-start",
+								message.role === "user"
+									? "items-end"
+									: "items-start",
 							)}
 						>
 							<div
 								className={cn(
 									"flex max-w-2xl items-center gap-2 whitespace-pre-wrap rounded-lg px-4 py-2 text-foreground",
-									message.role === "user" ? "bg-primary/10" : "bg-secondary/10",
+									message.role === "user"
+										? "bg-primary/10"
+										: "bg-secondary/10",
 								)}
 							>
 								{message.parts?.map((part, index) =>
