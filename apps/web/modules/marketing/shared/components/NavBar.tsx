@@ -27,6 +27,10 @@ export function NavBar() {
 	const localePathname = useLocalePathname();
 	const [isTop, setIsTop] = useState(true);
 
+	const handleMobileMenuClose = () => {
+		setMobileMenuOpen(false);
+	};
+
 	const debouncedScrollHandler = useDebounceCallback(
 		() => {
 			setIsTop(window.scrollY <= 10);
@@ -46,7 +50,7 @@ export function NavBar() {
 	}, [debouncedScrollHandler]);
 
 	useEffect(() => {
-		setMobileMenuOpen(false);
+		handleMobileMenuClose();
 	}, [localePathname]);
 
 	const isDocsPage = localePathname.startsWith("/docs");
@@ -160,6 +164,7 @@ export function NavBar() {
 										<LocaleLink
 											key={menuItem.href}
 											href={menuItem.href}
+											onClick={handleMobileMenuClose}
 											className={cn(
 												"block px-3 py-2 font-medium text-base text-foreground/80",
 												isMenuItemActive(menuItem.href)
@@ -176,6 +181,7 @@ export function NavBar() {
 										key={user ? "start" : "login"}
 										href={user ? "/app" : "/auth/login"}
 										className="block px-3 py-2 text-base"
+										onClick={handleMobileMenuClose}
 										prefetch={!user}
 									>
 										{user
