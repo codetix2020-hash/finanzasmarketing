@@ -128,17 +128,21 @@ model TwoFactor {
 }
 
 model Organization {
-  id                 String       @id @default(cuid())
-  name               String
-  slug               String?
-  logo               String?
-  createdAt          DateTime
-  metadata           String?
-  paymentsCustomerId String?
-  members            Member[]
-  invitations        Invitation[]
-  purchases          Purchase[]
-  aiChats            AiChat[]
+  id                    String                @id @default(cuid())
+  name                  String
+  slug                  String?
+  logo                  String?
+  createdAt             DateTime
+  metadata              String?
+  paymentsCustomerId    String?
+  members               Member[]
+  invitations           Invitation[]
+  purchases             Purchase[]
+  aiChats               AiChat[]
+  financialTransactions FinancialTransaction[]
+  saasMetrics          SaasMetrics[]
+  costTrackings        CostTracking[]
+  agentDecisions       AgentDecision[]
 
   @@unique([slug])
   @@map("organization")
@@ -207,4 +211,109 @@ model AiChat {
   updatedAt      DateTime      @updatedAt
 
   @@map("ai_chat")
+}
+
+// ============================================
+// FINANCIAL SYSTEM MODELS
+// ============================================
+
+enum TransactionType {
+  REVENUE
+  COST_API_CLAUDE
+  COST_API_OPENAI
+  COST_STRIPE_FEE
+  COST_ADS
+}
+
+model FinancialTransaction {
+  id             String          @id @default(cuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           TransactionType
+  amount         Decimal         @db.Decimal(10, 2)
+  currency       String          @default("EUR")
+  source         String
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("financial_transaction")
+}
+
+enum SaasStatus {
+  ACTIVE
+  PAUSED
+  OPTIMIZING
+  KILLED
+}
+
+model SaasMetrics {
+  id             String     @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  date           DateTime
+  mrr            Decimal    @db.Decimal(10, 2)
+  arr            Decimal    @db.Decimal(10, 2)
+  totalRevenue   Decimal    @db.Decimal(10, 2)
+  totalCosts     Decimal    @db.Decimal(10, 2)
+  netProfit      Decimal    @db.Decimal(10, 2)
+  roi            Float
+  apiCostsMTD    Decimal    @db.Decimal(10, 2)
+  adCostsMTD     Decimal    @db.Decimal(10, 2)
+  activeCustomers Int
+  churnRate      Float
+  status         SaasStatus
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([organizationId, date])
+  @@map("saas_metrics")
+}
+
+enum AIProvider {
+  CLAUDE_OPUS
+  CLAUDE_SONNET
+  CLAUDE_HAIKU
+  OPENAI_GPT4
+  OPENAI_GPT35
+}
+
+model CostTracking {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       AIProvider
+  requestId      String
+  inputTokens    Int
+  outputTokens   Int
+  totalTokens    Int
+  estimatedCost  Decimal      @db.Decimal(10, 6)
+  endpoint       String
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("cost_tracking")
+}
+
+enum Decision {
+  SCALE
+  MAINTAIN
+  OPTIMIZE
+  KILL
+}
+
+model AgentDecision {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentType      String
+  decision       Decision
+  reasoning      String       @db.Text
+  metrics        Json
+  executed       Boolean      @default(false)
+  executedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("agent_decision")
 }
