@@ -1,6 +1,5 @@
-import type { z } from "zod";
 import { db } from "../client";
-import type { OrganizationSchema } from "../zod";
+import type { Organization } from "../generated/client";
 
 export async function getOrganizations({
 	limit,
@@ -115,7 +114,7 @@ export async function getPendingInvitationByEmail(email: string) {
 }
 
 export async function updateOrganization(
-	organization: Partial<z.infer<typeof OrganizationSchema>> & { id: string },
+	organization: Partial<Organization> & { id: string },
 ) {
 	return db.organization.update({
 		where: {

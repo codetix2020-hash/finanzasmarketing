@@ -1,6 +1,5 @@
-import type { z } from "zod";
 import { db } from "../client";
-import type { PurchaseSchema } from "../zod";
+import type { Purchase } from "../generated/client";
 
 export async function getPurchaseById(id: string) {
 	return db.purchase.findUnique({
@@ -34,7 +33,7 @@ export async function getPurchaseBySubscriptionId(subscriptionId: string) {
 
 export async function createPurchase(
 	purchase: Omit<
-		z.infer<typeof PurchaseSchema>,
+		Purchase,
 		"id" | "createdAt" | "updatedAt"
 	>,
 ) {
@@ -47,7 +46,7 @@ export async function createPurchase(
 
 export async function updatePurchase(
 	purchase: Partial<
-		Omit<z.infer<typeof PurchaseSchema>, "createdAt" | "updatedAt">
+		Omit<Purchase, "createdAt" | "updatedAt">
 	> & { id: string },
 ) {
 	const updated = await db.purchase.update({
