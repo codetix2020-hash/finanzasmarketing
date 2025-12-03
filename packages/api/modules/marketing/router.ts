@@ -13,6 +13,14 @@ import {
   updateFBCampaignStatusProcedure,
   syncFBMetricsProcedure
 } from './procedures/facebook-ads';
+import { 
+  generateKeywordResearchProcedure,
+  generateGoogleStrategyProcedure,
+  createGoogleCampaignProcedure,
+  generateRSAProcedure,
+  optimizeGoogleCampaignProcedure,
+  syncGoogleMetricsProcedure
+} from './procedures/google-ads';
 
 export const marketingRouter = publicProcedure.router({
   guards: {
@@ -28,6 +36,14 @@ export const marketingRouter = publicProcedure.router({
     optimize: optimizeFBCampaignProcedure,
     updateStatus: updateFBCampaignStatusProcedure,
     syncMetrics: syncFBMetricsProcedure
+  },
+  googleAds: {
+    keywordResearch: generateKeywordResearchProcedure,
+    generateStrategy: generateGoogleStrategyProcedure,
+    createCampaign: createGoogleCampaignProcedure,
+    generateRSA: generateRSAProcedure,
+    optimize: optimizeGoogleCampaignProcedure,
+    syncMetrics: syncGoogleMetricsProcedure
   }
 });
 
