@@ -31,6 +31,13 @@ import {
   getLeadsProcedure,
   getLeadStatsProcedure
 } from './procedures/crm';
+import { 
+  getDashboardMetricsProcedure,
+  getContentPerformanceProcedure,
+  getCampaignROIProcedure,
+  generateInsightsProcedure,
+  generateWeeklyReportProcedure
+} from './procedures/analytics';
 
 export const marketingRouter = publicProcedure.router({
   guards: {
@@ -64,6 +71,13 @@ export const marketingRouter = publicProcedure.router({
     qualifyHot: qualifyHotLeadsProcedure,
     getLeads: getLeadsProcedure,
     getStats: getLeadStatsProcedure
+  },
+  analytics: {
+    dashboard: getDashboardMetricsProcedure,
+    contentPerformance: getContentPerformanceProcedure,
+    campaignROI: getCampaignROIProcedure,
+    insights: generateInsightsProcedure,
+    weeklyReport: generateWeeklyReportProcedure
   }
 });
 
