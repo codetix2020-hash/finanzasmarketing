@@ -49,16 +49,31 @@ export class ActionExecutor {
 
     switch (action.type) {
       case 'slack':
-        return await this.sendSlackNotification(action.params);
+        return await this.sendSlackNotification(action.params as {
+          title: string;
+          message: string;
+          severity?: 'info' | 'warning' | 'critical';
+        });
       
       case 'email':
-        return await this.sendEmail(action.params);
+        return await this.sendEmail(action.params as {
+          to: string;
+          subject: string;
+          content: string;
+        });
       
       case 'stripe_pricing':
-        return await this.adjustStripePricing(action.params);
+        return await this.adjustStripePricing(action.params as {
+          priceId: string;
+          newAmount: number;
+        });
       
       case 'alert':
-        return await this.sendAlert(action.params);
+        return await this.sendAlert(action.params as {
+          title: string;
+          message: string;
+          severity: 'info' | 'warning' | 'critical';
+        });
       
       default:
         return {
