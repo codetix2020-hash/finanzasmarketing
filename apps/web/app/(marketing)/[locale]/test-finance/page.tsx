@@ -1028,6 +1028,8 @@ export default function TestFinancePage() {
 						</div>
 					</>
 				)}
+					</div>
+				)}
 			</div>
 
 			{/* Panel de Anomaly Detection */}
