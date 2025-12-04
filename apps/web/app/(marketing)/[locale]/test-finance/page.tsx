@@ -2593,7 +2593,7 @@ export default function TestFinancePage() {
 									{unitEconomics.ratios.ltvToCac.toFixed(1)}x
 								</div>
 								<div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-									Target: &gt;3x
+									Target: {'>'}3x
 								</div>
 							</div>
 
@@ -2628,7 +2628,7 @@ export default function TestFinancePage() {
 									{unitEconomics.cac.paybackPeriod.toFixed(1)}m
 								</div>
 								<div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-									Target: &lt;12m
+									Target: {'<'}12m
 								</div>
 							</div>
 
@@ -2694,7 +2694,7 @@ export default function TestFinancePage() {
 									{unitEconomics.ratios.magicNumber.toFixed(2)}
 								</div>
 								<div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-									Target: &gt;0.75
+									Target: {'>'}0.75
 								</div>
 							</div>
 
@@ -2725,7 +2725,7 @@ export default function TestFinancePage() {
 									{unitEconomics.ratios.quickRatio.toFixed(1)}x
 								</div>
 								<div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-									Target: &gt;4x
+									Target: {'>'}4x
 								</div>
 							</div>
 
@@ -2756,7 +2756,7 @@ export default function TestFinancePage() {
 									{unitEconomics.ratios.burnMultiple.toFixed(1)}x
 								</div>
 								<div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-									Target: &lt;1.5x
+									Target: {'<'}1.5x
 								</div>
 							</div>
 						</div>
@@ -3279,7 +3279,7 @@ export default function TestFinancePage() {
 							<div style={{ padding: '1.5rem', background: '#fef3c7', borderRadius: '8px' }}>
 								<div style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.5rem' }}>Runway</div>
 								<div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#92400e' }}>10 meses</div>
-								<div style={{ fontSize: '0.75rem', color: '#92400e' }}>⚠️ < 12 meses</div>
+								<div style={{ fontSize: '0.75rem', color: '#92400e' }}>⚠️ {'<'} 12 meses</div>
 							</div>
 						</div>
 
@@ -3306,7 +3306,7 @@ export default function TestFinancePage() {
 						</div>
 
 						<div style={{ background: '#fee2e2', borderRadius: '8px', padding: '1.5rem', border: '2px solid #dc2626' }}>
-							<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#991b1b' }}>⚠️ ALERTA: Runway < 12 meses</div>
+							<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#991b1b' }}>⚠️ ALERTA: Runway {'<'} 12 meses</div>
 							<div style={{ fontSize: '0.875rem', color: '#991b1b', marginBottom: '0.5rem' }}>
 								💡 <strong>Sugerencia 1:</strong> Reducir marketing spend 15% → Runway +2 meses
 							</div>
