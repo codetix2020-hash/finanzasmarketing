@@ -4,7 +4,7 @@ import { StrategyAgent } from "../services/strategy-agent";
 
 export const coordinateMarketingAgentsProcedure = protectedProcedure
   .input(z.object({
-    channelPerformance: z.record(z.object({
+    channelPerformance: z.record(z.string(), z.object({
       spend: z.number(),
       revenue: z.number(),
       roi: z.number(),
@@ -25,7 +25,7 @@ export const coordinateMarketingAgentsProcedure = protectedProcedure
 export const optimizeBudgetProcedure = protectedProcedure
   .input(z.object({
     totalBudget: z.number(),
-    channels: z.record(z.object({
+    channels: z.record(z.string(), z.object({
       currentSpend: z.number(),
       roi: z.number(),
     })),
@@ -47,7 +47,7 @@ export const optimizeBudgetProcedure = protectedProcedure
 export const generateStrategicReportProcedure = protectedProcedure
   .input(z.object({
     period: z.string(),
-    metrics: z.record(z.any()),
+    metrics: z.record(z.string(), z.any()),
   }))
   .mutation(async ({ input }) => {
     const agent = new StrategyAgent();

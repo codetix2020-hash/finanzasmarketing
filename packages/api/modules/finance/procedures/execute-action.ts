@@ -4,7 +4,7 @@ import { ActionExecutor } from "../services/action-executor";
 
 const inputSchema = z.object({
   type: z.enum(['slack', 'email', 'stripe_pricing', 'alert']),
-  params: z.record(z.any()),
+  params: z.record(z.string(), z.any()),
   autoExecute: z.boolean().default(false),
 });
 
