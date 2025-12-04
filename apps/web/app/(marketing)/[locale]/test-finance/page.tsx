@@ -3318,6 +3318,111 @@ export default function TestFinancePage() {
 				)}
 			</div>
 
+			{/* Customer Health Scoring */}
+			<div style={{ marginBottom: '2rem', background: 'white', borderRadius: '12px', border: '2px solid #ec4899', overflow: 'hidden' }}>
+				<div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)', color: 'white', cursor: 'pointer' }} onClick={() => toggleSection('health')}>
+					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+						<div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+							<span style={{ fontSize: '1.5rem' }}>🏥</span>
+							<h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>Customer Health Scoring</h2>
+						</div>
+					</div>
+				</div>
+				{expandedSection === 'health' && (
+					<div style={{ padding: '2rem' }}>
+						<div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+							<div style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '1rem' }}>Portfolio Health Score</div>
+							<div style={{ fontSize: '4rem', fontWeight: 'bold', color: '#10b981' }}>78</div>
+							<div style={{ fontSize: '1rem', color: '#6b7280' }}>de 100 ✅</div>
+						</div>
+
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem' }}>📊 Segmentación de Clientes</h3>
+							<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+								<div style={{ padding: '1.5rem', background: '#dcfce7', borderRadius: '8px', border: '2px solid #10b981' }}>
+									<div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🟢</div>
+									<div style={{ fontSize: '0.875rem', color: '#065f46', marginBottom: '0.25rem' }}>Champions</div>
+									<div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065f46', marginBottom: '0.25rem' }}>342</div>
+									<div style={{ fontSize: '0.75rem', color: '#065f46' }}>€8.2k MRR</div>
+								</div>
+								<div style={{ padding: '1.5rem', background: '#fef3c7', borderRadius: '8px', border: '2px solid #f59e0b' }}>
+									<div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🟡</div>
+									<div style={{ fontSize: '0.875rem', color: '#92400e', marginBottom: '0.25rem' }}>At-Risk</div>
+									<div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#92400e', marginBottom: '0.25rem' }}>89</div>
+									<div style={{ fontSize: '0.75rem', color: '#92400e' }}>€2.1k MRR ⚠️</div>
+								</div>
+								<div style={{ padding: '1.5rem', background: '#dbeafe', borderRadius: '8px', border: '2px solid #3b82f6' }}>
+									<div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔵</div>
+									<div style={{ fontSize: '0.875rem', color: '#1e3a8a', marginBottom: '0.25rem' }}>Growth</div>
+									<div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e3a8a', marginBottom: '0.25rem' }}>156</div>
+									<div style={{ fontSize: '0.75rem', color: '#1e3a8a' }}>€1.8k MRR</div>
+								</div>
+								<div style={{ padding: '1.5rem', background: '#fee2e2', borderRadius: '8px', border: '2px solid #dc2626' }}>
+									<div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔴</div>
+									<div style={{ fontSize: '0.875rem', color: '#991b1b', marginBottom: '0.25rem' }}>Churning</div>
+									<div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#991b1b', marginBottom: '0.25rem' }}>23</div>
+									<div style={{ fontSize: '0.75rem', color: '#991b1b' }}>€0.5k MRR 🚨</div>
+								</div>
+							</div>
+						</div>
+
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem' }}>⚠️ High Priority Actions</h3>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+								{[
+									{ customer: 'TechCorp Inc.', mrr: '€450/mo', churn: '85%', action: 'Schedule check-in call', severity: 'critical' },
+									{ customer: 'StartupXYZ', mrr: '€320/mo', churn: '72%', action: 'Review onboarding success', severity: 'high' },
+									{ customer: 'Enterprise Co.', mrr: '€680/mo', churn: '58%', action: 'Send usage tips email', severity: 'medium' },
+								].map((item, idx) => (
+									<div 
+										key={idx}
+										style={{ 
+											padding: '1rem', 
+											background: item.severity === 'critical' ? '#fee2e2' : item.severity === 'high' ? '#fed7aa' : '#fef3c7',
+											borderRadius: '8px',
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center'
+										}}
+									>
+										<div>
+											<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+												{item.severity === 'critical' ? '🔴' : item.severity === 'high' ? '🟠' : '🟡'} {item.customer}
+											</div>
+											<div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+												{item.mrr} • {item.churn} churn risk
+											</div>
+										</div>
+										<div style={{ 
+											padding: '0.5rem 1rem', 
+											background: 'white', 
+											borderRadius: '6px',
+											fontSize: '0.875rem',
+											fontWeight: '500'
+										}}>
+											{item.action}
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+
+						<div style={{ background: '#f3f4f6', borderRadius: '8px', padding: '1.5rem' }}>
+							<h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem' }}>📈 Expansion Opportunities</h3>
+							<div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+								• <strong>12 customers</strong> ready for upsell → Potential +€4.8k MRR
+							</div>
+							<div style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+								• <strong>8 customers</strong> showing cross-sell signals → Potential +€2.4k MRR
+							</div>
+							<div style={{ fontSize: '0.875rem' }}>
+								• <strong>Total expansion potential:</strong> €7.2k MRR (+47% growth)
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
+
 			{/* Panel de Benchmarking */}
 			<div
 				style={{
@@ -3882,6 +3987,143 @@ export default function TestFinancePage() {
 							</div>
 						)}
 					</>
+				)}
+			</div>
+
+			{/* Forecasting & Scenarios */}
+			<div style={{ marginBottom: '2rem', background: 'white', borderRadius: '12px', border: '2px solid #a855f7', overflow: 'hidden' }}>
+				<div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)', color: 'white', cursor: 'pointer' }} onClick={() => toggleSection('scenarios')}>
+					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+						<div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+							<span style={{ fontSize: '1.5rem' }}>🎲</span>
+							<h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>Forecasting & Scenarios</h2>
+						</div>
+						<button
+							onClick={(e) => { e.stopPropagation(); alert('Run Scenario - Funcionalidad en desarrollo'); }}
+							style={{
+								padding: '0.75rem 1.5rem',
+								background: 'white',
+								color: '#a855f7',
+								border: 'none',
+								borderRadius: '8px',
+								fontWeight: 'bold',
+								cursor: 'pointer',
+							}}
+						>
+							🎯 Run Scenario
+						</button>
+					</div>
+				</div>
+				{expandedSection === 'scenarios' && (
+					<div style={{ padding: '2rem' }}>
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>📊 Scenario Comparison</h3>
+							<div style={{ overflowX: 'auto' }}>
+								<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+									<thead>
+										<tr style={{ background: '#f3f4f6' }}>
+											<th style={{ padding: '1rem', textAlign: 'left', border: '1px solid #e5e7eb' }}>Scenario</th>
+											<th style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>MRR (6m)</th>
+											<th style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>MRR (12m)</th>
+											<th style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>Runway</th>
+											<th style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>ROI</th>
+										</tr>
+									</thead>
+									<tbody>
+										{[
+											{ name: '📈 Base Case', mrr6: '€30.8k', mrr12: '€52.5k', runway: '18 mo', roi: '-', bg: '#dbeafe' },
+											{ name: '🚀 +3 SDRs', mrr6: '€35.2k', mrr12: '€61.8k', runway: '16 mo', roi: '3.2x', bg: '#dcfce7' },
+											{ name: '💰 +20% Pricing', mrr6: '€36.9k', mrr12: '€62.9k', runway: '19 mo', roi: '∞', bg: '#dcfce7' },
+											{ name: '🌍 EU Expansion', mrr6: '€42.1k', mrr12: '€78.5k', runway: '14 mo', roi: '2.8x', bg: '#fef3c7' },
+											{ name: '⚠️ -15% Marketing', mrr6: '€26.5k', mrr12: '€42.8k', runway: '22 mo', roi: '-', bg: '#fee2e2' },
+										].map((scenario, idx) => (
+											<tr key={idx} style={{ background: scenario.bg }}>
+												<td style={{ padding: '1rem', border: '1px solid #e5e7eb', fontWeight: '500' }}>{scenario.name}</td>
+												<td style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>{scenario.mrr6}</td>
+												<td style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>{scenario.mrr12}</td>
+												<td style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>{scenario.runway}</td>
+												<td style={{ padding: '1rem', textAlign: 'center', border: '1px solid #e5e7eb', fontWeight: 'bold' }}>{scenario.roi}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem' }}>🎯 What-If Analysis</h3>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+								<div style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px' }}>
+									<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+										💡 Scenario: +3 SDRs ($180k/year)
+									</div>
+									<div style={{ fontSize: '0.875rem', marginBottom: '1rem', color: '#6b7280' }}>
+										Contratar 3 Sales Development Reps para acelerar pipeline
+									</div>
+									<div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Impact on MRR (12m)</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>+€9.3k (+18%)</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Break-even Point</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Month 9</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>ROI (3 years)</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>3.2x</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Recommendation</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>✅ Hire</div>
+										</div>
+									</div>
+								</div>
+
+								<div style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px' }}>
+									<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+										💰 Scenario: +20% Price Increase
+									</div>
+									<div style={{ fontSize: '0.875rem', marginBottom: '1rem', color: '#6b7280' }}>
+										Aumentar precios de todos los planes en 20%
+									</div>
+									<div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Immediate MRR Lift</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>+€3.1k (+20%)</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Expected Churn Impact</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>+1.2%</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Net Impact (12m)</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>+€10.4k</div>
+										</div>
+										<div>
+											<div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Recommendation</div>
+											<div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>✅ Execute</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div style={{ background: '#a855f7', color: 'white', borderRadius: '8px', padding: '1.5rem' }}>
+							<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+								🎯 Recommended Action Plan
+							</div>
+							<div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+								1. ✅ Increase prices by 20% (Immediate €3.1k MRR lift)
+							</div>
+							<div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+								2. ✅ Hire 3 SDRs in Q1 2025 (3.2x ROI over 3 years)
+							</div>
+							<div style={{ fontSize: '0.875rem' }}>
+								3. 🔄 Monitor: Review EU expansion in Q2 after hitting €40k MRR
+							</div>
+						</div>
+					</div>
 				)}
 			</div>
 
