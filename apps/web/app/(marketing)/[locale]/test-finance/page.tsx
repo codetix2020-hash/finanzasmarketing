@@ -3483,7 +3483,154 @@ export default function TestFinancePage() {
 					</button>
 				</div>
 
-				{!benchmarking && !loadingBenchmark && (
+				{expandedSection === 'benchmarking' && (
+					<div style={{ padding: '2rem' }}>
+						<div style={{ marginBottom: '2rem' }}>
+							<label style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', display: 'block' }}>
+								Selecciona tu industria:
+							</label>
+							<select 
+								style={{ 
+									padding: '0.75rem', 
+									borderRadius: '8px', 
+									border: '1px solid #e5e7eb',
+									fontSize: '1rem',
+									width: '100%',
+									maxWidth: '300px'
+								}}
+							>
+								<option>SaaS B2B</option>
+								<option>SaaS B2C</option>
+								<option>Marketplace</option>
+								<option>E-commerce</option>
+								<option>Fintech</option>
+							</select>
+						</div>
+
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Tu posición vs SaaS B2B</h3>
+							
+							{/* LTV/CAC Ratio */}
+							<div style={{ marginBottom: '2rem' }}>
+								<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>LTV/CAC Ratio</div>
+								<div style={{ position: 'relative', height: '60px', background: '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
+									<div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+										<span>P25: 2.0</span>
+										<span>P50: 3.0</span>
+										<span>P75: 5.0</span>
+										<span>P90: 7.0</span>
+									</div>
+									<div style={{ position: 'relative', height: '20px', background: 'linear-gradient(to right, #fee2e2, #fef3c7, #dcfce7, #86efac)', borderRadius: '4px' }}>
+										<div style={{ 
+											position: 'absolute', 
+											left: '57%', 
+											top: '-8px',
+											width: '0',
+											height: '0',
+											borderLeft: '8px solid transparent',
+											borderRight: '8px solid transparent',
+											borderTop: '12px solid #10b981'
+										}}></div>
+										<div style={{ 
+											position: 'absolute', 
+											left: '52%', 
+											bottom: '-25px',
+											fontSize: '0.875rem',
+											fontWeight: 'bold',
+											color: '#10b981'
+										}}>
+											TÚ: 3.54 ↑ Top 25%
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Churn Rate */}
+							<div style={{ marginBottom: '2rem' }}>
+								<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Churn Rate (Monthly)</div>
+								<div style={{ position: 'relative', height: '60px', background: '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
+									<div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+										<span>P90: 1%</span>
+										<span>P75: 2%</span>
+										<span>P50: 5%</span>
+										<span>P25: 8%</span>
+									</div>
+									<div style={{ position: 'relative', height: '20px', background: 'linear-gradient(to right, #86efac, #dcfce7, #fef3c7, #fee2e2)', borderRadius: '4px' }}>
+										<div style={{ 
+											position: 'absolute', 
+											left: '23%', 
+											top: '-8px',
+											width: '0',
+											height: '0',
+											borderLeft: '8px solid transparent',
+											borderRight: '8px solid transparent',
+											borderTop: '12px solid #10b981'
+										}}></div>
+										<div style={{ 
+											position: 'absolute', 
+											left: '18%', 
+											bottom: '-25px',
+											fontSize: '0.875rem',
+											fontWeight: 'bold',
+											color: '#10b981'
+										}}>
+											TÚ: 3.2% ↑ Top 10%
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Growth Rate */}
+							<div style={{ marginBottom: '2rem' }}>
+								<div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Growth Rate (YoY)</div>
+								<div style={{ position: 'relative', height: '60px', background: '#f3f4f6', borderRadius: '8px', padding: '1rem' }}>
+									<div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+										<span>P25: 15%</span>
+										<span>P50: 25%</span>
+										<span>P75: 45%</span>
+										<span>P90: 70%</span>
+									</div>
+									<div style={{ position: 'relative', height: '20px', background: 'linear-gradient(to right, #fee2e2, #fef3c7, #dcfce7, #86efac)', borderRadius: '4px' }}>
+										<div style={{ 
+											position: 'absolute', 
+											left: '68%', 
+											top: '-8px',
+											width: '0',
+											height: '0',
+											borderLeft: '8px solid transparent',
+											borderRight: '8px solid transparent',
+											borderTop: '12px solid #10b981'
+										}}></div>
+										<div style={{ 
+											position: 'absolute', 
+											left: '61%', 
+											bottom: '-25px',
+											fontSize: '0.875rem',
+											fontWeight: 'bold',
+											color: '#10b981'
+										}}>
+											TÚ: 52% ↑ Top 25%
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div style={{ background: '#dcfce7', borderRadius: '8px', padding: '1.5rem', border: '2px solid #10b981' }}>
+							<div style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#065f46' }}>
+								🏆 Overall Health Score: 85/100
+							</div>
+							<div style={{ fontSize: '0.875rem', color: '#065f46', marginBottom: '0.5rem' }}>
+								✅ <strong>Fortalezas:</strong> Churn rate excelente, growth rate fuerte, LTV/CAC saludable
+							</div>
+							<div style={{ fontSize: '0.875rem', color: '#065f46' }}>
+								💡 <strong>Áreas de mejora:</strong> CAC payback period podría reducirse, considerar aumentar precios
+							</div>
+						</div>
+					</div>
+				)}
+
+				{!benchmarking && !loadingBenchmark && expandedSection !== 'benchmarking' && (
 					<div
 						style={{
 							textAlign: "center",
@@ -3509,7 +3656,7 @@ export default function TestFinancePage() {
 					</div>
 				)}
 
-				{benchmarking && (
+				{benchmarking && expandedSection !== 'benchmarking' && (
 					<>
 						{/* Overall Score & Position */}
 						<div
