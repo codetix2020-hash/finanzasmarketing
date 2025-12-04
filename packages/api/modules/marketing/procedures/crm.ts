@@ -76,14 +76,14 @@ export const getLeadsProcedure = protectedProcedure
       limit: z.number().optional()
     })
   )
-  .query(async ({ input }) => {
+  .handler(async ({ input }) => {
     const result = await getLeads(input)
     return { success: true, leads: result }
   })
 
 export const getLeadStatsProcedure = protectedProcedure
   .input(z.object({ organizationId: z.string() }))
-  .query(async ({ input }) => {
+  .handler(async ({ input }) => {
     const result = await getLeadStats(input.organizationId)
     return { success: true, stats: result }
   })

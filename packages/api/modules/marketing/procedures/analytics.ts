@@ -19,7 +19,7 @@ export const getDashboardMetricsProcedure = protectedProcedure
       }).optional()
     })
   )
-  .query(async ({ input }) => {
+  .handler(async ({ input }) => {
     const result = await getDashboardMetrics(input)
     return { success: true, metrics: result }
   })
@@ -32,14 +32,14 @@ export const getContentPerformanceProcedure = protectedProcedure
       limit: z.number().optional()
     })
   )
-  .query(async ({ input }) => {
+  .handler(async ({ input }) => {
     const result = await getContentPerformance(input)
     return { success: true, performance: result }
   })
 
 export const getCampaignROIProcedure = protectedProcedure
   .input(z.object({ organizationId: z.string() }))
-  .query(async ({ input }) => {
+  .handler(async ({ input }) => {
     const result = await getCampaignROI(input.organizationId)
     return { success: true, roi: result }
   })
