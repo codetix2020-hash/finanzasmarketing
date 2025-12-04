@@ -1766,12 +1766,12 @@ export default function TestFinancePage() {
 							<div style={{ padding: '1.5rem', background: '#dcfce7', borderRadius: '8px' }}>
 								<div style={{ fontSize: '0.875rem', color: '#065f46', marginBottom: '0.5rem' }}>Net Revenue Retention</div>
 								<div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#065f46' }}>115%</div>
-								<div style={{ fontSize: '0.75rem', color: '#065f46' }}>Target: >110%</div>
+														<div style={{ fontSize: '0.75rem', color: '#065f46' }}>Target: {'>'}110%</div>
 							</div>
 							<div style={{ padding: '1.5rem', background: '#dbeafe', borderRadius: '8px' }}>
 								<div style={{ fontSize: '0.875rem', color: '#1e3a8a', marginBottom: '0.5rem' }}>Quick Ratio</div>
 								<div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e3a8a' }}>4.2</div>
-								<div style={{ fontSize: '0.75rem', color: '#1e3a8a' }}>Target: >4.0 ✅</div>
+														<div style={{ fontSize: '0.75rem', color: '#1e3a8a' }}>Target: {'>'}4.0 ✅</div>
 							</div>
 						</div>
 
