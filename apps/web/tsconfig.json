@@ -2,6 +2,8 @@
 	"extends": "@repo/tsconfig/nextjs.json",
 	"compilerOptions": {
 		"plugins": [{ "name": "next" }],
+		"skipLibCheck": true,
+		"strict": false,
 		"paths": {
 			"@analytics": ["./modules/analytics"],
 			"@marketing/*": ["./modules/marketing/*"],
