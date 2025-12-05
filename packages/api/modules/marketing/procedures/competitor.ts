@@ -3,7 +3,6 @@ import { protectedProcedure } from '../../../orpc/procedures'
 import { analyzeCompetitors, monitorCompetitorChanges } from '../services/competitor-analyzer'
 
 export const analyzeCompetitorsProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/analyze-competitors' })
   .input(z.object({
     organizationId: z.string(),
     productId: z.string(),
@@ -16,7 +15,6 @@ export const analyzeCompetitorsProcedure = protectedProcedure
   })
 
 export const monitorCompetitorChangesProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/monitor-competitor-changes' })
   .input(z.object({
     organizationId: z.string(),
     productId: z.string()

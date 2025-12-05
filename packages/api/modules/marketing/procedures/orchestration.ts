@@ -4,7 +4,6 @@ import { orchestrate, orchestrateMaster, orchestrateProduct } from '../../../src
 import { saveMemory, searchMemory } from '../../../src/lib/ai/embeddings'
 
 export const orchestrateProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/orchestrate' })
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional()
@@ -16,7 +15,6 @@ export const orchestrateProcedure = protectedProcedure
   })
 
 export const orchestrateMasterProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/orchestrate-master' })
   .input(z.object({
     organizationId: z.string()
   }))
@@ -27,7 +25,6 @@ export const orchestrateMasterProcedure = protectedProcedure
   })
 
 export const orchestrateProductProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/orchestrate-product' })
   .input(z.object({
     productId: z.string()
   }))
@@ -38,7 +35,6 @@ export const orchestrateProductProcedure = protectedProcedure
   })
 
 export const saveMemoryProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/save-memory' })
   .input(z.object({
     organizationId: z.string(),
     memoryType: z.enum(['business_dna', 'learning', 'prompt_template']),
@@ -59,7 +55,6 @@ export const saveMemoryProcedure = protectedProcedure
   })
 
 export const searchMemoryProcedure = protectedProcedure
-  .route({ method: 'POST', path: '/search-memory' })
   .input(z.object({
     organizationId: z.string(),
     query: z.string(),
