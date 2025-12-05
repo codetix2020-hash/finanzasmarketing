@@ -1,7 +1,7 @@
-import { orpc } from "@kit/orpc/server"
+import { publicProcedure } from "../../orpc/procedures"
 import { webhookProcedure, sendFeatureRequestProcedure, processInboxProcedure } from './procedures/webhook'
 
-export const autosaasRouter = orpc.router({
+export const autosaasRouter = publicProcedure.router({
   webhook: webhookProcedure,
   sendFeatureRequest: sendFeatureRequestProcedure,
   processInbox: processInboxProcedure
