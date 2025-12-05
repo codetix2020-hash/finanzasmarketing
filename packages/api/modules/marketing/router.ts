@@ -85,91 +85,90 @@ import {
   searchMemoryProcedure
 } from './procedures/orchestration';
 
+// Aplanar el router para que coincida con la estructura de finance
 export const marketingRouter = publicProcedure.router({
-  guards: {
-    financial: checkFinancialGuardProcedure,
-    reputation: checkReputationGuardProcedure,
-    legal: checkLegalGuardProcedure,
-    runAll: runAllGuardsProcedure
-  },
-  facebookAds: {
-    generateStrategy: generateFBStrategyProcedure,
-    createCampaign: createFBCampaignProcedure,
-    generateCreatives: generateFBCreativesProcedure,
-    optimize: optimizeFBCampaignProcedure,
-    updateStatus: updateFBCampaignStatusProcedure,
-    syncMetrics: syncFBMetricsProcedure
-  },
-  googleAds: {
-    keywordResearch: generateKeywordResearchProcedure,
-    generateStrategy: generateGoogleStrategyProcedure,
-    createCampaign: createGoogleCampaignProcedure,
-    generateRSA: generateRSAProcedure,
-    optimize: optimizeGoogleCampaignProcedure,
-    syncMetrics: syncGoogleMetricsProcedure
-  },
-  crm: {
-    createLead: createLeadProcedure,
-    scoreLead: scoreLeadProcedure,
-    qualifyLead: qualifyLeadProcedure,
-    generateFollowUp: generateFollowUpProcedure,
-    scoreAll: scoreAllLeadsProcedure,
-    qualifyHot: qualifyHotLeadsProcedure,
-    getLeads: getLeadsProcedure,
-    getStats: getLeadStatsProcedure
-  },
-  analytics: {
-    dashboard: getDashboardMetricsProcedure,
-    contentPerformance: getContentPerformanceProcedure,
-    campaignROI: getCampaignROIProcedure,
-    insights: generateInsightsProcedure,
-    weeklyReport: generateWeeklyReportProcedure
-  },
-  content: {
-    generate: generateContentProcedure,
-    generateVariations: generateContentVariationsProcedure,
-    optimizeSEO: optimizeContentForSEOProcedure
-  },
-  email: {
-    createCampaign: createEmailCampaignProcedure,
-    sendCampaign: sendEmailCampaignProcedure,
-    segmentAudience: segmentAudienceProcedure,
-    runABTest: runABTestProcedure
-  },
-  social: {
-    generatePost: generateSocialPostProcedure,
-    analyzeSentiment: analyzeSocialSentimentProcedure,
-    getBestPostingTimes: getBestPostingTimesProcedure
-  },
-  strategy: {
-    coordinateAgents: coordinateMarketingAgentsProcedure,
-    optimizeBudget: optimizeBudgetProcedure,
-    generateReport: generateStrategicReportProcedure
-  },
-  visual: {
-    generate: generateImageProcedure,
-    variants: generateImageVariantsProcedure,
-    optimizePrompt: generateOptimizedPromptProcedure
-  },
-  voice: {
-    generate: generateVoiceoverProcedure,
-    script: generateVideoScriptProcedure,
-    complete: generateScriptAndVoiceProcedure
-  },
-  competitor: {
-    analyze: analyzeCompetitorsProcedure,
-    monitor: monitorCompetitorChangesProcedure
-  },
-  launch: {
-    orchestrate: orchestrateLaunchProcedure,
-    status: getLaunchStatusProcedure
-  },
-  orchestration: {
-    run: orchestrateProcedure,
-    master: orchestrateMasterProcedure,
-    product: orchestrateProductProcedure,
-    saveMemory: saveMemoryProcedure,
-    searchMemory: searchMemoryProcedure
-  }
+  // Guards
+  guardsFinancial: checkFinancialGuardProcedure,
+  guardsReputation: checkReputationGuardProcedure,
+  guardsLegal: checkLegalGuardProcedure,
+  guardsRunAll: runAllGuardsProcedure,
+  
+  // Facebook Ads
+  facebookAdsGenerateStrategy: generateFBStrategyProcedure,
+  facebookAdsCreateCampaign: createFBCampaignProcedure,
+  facebookAdsGenerateCreatives: generateFBCreativesProcedure,
+  facebookAdsOptimize: optimizeFBCampaignProcedure,
+  facebookAdsUpdateStatus: updateFBCampaignStatusProcedure,
+  facebookAdsSyncMetrics: syncFBMetricsProcedure,
+  
+  // Google Ads
+  googleAdsKeywordResearch: generateKeywordResearchProcedure,
+  googleAdsGenerateStrategy: generateGoogleStrategyProcedure,
+  googleAdsCreateCampaign: createGoogleCampaignProcedure,
+  googleAdsGenerateRSA: generateRSAProcedure,
+  googleAdsOptimize: optimizeGoogleCampaignProcedure,
+  googleAdsSyncMetrics: syncGoogleMetricsProcedure,
+  
+  // CRM
+  crmCreateLead: createLeadProcedure,
+  crmScoreLead: scoreLeadProcedure,
+  crmQualifyLead: qualifyLeadProcedure,
+  crmGenerateFollowUp: generateFollowUpProcedure,
+  crmScoreAll: scoreAllLeadsProcedure,
+  crmQualifyHot: qualifyHotLeadsProcedure,
+  crmGetLeads: getLeadsProcedure,
+  crmGetStats: getLeadStatsProcedure,
+  
+  // Analytics
+  analyticsDashboard: getDashboardMetricsProcedure,
+  analyticsContentPerformance: getContentPerformanceProcedure,
+  analyticsCampaignROI: getCampaignROIProcedure,
+  analyticsInsights: generateInsightsProcedure,
+  analyticsWeeklyReport: generateWeeklyReportProcedure,
+  
+  // Content
+  contentGenerate: generateContentProcedure,
+  contentGenerateVariations: generateContentVariationsProcedure,
+  contentOptimizeSEO: optimizeContentForSEOProcedure,
+  
+  // Email
+  emailCreateCampaign: createEmailCampaignProcedure,
+  emailSendCampaign: sendEmailCampaignProcedure,
+  emailSegmentAudience: segmentAudienceProcedure,
+  emailRunABTest: runABTestProcedure,
+  
+  // Social
+  socialGeneratePost: generateSocialPostProcedure,
+  socialAnalyzeSentiment: analyzeSocialSentimentProcedure,
+  socialGetBestPostingTimes: getBestPostingTimesProcedure,
+  
+  // Strategy
+  strategyCoordinateAgents: coordinateMarketingAgentsProcedure,
+  strategyOptimizeBudget: optimizeBudgetProcedure,
+  strategyGenerateReport: generateStrategicReportProcedure,
+  
+  // Visual
+  visualGenerate: generateImageProcedure,
+  visualVariants: generateImageVariantsProcedure,
+  visualOptimizePrompt: generateOptimizedPromptProcedure,
+  
+  // Voice
+  voiceGenerate: generateVoiceoverProcedure,
+  voiceScript: generateVideoScriptProcedure,
+  voiceComplete: generateScriptAndVoiceProcedure,
+  
+  // Competitor
+  competitorAnalyze: analyzeCompetitorsProcedure,
+  competitorMonitor: monitorCompetitorChangesProcedure,
+  
+  // Launch
+  launchOrchestrate: orchestrateLaunchProcedure,
+  launchStatus: getLaunchStatusProcedure,
+  
+  // Orchestration
+  orchestrationRun: orchestrateProcedure,
+  orchestrationMaster: orchestrateMasterProcedure,
+  orchestrationProduct: orchestrateProductProcedure,
+  orchestrationSaveMemory: saveMemoryProcedure,
+  orchestrationSearchMemory: searchMemoryProcedure,
 });
-
