@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { protectedProcedure } from '../../../orpc/procedures'
+import { publicProcedure } from '../../../orpc/procedures'
 import { orchestrate, orchestrateMaster, orchestrateProduct } from '../../../src/lib/ai/orchestrator'
 import { saveMemory, searchMemory } from '../../../src/lib/ai/embeddings'
 
-export const orchestrateProcedure = protectedProcedure
+export const orchestrateProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional()
@@ -14,7 +14,7 @@ export const orchestrateProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const orchestrateMasterProcedure = protectedProcedure
+export const orchestrateMasterProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string()
   }))
@@ -24,7 +24,7 @@ export const orchestrateMasterProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const orchestrateProductProcedure = protectedProcedure
+export const orchestrateProductProcedure = publicProcedure
   .input(z.object({
     productId: z.string()
   }))
@@ -34,7 +34,7 @@ export const orchestrateProductProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const saveMemoryProcedure = protectedProcedure
+export const saveMemoryProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     memoryType: z.enum(['business_dna', 'learning', 'prompt_template']),
@@ -54,7 +54,7 @@ export const saveMemoryProcedure = protectedProcedure
     return { success: true, memory: result }
   })
 
-export const searchMemoryProcedure = protectedProcedure
+export const searchMemoryProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     query: z.string(),

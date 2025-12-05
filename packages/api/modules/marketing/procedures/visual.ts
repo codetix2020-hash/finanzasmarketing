@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { protectedProcedure } from '../../../orpc/procedures'
+import { publicProcedure } from '../../../orpc/procedures'
 import { generateImage, generateImageVariants, generateOptimizedPrompt } from '../services/visual-agent'
 
-export const generateImageProcedure = protectedProcedure
+export const generateImageProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional(),
@@ -18,7 +18,7 @@ export const generateImageProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const generateImageVariantsProcedure = protectedProcedure
+export const generateImageVariantsProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional(),
@@ -33,7 +33,7 @@ export const generateImageVariantsProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const generateOptimizedPromptProcedure = protectedProcedure
+export const generateOptimizedPromptProcedure = publicProcedure
   .input(z.object({
     productName: z.string(),
     productDescription: z.string(),

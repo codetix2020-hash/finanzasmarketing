@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { protectedProcedure } from '../../../orpc/procedures'
+import { publicProcedure } from '../../../orpc/procedures'
 import { analyzeCompetitors, monitorCompetitorChanges } from '../services/competitor-analyzer'
 
-export const analyzeCompetitorsProcedure = protectedProcedure
+export const analyzeCompetitorsProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string(),
@@ -14,7 +14,7 @@ export const analyzeCompetitorsProcedure = protectedProcedure
     return { success: true, analysis: result }
   })
 
-export const monitorCompetitorChangesProcedure = protectedProcedure
+export const monitorCompetitorChangesProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string()

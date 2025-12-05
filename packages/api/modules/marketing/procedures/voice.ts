@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { protectedProcedure } from '../../../orpc/procedures'
+import { publicProcedure } from '../../../orpc/procedures'
 import { generateVoiceover, generateVideoScript, generateScriptAndVoice } from '../services/voice-agent'
 
-export const generateVoiceoverProcedure = protectedProcedure
+export const generateVoiceoverProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional(),
@@ -16,7 +16,7 @@ export const generateVoiceoverProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const generateVideoScriptProcedure = protectedProcedure
+export const generateVideoScriptProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional(),
@@ -31,7 +31,7 @@ export const generateVideoScriptProcedure = protectedProcedure
     return { success: true, script: result }
   })
 
-export const generateScriptAndVoiceProcedure = protectedProcedure
+export const generateScriptAndVoiceProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string().optional(),

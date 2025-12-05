@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { protectedProcedure } from '../../../orpc/procedures'
+import { publicProcedure } from '../../../orpc/procedures'
 import { orchestrateLaunch, getLaunchStatus } from '../services/launch-orchestrator'
 
-export const orchestrateLaunchProcedure = protectedProcedure
+export const orchestrateLaunchProcedure = publicProcedure
   .input(z.object({
     organizationId: z.string(),
     productId: z.string(),
@@ -15,7 +15,7 @@ export const orchestrateLaunchProcedure = protectedProcedure
     return { success: true, ...result }
   })
 
-export const getLaunchStatusProcedure = protectedProcedure
+export const getLaunchStatusProcedure = publicProcedure
   .input(z.object({
     productId: z.string()
   }))
