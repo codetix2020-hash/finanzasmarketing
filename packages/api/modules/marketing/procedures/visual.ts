@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { publicProcedure } from '../../../orpc/procedures'
+import { protectedProcedure } from '../../../orpc/procedures'
 import { generateImage, generateImageVariants, generateOptimizedPrompt } from '../services/visual-agent'
 
-export const generateImageProcedure = publicProcedure
+export const generateImageProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/visual-generate" })
   .input(z.object({
     organizationId: z.string(),
@@ -19,7 +19,7 @@ export const generateImageProcedure = publicProcedure
     return result
   })
 
-export const generateImageVariantsProcedure = publicProcedure
+export const generateImageVariantsProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/visual-variants" })
   .input(z.object({
     organizationId: z.string(),
@@ -35,7 +35,7 @@ export const generateImageVariantsProcedure = publicProcedure
     return result
   })
 
-export const generateOptimizedPromptProcedure = publicProcedure
+export const generateOptimizedPromptProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/visual-optimize-prompt" })
   .input(z.object({
     productName: z.string(),

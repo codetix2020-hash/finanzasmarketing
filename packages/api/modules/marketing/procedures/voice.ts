@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { publicProcedure } from '../../../orpc/procedures'
+import { protectedProcedure } from '../../../orpc/procedures'
 import { generateVoiceover, generateVideoScript, generateScriptAndVoice } from '../services/voice-agent'
 
-export const generateVoiceoverProcedure = publicProcedure
+export const generateVoiceoverProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/voice-generate" })
   .input(z.object({
     organizationId: z.string(),
@@ -17,7 +17,7 @@ export const generateVoiceoverProcedure = publicProcedure
     return result
   })
 
-export const generateVideoScriptProcedure = publicProcedure
+export const generateVideoScriptProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/voice-script" })
   .input(z.object({
     organizationId: z.string(),
@@ -33,7 +33,7 @@ export const generateVideoScriptProcedure = publicProcedure
     return { success: true, script: result }
   })
 
-export const generateScriptAndVoiceProcedure = publicProcedure
+export const generateScriptAndVoiceProcedure = protectedProcedure
   .route({ method: "POST", path: "/marketing/voice-complete" })
   .input(z.object({
     organizationId: z.string(),
