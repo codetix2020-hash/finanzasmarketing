@@ -1,7 +1,8 @@
 import { withContentCollections } from "@content-collections/next";
 // @ts-expect-error - PrismaPlugin is not typed
 import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
-import * as Sentry, {withSentryConfig} from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import nextIntlPlugin from "next-intl/plugin";
 
