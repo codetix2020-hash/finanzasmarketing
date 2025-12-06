@@ -36,6 +36,16 @@ export const app = new Hono()
 
 		const isRpc = c.req.path.includes("/rpc/");
 
+		// Logging para diagnóstico
+		if (isRpc) {
+			logger.log("📡 [oRPC] Request received", {
+				path: c.req.path,
+				method: c.req.method,
+				isRpc,
+				hasHeaders: !!context.headers,
+			});
+		}
+
 		const handler = isRpc ? rpcHandler : openApiHandler;
 
 		const prefix = isRpc ? "/api/rpc" : "/api";
@@ -44,6 +54,15 @@ export const app = new Hono()
 			prefix,
 			context,
 		});
+
+		if (isRpc) {
+			logger.log("📡 [oRPC] Response", {
+				matched,
+				status: response.status,
+				statusText: response.statusText,
+				path: c.req.path,
+			});
+		}
 
 		if (matched) {
 			return c.newResponse(response.body, response);

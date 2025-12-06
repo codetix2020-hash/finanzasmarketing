@@ -7,11 +7,26 @@ export const publicProcedure = os.$context<{
 
 export const protectedProcedure = publicProcedure.use(
 	async ({ context, next }) => {
+		// Logging para diagnóstico
+		const cookieHeader = context.headers.get("cookie");
+		logger.log("🔐 [AUTH] Checking authentication", {
+			hasHeaders: !!context.headers,
+			hasCookie: !!cookieHeader,
+			cookiePreview: cookieHeader?.substring(0, 50),
+		});
+
 		const session = await auth.api.getSession({
 			headers: context.headers,
 		});
 
+		logger.log("🔐 [AUTH] Session result", {
+			hasSession: !!session,
+			hasUser: !!session?.user,
+			userId: session?.user?.id,
+		});
+
 		if (!session) {
+			logger.error("❌ [AUTH] UNAUTHORIZED: No session found");
 			throw new ORPCError("UNAUTHORIZED");
 		}
 
