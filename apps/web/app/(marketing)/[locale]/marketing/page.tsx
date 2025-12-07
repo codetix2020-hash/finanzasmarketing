@@ -73,20 +73,25 @@ export default function MarketingDashboard() {
   const [costs, setCosts] = useState<ApiCosts | null>(null)
 
   const fetchData = async (endpoint: string, body: any) => {
+    const url = `/api/marketing/${endpoint}`
     try {
-      const response = await fetch(`/api/marketing/${endpoint}`, {
+      console.log(`🔵 Fetching: ${url}`, body)
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(body)
       })
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
+        const errorText = await response.text()
+        console.error(`❌ HTTP ${response.status} for ${url}:`, errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
       }
       const data = await response.json()
+      console.log(`✅ Response from ${url}:`, { success: data.success, hasData: !!data.products || !!data.content || !!data.status })
       return data
     } catch (error) {
-      console.error(`Error fetching ${endpoint}:`, error)
+      console.error(`❌ Error fetching ${url}:`, error)
       return null
     }
   }
@@ -96,29 +101,45 @@ export default function MarketingDashboard() {
     try {
       const [statusRes, productsRes, contentRes, imagesRes, decisionsRes, costsRes] = 
         await Promise.all([
-          fetchData('dashboard-status', { organizationId: ORGANIZATION_ID }),
-          fetchData('dashboard-products', { organizationId: ORGANIZATION_ID }),
-          fetchData('dashboard-content', { organizationId: ORGANIZATION_ID }),
-          fetchData('dashboard-images', { organizationId: ORGANIZATION_ID }),
-          fetchData('dashboard-decisions', { organizationId: ORGANIZATION_ID }),
-          fetchData('dashboard-costs', { organizationId: ORGANIZATION_ID })
+          fetchData('dashboard/status', { organizationId: ORGANIZATION_ID }),
+          fetchData('dashboard/products', { organizationId: ORGANIZATION_ID }),
+          fetchData('dashboard/content', { organizationId: ORGANIZATION_ID }),
+          fetchData('dashboard/images', { organizationId: ORGANIZATION_ID }),
+          fetchData('dashboard/decisions', { organizationId: ORGANIZATION_ID }),
+          fetchData('dashboard/costs', { organizationId: ORGANIZATION_ID })
         ])
 
+      // Debug logging
+      console.log('📊 Dashboard Data Loaded:', {
+        statusRes,
+        productsRes,
+        productsCount: productsRes?.products?.length || 0,
+        contentRes: contentRes ? { count: contentRes.content?.length || 0 } : null,
+        imagesRes: imagesRes ? { count: imagesRes.images?.length || 0 } : null,
+        decisionsRes: decisionsRes ? { count: decisionsRes.decisions?.length || 0 } : null,
+        costsRes: costsRes ? { hasCosts: !!costsRes.costs } : null
+      })
+
       if (statusRes?.status) setStatus(statusRes.status)
-      if (productsRes?.products) setProducts(productsRes.products)
+      if (productsRes?.products) {
+        console.log('✅ Setting products:', productsRes.products.length)
+        setProducts(productsRes.products)
+      } else {
+        console.warn('⚠️ No products in response:', productsRes)
+      }
       if (contentRes?.content) setContent(contentRes.content)
       if (imagesRes?.images) setImages(imagesRes.images)
       if (decisionsRes?.decisions) setDecisions(decisionsRes.decisions)
       if (costsRes?.costs) setCosts(costsRes.costs)
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('❌ Error loading data:', error)
     }
     setLoading(false)
   }
 
   const togglePause = async () => {
     if (!status) return
-    const result = await fetchData('dashboard-toggle-pause', {
+    const result = await fetchData('dashboard/toggle-pause', {
       organizationId: ORGANIZATION_ID,
       pause: !status.isPaused
     })
