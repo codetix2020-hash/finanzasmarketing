@@ -1,4 +1,7 @@
 import { prisma } from '@repo/database'
+import { ContentAgent } from '../../modules/marketing/services/content-agent'
+import { generateImage } from '../../modules/marketing/services/visual-agent'
+import { generateVoiceover } from '../../modules/marketing/services/voice-agent'
 
 /**
  * Procesa jobs de generación de contenido pendientes
@@ -122,26 +125,32 @@ export async function processContentJobs() {
 
 // Funciones auxiliares para cada tipo de job
 async function processContentGeneration(job: any) {
-  // TODO: Integrar con content-agent.ts
   const input = job.input as any
   console.log(`  📝 Generando contenido: ${input.type} para ${input.platform}`)
   
-  // Actualizar progreso
   await prisma.marketingJob.update({
     where: { id: job.id },
     data: { progress: 50 }
   })
   
-  // Por ahora retorna placeholder - integrar con ContentAgent
+  const contentAgent = new ContentAgent()
+  const result = await contentAgent.generateContent({
+    type: input.type || 'blog_post',
+    topic: input.topic || job.product?.name || 'Marketing content',
+    tone: input.tone || 'professional',
+    length: input.length || 'medium',
+    organizationId: job.organizationId
+  })
+  
   return {
-    message: 'Content generation completed',
+    success: true,
+    content: result,
     type: input.type,
     platform: input.platform
   }
 }
 
 async function processImageGeneration(job: any) {
-  // TODO: Integrar con visual-agent.ts cuando exista
   const input = job.input as any
   console.log(`  🎨 Generando imagen: ${input.prompt?.substring(0, 50)}...`)
   
@@ -150,8 +159,17 @@ async function processImageGeneration(job: any) {
     data: { progress: 50 }
   })
   
+  const result = await generateImage({
+    prompt: input.prompt || `Marketing image for ${job.product?.name || 'product'}`,
+    purpose: input.purpose || 'social_post',
+    aspectRatio: input.aspectRatio || '1:1',
+    organizationId: job.organizationId,
+    productId: job.productId || undefined
+  })
+  
   return {
-    message: 'Image generation placeholder',
+    success: true,
+    image: result,
     prompt: input.prompt
   }
 }
@@ -173,7 +191,6 @@ async function processEmailSequence(job: any) {
 }
 
 async function processVoiceGeneration(job: any) {
-  // TODO: Integrar con voice-agent.ts cuando exista
   const input = job.input as any
   console.log(`  🎙️ Generando voz: ${input.script?.substring(0, 50)}...`)
   
@@ -182,8 +199,16 @@ async function processVoiceGeneration(job: any) {
     data: { progress: 50 }
   })
   
+  const result = await generateVoiceover({
+    script: input.script || '',
+    voiceProfile: input.voiceProfile || 'professional',
+    organizationId: job.organizationId,
+    productId: job.productId || undefined
+  })
+  
   return {
-    message: 'Voice generation placeholder',
+    success: true,
+    voice: result,
     script: input.script
   }
 }

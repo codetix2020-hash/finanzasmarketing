@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@repo/database'
 import { searchMemory, saveMemory } from './embeddings'
+import { ContentAgent } from '../../modules/marketing/services/content-agent'
+import { generateImage } from '../../modules/marketing/services/visual-agent'
 
 let anthropicClient: Anthropic | null = null
 
@@ -151,10 +153,85 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
 
   console.log(`✅ Orquestación marketing completada: ${decision.contentPlan?.length || 0} contenidos planificados`)
 
+  // 8. EJECUTAR ACCIONES AUTOMÁTICAMENTE (solo las de alta prioridad)
+  const executedActions = []
+  const contentAgent = new ContentAgent()
+  
+  for (const item of (decision.contentPlan || []).slice(0, 3)) { // Ejecutar máximo 3 acciones inmediatas
+    if (item.priority === 'high') {
+      try {
+        console.log(`🎯 Ejecutando acción automática: ${item.type} - ${item.topic}`)
+        
+        if (item.type === 'blog' || item.type === 'post' || item.type === 'email') {
+          const contentResult = await contentAgent.generateContent({
+            type: item.type === 'blog' ? 'blog_post' : item.type === 'email' ? 'email' : 'social_post',
+            topic: item.topic,
+            tone: 'professional',
+            length: 'medium',
+            organizationId: product.organizationId
+          })
+          
+          // Guardar contenido generado
+          await prisma.marketingContent.create({
+            data: {
+              organizationId: product.organizationId,
+              productId: product.id,
+              type: item.type === 'blog' ? 'BLOG' : item.type === 'email' ? 'EMAIL' : 'POST',
+              platform: item.platform || 'web',
+              title: contentResult.title || item.topic,
+              content: contentResult.content,
+              status: 'DRAFT',
+              metadata: {
+                generatedBy: 'orchestrator',
+                planItem: item,
+                metadata: contentResult.metadata
+              }
+            }
+          })
+          
+          executedActions.push({ type: 'content', success: true, topic: item.topic })
+        } else if (item.type === 'image' || item.type === 'carousel') {
+          const imageResult = await generateImage({
+            prompt: `${item.topic}. ${item.angle || ''}. Marketing image for ${product.name}`,
+            purpose: 'social_post',
+            aspectRatio: '1:1',
+            organizationId: product.organizationId,
+            productId: product.id
+          })
+          
+          executedActions.push({ type: 'image', success: true, topic: item.topic })
+        }
+      } catch (error) {
+        console.error(`❌ Error ejecutando acción ${item.type}:`, error)
+        executedActions.push({ type: item.type, success: false, error: String(error) })
+      }
+    }
+  }
+
+  // 9. Notificar por Slack si está configurado
+  if (process.env.SLACK_WEBHOOK_URL && executedActions.length > 0) {
+    try {
+      await fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `🤖 MarketingOS ha orquestado marketing para *${product.name}*\n` +
+                `📊 Contenidos planificados: ${decision.contentPlan?.length || 0}\n` +
+                `✅ Acciones ejecutadas: ${executedActions.filter(a => a.success).length}\n` +
+                `📝 Estrategia: ${decision.insights?.[0] || 'Ver dashboard'}`
+        })
+      })
+    } catch (e) {
+      console.log('Slack notification failed:', e)
+    }
+  }
+
   return {
     productId,
     productName: product.name,
-    decision
+    decision,
+    executedActions,
+    orchestratedAt: new Date().toISOString()
   }
 }
 

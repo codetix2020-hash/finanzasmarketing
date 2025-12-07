@@ -143,4 +143,7 @@ export const marketingRouter = publicProcedure.router({
 	orchestrationProduct,
 	orchestrationSaveMemory,
 	orchestrationSearchMemory,
+	cronOrchestration,
+	cronJobProcessor,
+	cronProcessInbox,
 });

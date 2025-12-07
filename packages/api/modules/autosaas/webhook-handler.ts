@@ -2,6 +2,7 @@ import { prisma } from '@repo/database'
 import { saveMemory } from '../../src/lib/ai/embeddings'
 import { analyzeCompetitors } from '../marketing/services/competitor-analyzer'
 import { orchestrateLaunch } from '../marketing/services/launch-orchestrator'
+import { orchestrateProduct } from '../../src/lib/ai/orchestrator'
 
 interface NewProductPayload {
   productId: string
@@ -65,7 +66,17 @@ export async function handleNewProduct(organizationId: string, payload: NewProdu
       console.error('  ⚠️ Error en análisis competitivo:', error)
     }
 
-    // 4. Si hay fecha de lanzamiento, programar
+    // 4. AUTOMÁTICAMENTE iniciar orquestación de marketing
+    console.log('  🤖 Iniciando orquestación automática de marketing...')
+    let orchestrationResult = null
+    try {
+      orchestrationResult = await orchestrateProduct(product.id)
+      console.log('  ✅ Orquestación completada')
+    } catch (error) {
+      console.error('  ⚠️ Error en orquestación:', error)
+    }
+
+    // 5. Si hay fecha de lanzamiento, programar
     if (payload.launchDate) {
       try {
         await orchestrateLaunch({
@@ -80,7 +91,25 @@ export async function handleNewProduct(organizationId: string, payload: NewProdu
       }
     }
 
-    // 5. Marcar mensaje como procesado
+    // 6. Notificar por Slack si está configurado
+    if (process.env.SLACK_WEBHOOK_URL) {
+      try {
+        await fetch(process.env.SLACK_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: `🤖 MarketingOS ha recibido nuevo producto: *${payload.name}*\n` +
+                  `📦 Producto ID: ${product.id}\n` +
+                  `✅ Orquestación: ${orchestrationResult ? 'Completada' : 'Error'}\n` +
+                  `📊 Acciones: Producto guardado, memoria poblada, análisis competitivo iniciado`
+          })
+        })
+      } catch (e) {
+        console.log('  ⚠️ Slack notification failed:', e)
+      }
+    }
+
+    // 7. Marcar mensaje como procesado
     await prisma.autoSaasInbox.updateMany({
       where: {
         organizationId,
@@ -97,7 +126,14 @@ export async function handleNewProduct(organizationId: string, payload: NewProdu
     return {
       success: true,
       productId: product.id,
-      actions: ['product_saved', 'memory_populated', 'competitor_analysis', payload.launchDate ? 'launch_scheduled' : null].filter(Boolean)
+      orchestration: orchestrationResult,
+      actions: [
+        'product_saved',
+        'memory_populated',
+        'competitor_analysis',
+        'orchestration_started',
+        payload.launchDate ? 'launch_scheduled' : null
+      ].filter(Boolean)
     }
 
   } catch (error) {
