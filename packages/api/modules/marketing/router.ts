@@ -41,6 +41,7 @@ import {
 import {
   contentGenerate,
   contentGenerateVariations,
+  contentVariations,
   contentOptimizeSEO
 } from './procedures/content';
 import {
