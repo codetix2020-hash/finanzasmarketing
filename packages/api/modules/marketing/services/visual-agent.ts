@@ -13,7 +13,10 @@ function getAnthropicClient() {
 }
 
 function getReplicateClient() {
-  if (!replicateClient && process.env.REPLICATE_API_TOKEN) {
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return null;
+  }
+  if (!replicateClient) {
     replicateClient = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
   }
   return replicateClient
@@ -51,16 +54,7 @@ export async function generateImage(params: GenerateImageParams) {
 
   const replicate = getReplicateClient()
   if (!replicate) {
-    console.warn('⚠️ Replicate not configured, returning mock response')
-    return {
-      success: true,
-      imageUrl: 'https://via.placeholder.com/1024x1024?text=Image+Generated',
-      contentId: `mock_${Date.now()}`,
-      dimensions: ASPECT_RATIOS[params.aspectRatio || '1:1'],
-      prompt: params.prompt,
-      mock: true,
-      message: 'Replicate not configured, returning mock response'
-    }
+    throw new Error('REPLICATE_API_TOKEN not configured')
   }
 
   const { organizationId, productId, prompt, purpose, aspectRatio = '1:1' } = params

@@ -47,7 +47,9 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
   console.log('🎙️ Generando voiceover de marketing...')
 
   const apiKey = process.env.ELEVENLABS_API_KEY
-  if (!apiKey) throw new Error('ElevenLabs not configured')
+  if (!apiKey) {
+    throw new Error('ELEVENLABS_API_KEY not configured')
+  }
 
   const { organizationId, productId, script, voiceProfile, language = 'en' } = params
   const profile = VOICE_PROFILES[voiceProfile]

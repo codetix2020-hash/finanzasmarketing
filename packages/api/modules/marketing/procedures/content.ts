@@ -24,19 +24,24 @@ export const contentGenerate = publicProcedure
         content,
         generatedAt: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating content:', error);
-      return {
-        success: true,
-        content: {
-          title: `Mock ${input.type} about ${input.topic}`,
-          body: `This is a mock ${input.type} about ${input.topic}. The content generation service is not configured.`,
-          excerpt: `Mock excerpt for ${input.topic}`
-        },
-        generatedAt: new Date().toISOString(),
-        mock: true,
-        message: 'Service not configured, returning mock response'
-      };
+      const errorMessage = error?.message || 'Unknown error';
+      
+      // Solo devolver mock si es un error de configuración
+      if (errorMessage.includes('not configured') || errorMessage.includes('ANTHROPIC_API_KEY')) {
+        return {
+          success: false,
+          error: errorMessage,
+          content: null,
+          generatedAt: new Date().toISOString(),
+          mock: true,
+          message: 'Service not configured. Please set ANTHROPIC_API_KEY in environment variables.'
+        };
+      }
+      
+      // Para otros errores, devolver el error real
+      throw error;
     }
   });
 

@@ -27,12 +27,22 @@ export class ContentAgent {
   private openai: OpenAI;
 
   constructor() {
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+    
+    if (!anthropicKey) {
+      console.warn('⚠️ ANTHROPIC_API_KEY not configured - content generation will fail');
+    }
+    if (!openaiKey) {
+      console.warn('⚠️ OPENAI_API_KEY not configured - some features may fail');
+    }
+    
     this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || "",
+      apiKey: anthropicKey || "",
     });
     
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || "",
+      apiKey: openaiKey || "",
     });
   }
 
@@ -73,17 +83,8 @@ export class ContentAgent {
       };
     } catch (error) {
       console.error("Error generating content:", error);
-      
-      // Fallback
-      return {
-        content: `Contenido sobre: ${request.topic}`,
-        metadata: {
-          wordCount: 10,
-          readingTime: 1,
-          seoScore: 0,
-          keywords: request.keywords || [],
-        },
-      };
+      // Lanzar error en lugar de devolver mock - el handler lo manejará
+      throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

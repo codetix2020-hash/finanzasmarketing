@@ -20,16 +20,22 @@ export const visualGenerate = publicProcedure
       return result
     } catch (error: any) {
       console.error('Error generating image:', error)
-      // Devolver respuesta mock en caso de error
-      return {
-        success: true,
-        imageUrl: 'https://via.placeholder.com/1024x1024?text=Image+Generated',
-        contentId: `mock_${Date.now()}`,
-        dimensions: { width: 1024, height: 1024 },
-        prompt: input.prompt,
-        mock: true,
-        message: error?.message || 'Service not configured, returning mock response'
+      const errorMessage = error?.message || 'Unknown error';
+      
+      // Solo devolver mock si es un error de configuración
+      if (errorMessage.includes('not configured') || errorMessage.includes('REPLICATE_API_TOKEN')) {
+        return {
+          success: false,
+          error: errorMessage,
+          imageUrl: null,
+          contentId: null,
+          mock: true,
+          message: 'Service not configured. Please set REPLICATE_API_TOKEN in environment variables.'
+        };
       }
+      
+      // Para otros errores, devolver el error real
+      throw error;
     }
   })
 
