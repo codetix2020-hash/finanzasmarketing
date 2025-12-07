@@ -8,8 +8,15 @@ export const visualGenerate = publicProcedure
     organizationId: z.string(),
     productId: z.string().optional(),
     prompt: z.string(),
-    purpose: z.enum(['social_post', 'ad', 'landing_hero', 'blog_header', 'product_showcase']),
-    aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:5']).optional(),
+    purpose: z.union([
+      z.enum(['social_post', 'ad', 'landing_hero', 'blog_header', 'product_showcase']),
+      z.enum(['facebook_ad', 'social_post', 'blog_header']),
+      z.string()
+    ]),
+    aspectRatio: z.union([
+      z.enum(['1:1', '16:9', '9:16', '4:5']),
+      z.string()
+    ]).optional(),
     brandColors: z.array(z.string()).optional(),
     style: z.string().optional()
   }))

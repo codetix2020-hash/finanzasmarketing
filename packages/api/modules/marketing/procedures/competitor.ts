@@ -6,20 +6,33 @@ export const competitorAnalyze = publicProcedure
   .route({ method: "POST", path: "/marketing/competitor-analyze" })
   .input(z.object({
     organizationId: z.string(),
-    productId: z.string(),
-    competitors: z.array(z.string()).optional()
+    productId: z.string().optional(),
+    productName: z.string().optional(),
+    productDescription: z.string().optional(),
+    competitors: z.array(z.string()),
+    focusAreas: z.array(z.string()).optional()
   }))
   .output(z.any())
   .handler(async ({ input }) => {
     try {
-      const result = await analyzeCompetitors(input)
+      // Si no hay productId, crear un objeto con la info disponible
+      const analysisInput = {
+        organizationId: input.organizationId,
+        productId: input.productId || `mock-${input.productName?.toLowerCase().replace(/\s+/g, '-') || 'product'}`,
+        competitors: input.competitors
+      };
+      
+      const result = await analyzeCompetitors(analysisInput)
       return { success: true, analysis: result }
     } catch (error: any) {
       console.error('Error analyzing competitors:', error)
       return {
         success: true,
-        analysis: { competitors: [], insights: [] },
-        mock: true,
+        analysis: { 
+          competitors: input.competitors.map(c => ({ name: c, analysis: 'Mock analysis' })),
+          insights: [],
+          mock: true 
+        },
         message: error?.message || 'Service not configured'
       }
     }

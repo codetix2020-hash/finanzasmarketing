@@ -131,6 +131,7 @@ export const marketingRouter = publicProcedure.router({
 	analyticsWeeklyReport,
 	contentGenerate,
 	contentGenerateVariations,
+	contentVariations,
 	contentOptimizeSEO,
 	emailCreateCampaign,
 	emailSendCampaign,

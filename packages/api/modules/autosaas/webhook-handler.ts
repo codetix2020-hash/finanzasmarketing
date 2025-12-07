@@ -15,16 +15,19 @@ interface NewProductPayload {
 }
 
 // Manejar nuevo producto desde Auto-SaaS Builder
-export async function handleNewProduct(organizationId: string, payload: NewProductPayload) {
+export async function handleNewProduct(organizationId: string, payload: any) {
   console.log('🆕 WebhookHandler: handleNewProduct iniciado')
   console.log('🆕 OrganizationId:', organizationId)
   console.log('🆕 Payload:', JSON.stringify(payload, null, 2))
 
   try {
+    // Generar productId si no existe
+    const productId = payload.productId || `${payload.name?.toLowerCase().replace(/\s+/g, '-') || 'product'}-${Date.now()}`
+    
     console.log('🆕 Paso 1: Crear o actualizar producto en BD...')
     // 1. Crear o actualizar producto en BD
     const product = await prisma.saasProduct.upsert({
-      where: { id: payload.productId },
+      where: { id: productId },
       update: {
         name: payload.name,
         description: payload.description,
@@ -34,7 +37,7 @@ export async function handleNewProduct(organizationId: string, payload: NewProdu
         marketingEnabled: true
       },
       create: {
-        id: payload.productId,
+        id: productId,
         organizationId,
         name: payload.name,
         description: payload.description,

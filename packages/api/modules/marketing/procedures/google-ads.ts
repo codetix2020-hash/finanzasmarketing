@@ -11,15 +11,43 @@ import {
 
 export const googleAdsKeywordResearch = publicProcedure
   .route({ method: "POST", path: "/marketing/google-ads-keyword-research" })
-  .input(z.object({ productId: z.string() }))
+  .input(z.object({ 
+    organizationId: z.string(),
+    productId: z.string().optional(),
+    productName: z.string().optional(),
+    seedKeywords: z.array(z.string()),
+    language: z.string().optional(),
+    country: z.string().optional()
+  }))
   .handler(async ({ input }) => {
     try {
-      const result = await generateKeywordResearch(input.productId)
-      return { success: true, research: result }
+      let productId = input.productId;
+      if (!productId && input.productName) {
+        productId = `mock-${input.productName.toLowerCase().replace(/\s+/g, '-')}`;
+      }
+      
+      if (productId) {
+        const result = await generateKeywordResearch(productId)
+        return { success: true, keywords: result.keywords || [], research: result }
+      } else {
+        // Generar keywords mock basadas en seedKeywords
+        const keywords = input.seedKeywords.map(kw => ({
+          keyword: kw,
+          searchVolume: Math.floor(Math.random() * 10000),
+          competition: 'medium',
+          cpc: (Math.random() * 2 + 0.5).toFixed(2)
+        }));
+        return {
+          success: true,
+          keywords: keywords.map(k => k.keyword),
+          research: { keywords, mock: true }
+        };
+      }
     } catch (error: any) {
       console.error('Error generating keyword research:', error)
       return {
         success: true,
+        keywords: input.seedKeywords || [],
         research: { keywords: [], mock: true },
         message: error?.message || 'Service not configured'
       }
@@ -28,11 +56,38 @@ export const googleAdsKeywordResearch = publicProcedure
 
 export const googleAdsGenerateStrategy = publicProcedure
   .route({ method: "POST", path: "/marketing/google-ads-generate-strategy" })
-  .input(z.object({ productId: z.string() }))
+  .input(z.object({ 
+    organizationId: z.string(),
+    productId: z.string().optional(),
+    productName: z.string().optional(),
+    keywords: z.array(z.string()).optional(),
+    budget: z.number().optional(),
+    objective: z.string().optional()
+  }))
   .handler(async ({ input }) => {
     try {
-      const result = await generateGoogleAdsStrategy(input.productId)
-      return { success: true, strategy: result }
+      let productId = input.productId;
+      if (!productId && input.productName) {
+        productId = `mock-${input.productName.toLowerCase().replace(/\s+/g, '-')}`;
+      }
+      
+      if (productId) {
+        const result = await generateGoogleAdsStrategy(productId)
+        return { success: true, strategy: result }
+      } else {
+        // Generar estrategia mock
+        return {
+          success: true,
+          strategy: {
+            recommendations: [
+              `Keywords: ${(input.keywords || []).join(', ')}`,
+              `Budget: €${input.budget || 100}/day`,
+              `Objective: ${input.objective || 'leads'}`
+            ],
+            mock: true
+          }
+        };
+      }
     } catch (error: any) {
       console.error('Error generating Google strategy:', error)
       return {
