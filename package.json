@@ -2,7 +2,9 @@
 	"name": "supastarter-nextjs",
 	"private": true,
 	"scripts": {
-		"build": "dotenv -c -- turbo build",
+		"db:push": "pnpm --filter @repo/database push",
+		"db:generate": "pnpm --filter @repo/database generate",
+		"build": "pnpm db:push && dotenv -c -- turbo build",
 		"dev": "dotenv -c -- turbo dev --concurrency 15",
 		"type-check": "dotenv -c -- turbo type-check",
 		"typecheck": "turbo typecheck",
@@ -12,7 +14,8 @@
 		"check": "biome check",
 		"clean": "turbo clean",
 		"format": "biome format . --write",
-		"analyze": "pnpm lint && pnpm typecheck"
+		"analyze": "pnpm lint && pnpm typecheck",
+		"postinstall": "pnpm db:generate"
 	},
 	"engines": {
 		"node": ">=20"
