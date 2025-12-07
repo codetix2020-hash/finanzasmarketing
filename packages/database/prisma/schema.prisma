@@ -155,6 +155,8 @@ model Organization {
   marketingJobs        MarketingJob[]
   autoSaasInbox        AutoSaasInbox[]
   autoSaasOutbox       AutoSaasOutbox[]
+  apiUsageLogs         ApiUsageLog[]
+  marketingConfig      MarketingConfig?
 
   @@unique([slug])
   @@map("organization")
@@ -835,4 +837,33 @@ model AutoSaasOutbox {
   @@index([organizationId])
   @@index([sent])
   @@map("auto_saas_outbox")
+}
+
+model ApiUsageLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  apiName        String   // anthropic, openai, replicate, elevenlabs
+  endpoint       String?
+  tokens         Int?
+  cost           Float?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([apiName])
+  @@index([createdAt])
+  @@map("api_usage_log")
+}
+
+model MarketingConfig {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  isPaused       Boolean  @default(false)
+  settings       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("marketing_config")
 }

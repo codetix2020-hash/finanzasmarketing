@@ -89,6 +89,15 @@ import {
 	cronJobProcessor,
 	cronProcessInbox,
 } from './procedures/cron';
+import {
+	getProducts,
+	getGeneratedContent,
+	getGeneratedImages,
+	getMarketingDecisions,
+	getApiCosts,
+	getSystemStatus,
+	toggleSystemPause
+} from './procedures/dashboard-data';
 
 export const marketingRouter = publicProcedure.router({
 	guardsFinancial,
@@ -151,4 +160,13 @@ export const marketingRouter = publicProcedure.router({
 	cronOrchestration,
 	cronJobProcessor,
 	cronProcessInbox,
+	
+	// Dashboard data
+	dashboardProducts: getProducts,
+	dashboardContent: getGeneratedContent,
+	dashboardImages: getGeneratedImages,
+	dashboardDecisions: getMarketingDecisions,
+	dashboardCosts: getApiCosts,
+	dashboardStatus: getSystemStatus,
+	dashboardTogglePause: toggleSystemPause,
 });

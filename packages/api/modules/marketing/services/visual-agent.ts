@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import Replicate from 'replicate'
 import { prisma } from '@repo/database'
+import { trackApiUsage, calculateReplicateCost } from '../../../lib/track-api-usage'
 
 let anthropicClient: Anthropic | null = null
 let replicateClient: Replicate | null = null
@@ -111,6 +112,24 @@ export async function generateImage(params: GenerateImageParams) {
 
     const imageUrl = output[0]
     console.log('✅ Imagen generada:', imageUrl)
+
+    // Track API usage
+    const cost = calculateReplicateCost()
+    try {
+      await trackApiUsage({
+        organizationId: params.organizationId,
+        apiName: 'replicate',
+        endpoint: 'flux-schnell',
+        cost,
+        metadata: {
+          model: 'black-forest-labs/flux-schnell',
+          prompt: enhancedPrompt.substring(0, 100),
+          dimensions
+        }
+      })
+    } catch (trackError) {
+      console.warn('⚠️ Error tracking API usage:', trackError)
+    }
 
     // Intentar guardar en MarketingContent (opcional, no crítico)
     let contentId = `generated_${Date.now()}`

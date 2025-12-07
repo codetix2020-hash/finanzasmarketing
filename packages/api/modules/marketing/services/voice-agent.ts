@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@repo/database'
+import { trackApiUsage, calculateAnthropicCost, calculateElevenLabsCost } from '../../../lib/track-api-usage'
 
 let anthropicClient: Anthropic | null = null
 
@@ -88,6 +89,26 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
     const audioDataUrl = `data:audio/mpeg;base64,${audioBase64}`
 
     console.log('  ✅ Audio generado')
+
+    // Track API usage
+    const characterCount = optimizedScript.length
+    const cost = calculateElevenLabsCost(characterCount)
+    try {
+      await trackApiUsage({
+        organizationId,
+        apiName: 'elevenlabs',
+        endpoint: 'text-to-speech',
+        cost,
+        metadata: {
+          voiceId: profile.voiceId,
+          voiceProfile,
+          characters: characterCount,
+          model: 'eleven_multilingual_v2'
+        }
+      })
+    } catch (trackError) {
+      console.warn('⚠️ Error tracking API usage:', trackError)
+    }
 
     // Guardar en MarketingContent
     const content = await prisma.marketingContent.create({
@@ -181,6 +202,28 @@ Responde SOLO con JSON:
     max_tokens: 2000,
     messages: [{ role: 'user', content: prompt }]
   })
+
+  // Track API usage
+  const inputTokens = response.usage?.input_tokens || 0
+  const outputTokens = response.usage?.output_tokens || 0
+  const cost = calculateAnthropicCost(inputTokens, outputTokens)
+  try {
+    await trackApiUsage({
+      organizationId: params.organizationId,
+      apiName: 'anthropic',
+      endpoint: 'messages.create',
+      tokens: inputTokens + outputTokens,
+      cost,
+      metadata: {
+        model: 'claude-sonnet-4-20250514',
+        inputTokens,
+        outputTokens,
+        purpose: 'video_script_generation'
+      }
+    })
+  } catch (trackError) {
+    console.warn('⚠️ Error tracking API usage:', trackError)
+  }
 
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const result = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())

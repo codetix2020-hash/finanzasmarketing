@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
+import { trackApiUsage, calculateAnthropicCost } from '../../../lib/track-api-usage';
 
 export interface ContentRequest {
   type: 'blog_post' | 'social_post' | 'ad_copy' | 'email' | 'landing_page';
@@ -86,6 +87,30 @@ export class ContentAgent {
       
       console.log('🔵 Anthropic API response received');
       console.log('🔵 Response content type:', message.content[0]?.type);
+      
+      // Track API usage
+      const inputTokens = message.usage?.input_tokens || 0
+      const outputTokens = message.usage?.output_tokens || 0
+      const cost = calculateAnthropicCost(inputTokens, outputTokens)
+      
+      // Note: organizationId needs to be passed to generateContent
+      // For now, we'll track without it if not available
+      try {
+        await trackApiUsage({
+          organizationId: (request as any).organizationId || 'unknown',
+          apiName: 'anthropic',
+          endpoint: 'messages.create',
+          tokens: inputTokens + outputTokens,
+          cost,
+          metadata: {
+            model: 'claude-sonnet-4-20250514',
+            inputTokens,
+            outputTokens
+          }
+        })
+      } catch (trackError) {
+        console.warn('⚠️ Error tracking API usage:', trackError)
+      }
       
       const content = message.content[0];
       if (content.type !== "text") {

@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { prisma } from '@repo/database'
+import { trackApiUsage, calculateOpenAICost } from '../../lib/track-api-usage'
 
 let openaiClient: OpenAI | null = null
 
