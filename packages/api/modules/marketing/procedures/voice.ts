@@ -17,9 +17,13 @@ export const voiceGenerate = publicProcedure
       const result = await generateVoiceover(input)
       return result
     } catch (error: any) {
-      console.error('Error generating voiceover:', error)
+      console.error('🔴 Error generating voiceover in procedure:', error)
+      console.error('🔴 Error message:', error?.message || 'Unknown error')
+      console.error('🔴 Error stack:', error?.stack || 'No stack')
+      
       const errorMessage = error?.message || 'Unknown error';
       
+      // Si es un error de configuración
       if (errorMessage.includes('not configured') || errorMessage.includes('ELEVENLABS_API_KEY')) {
         return {
           success: false,
@@ -30,7 +34,23 @@ export const voiceGenerate = publicProcedure
         };
       }
       
-      throw error;
+      // Si es un error de la API de ElevenLabs, devolver error descriptivo sin lanzar 500
+      if (errorMessage.includes('ElevenLabs') || errorMessage.includes('Voice generation')) {
+        return {
+          success: false,
+          error: errorMessage,
+          audioUrl: null,
+          message: `ElevenLabs API error: ${errorMessage}. Please check your API key and account status.`
+        };
+      }
+      
+      // Para otros errores inesperados, devolver error descriptivo
+      return {
+        success: false,
+        error: errorMessage,
+        audioUrl: null,
+        message: `Voice generation failed: ${errorMessage}`
+      };
     }
   })
 

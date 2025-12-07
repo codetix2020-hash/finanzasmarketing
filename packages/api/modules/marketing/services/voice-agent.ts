@@ -48,6 +48,9 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
   console.log('🎙️ Generando voiceover de marketing...')
 
   const apiKey = process.env.ELEVENLABS_API_KEY
+  console.log('🎙️ ELEVENLABS_API_KEY exists:', !!apiKey)
+  console.log('🎙️ ELEVENLABS_API_KEY prefix:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT SET')
+  
   if (!apiKey) {
     throw new Error('ELEVENLABS_API_KEY not configured')
   }
@@ -60,27 +63,35 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
 
   console.log(`  📝 Script: ${optimizedScript.substring(0, 100)}...`)
   console.log(`  🎤 Perfil: ${voiceProfile}`)
+  console.log(`  🎤 Voice ID: ${profile.voiceId}`)
 
   try {
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey
-        },
-        body: JSON.stringify({
-          text: optimizedScript,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: profile.settings
-        })
-      }
-    )
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}`
+    console.log(`  🔵 Calling ElevenLabs API: ${url}`)
+    
+    const requestBody = {
+      text: optimizedScript,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: profile.settings
+    }
+    console.log(`  🔵 Request body length: ${JSON.stringify(requestBody).length} chars`)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    console.log(`  🔵 Response status: ${response.status} ${response.statusText}`)
 
     if (!response.ok) {
-      throw new Error(`ElevenLabs error: ${response.status}`)
+      const errorText = await response.text()
+      console.error(`  ❌ ElevenLabs API error: ${response.status} - ${errorText}`)
+      throw new Error(`ElevenLabs API error: ${response.status} - ${errorText.substring(0, 200)}`)
     }
 
     // Convertir a base64 para almacenamiento
@@ -141,9 +152,24 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
       voiceProfile
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error generando voiceover:', error)
-    throw error
+    console.error('❌ Error message:', error?.message || 'Unknown error')
+    console.error('❌ Error stack:', error?.stack || 'No stack')
+    console.error('❌ Error name:', error?.name || 'Unknown')
+    
+    // Si es un error de configuración, lanzarlo tal cual
+    if (error?.message?.includes('not configured')) {
+      throw error
+    }
+    
+    // Si es un error de la API, crear un error más descriptivo
+    if (error?.message?.includes('ElevenLabs')) {
+      throw new Error(`ElevenLabs service error: ${error.message}`)
+    }
+    
+    // Para otros errores, lanzar con contexto
+    throw new Error(`Voice generation failed: ${error?.message || 'Unknown error'}`)
   }
 }
 
