@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { orpcClient } from '@repo/web/modules/shared/lib/orpc-client'
 
 export default function MarketingOSDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -68,7 +69,7 @@ export default function MarketingOSDashboard() {
     }
   }
 
-  // Función mejorada para llamar endpoints
+  // Función mejorada para llamar endpoints usando orpcClient
   const callEndpoint = async (endpoint: string, params: any = {}) => {
     setLoading(endpoint)
     setResults(null)
@@ -82,50 +83,37 @@ export default function MarketingOSDashboard() {
       }
 
       // Log para debugging
-      console.log('Calling endpoint:', `/api/rpc/${endpoint}`, 'with body:', body)
+      console.log('Calling endpoint:', endpoint, 'with params:', body)
 
-      const response = await fetch(`/api/rpc/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(body)
-      })
-
-      console.log('Response status:', response.status, response.statusText)
-
-      // Leer el texto primero para manejar errores de JSON
-      const text = await response.text()
-      
-      let data: any
-      try {
-        // Intentar parsear como JSON
-        data = text ? JSON.parse(text) : {}
-      } catch (parseError) {
-        // Si no es JSON válido, crear un objeto de error
-        console.error('Error parsing JSON:', parseError, 'Response text:', text.substring(0, 200))
-        setError(`Error parsing response: ${text.substring(0, 100)}`)
-        setResults({ 
-          endpoint, 
-          error: { 
-            message: 'Invalid JSON response', 
-            rawResponse: text.substring(0, 500),
-            status: response.status,
-            statusText: response.statusText
-          }, 
-          success: false 
-        })
-        return
+      // Parsear el endpoint (ej: "marketing.visualGenerate" -> ["marketing", "visualGenerate"])
+      const parts = endpoint.split('.')
+      if (parts.length < 2) {
+        throw new Error(`Invalid endpoint format: ${endpoint}. Expected format: "module.procedure"`)
       }
-      
-      if (!response.ok) {
-        const errorMessage = data.error?.message || data.message || `Error ${response.status}: ${response.statusText}`
-        setError(errorMessage)
-        setResults({ endpoint, error: data.error || data, success: false })
-      } else {
-        setResults({ endpoint, data: data.result || data, success: true })
+
+      // Obtener el módulo y el procedure
+      const [module, ...procedureParts] = parts
+      const procedure = procedureParts.join('.')
+
+      // Acceder al cliente oRPC dinámicamente
+      const moduleClient = (orpcClient as any)[module]
+      if (!moduleClient) {
+        throw new Error(`Module "${module}" not found in orpcClient`)
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err)
+
+      const procedureFn = moduleClient[procedure]
+      if (!procedureFn || typeof procedureFn !== 'function') {
+        throw new Error(`Procedure "${procedure}" not found in module "${module}"`)
+      }
+
+      // Llamar al procedure
+      const result = await procedureFn(body)
+      
+      console.log('Response received:', result)
+      
+      setResults({ endpoint, data: result, success: true })
+    } catch (err: any) {
+      const errorMessage = err?.message || err?.toString() || 'Unknown error'
       console.error('Error calling endpoint:', endpoint, err)
       setError(errorMessage)
       setResults({ endpoint, error: errorMessage, success: false })
