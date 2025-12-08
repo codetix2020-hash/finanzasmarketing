@@ -20,7 +20,15 @@ import { MarketingLeadListRelationFilterObjectSchema as MarketingLeadListRelatio
 import { MarketingMemoryListRelationFilterObjectSchema as MarketingMemoryListRelationFilterObjectSchema } from './MarketingMemoryListRelationFilter.schema';
 import { MarketingJobListRelationFilterObjectSchema as MarketingJobListRelationFilterObjectSchema } from './MarketingJobListRelationFilter.schema';
 import { AutoSaasInboxListRelationFilterObjectSchema as AutoSaasInboxListRelationFilterObjectSchema } from './AutoSaasInboxListRelationFilter.schema';
-import { AutoSaasOutboxListRelationFilterObjectSchema as AutoSaasOutboxListRelationFilterObjectSchema } from './AutoSaasOutboxListRelationFilter.schema'
+import { AutoSaasOutboxListRelationFilterObjectSchema as AutoSaasOutboxListRelationFilterObjectSchema } from './AutoSaasOutboxListRelationFilter.schema';
+import { ApiUsageLogListRelationFilterObjectSchema as ApiUsageLogListRelationFilterObjectSchema } from './ApiUsageLogListRelationFilter.schema';
+import { MarketingConfigNullableScalarRelationFilterObjectSchema as MarketingConfigNullableScalarRelationFilterObjectSchema } from './MarketingConfigNullableScalarRelationFilter.schema';
+import { MarketingConfigWhereInputObjectSchema as MarketingConfigWhereInputObjectSchema } from './MarketingConfigWhereInput.schema';
+import { FinancialMetricListRelationFilterObjectSchema as FinancialMetricListRelationFilterObjectSchema } from './FinancialMetricListRelationFilter.schema';
+import { TransactionListRelationFilterObjectSchema as TransactionListRelationFilterObjectSchema } from './TransactionListRelationFilter.schema';
+import { FinanceActionListRelationFilterObjectSchema as FinanceActionListRelationFilterObjectSchema } from './FinanceActionListRelationFilter.schema';
+import { PredictionListRelationFilterObjectSchema as PredictionListRelationFilterObjectSchema } from './PredictionListRelationFilter.schema';
+import { AnomalyListRelationFilterObjectSchema as AnomalyListRelationFilterObjectSchema } from './AnomalyListRelationFilter.schema'
 
 const organizationwhereinputSchema = z.object({
   AND: z.union([z.lazy(() => OrganizationWhereInputObjectSchema), z.lazy(() => OrganizationWhereInputObjectSchema).array()]).optional(),
@@ -50,7 +58,14 @@ const organizationwhereinputSchema = z.object({
   marketingMemories: z.lazy(() => MarketingMemoryListRelationFilterObjectSchema).optional(),
   marketingJobs: z.lazy(() => MarketingJobListRelationFilterObjectSchema).optional(),
   autoSaasInbox: z.lazy(() => AutoSaasInboxListRelationFilterObjectSchema).optional(),
-  autoSaasOutbox: z.lazy(() => AutoSaasOutboxListRelationFilterObjectSchema).optional()
+  autoSaasOutbox: z.lazy(() => AutoSaasOutboxListRelationFilterObjectSchema).optional(),
+  apiUsageLogs: z.lazy(() => ApiUsageLogListRelationFilterObjectSchema).optional(),
+  marketingConfig: z.union([z.lazy(() => MarketingConfigNullableScalarRelationFilterObjectSchema), z.lazy(() => MarketingConfigWhereInputObjectSchema)]).optional(),
+  financialMetrics: z.lazy(() => FinancialMetricListRelationFilterObjectSchema).optional(),
+  transactions: z.lazy(() => TransactionListRelationFilterObjectSchema).optional(),
+  financeActions: z.lazy(() => FinanceActionListRelationFilterObjectSchema).optional(),
+  predictions: z.lazy(() => PredictionListRelationFilterObjectSchema).optional(),
+  anomalies: z.lazy(() => AnomalyListRelationFilterObjectSchema).optional()
 }).strict();
 export const OrganizationWhereInputObjectSchema: z.ZodType<Prisma.OrganizationWhereInput> = organizationwhereinputSchema as unknown as z.ZodType<Prisma.OrganizationWhereInput>;
 export const OrganizationWhereInputObjectZodSchema = organizationwhereinputSchema;

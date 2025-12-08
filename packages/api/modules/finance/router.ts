@@ -3,10 +3,7 @@ import { getOverview } from "./procedures/get-overview";
 import { predictMetrics } from "./procedures/predict-metrics";
 import { detectAnomalies } from "./procedures/detect-anomalies";
 import { getCohortAnalysis } from "./procedures/get-cohort-analysis";
-import {
-	calculateUnitEconomics,
-	simulateUnitEconomics,
-} from "./procedures/calculate-unit-economics";
+import { calculateUnitEconomics } from "./procedures/calculate-unit-economics";
 import { getBenchmarking } from "./procedures/get-benchmarking";
 import { analyzeSaas } from "./procedures/analyze-saas";
 import { executeAction } from "./procedures/execute-action";
@@ -17,9 +14,10 @@ export const financeRouter = publicProcedure.router({
 	detectAnomalies,
 	getCohortAnalysis,
 	calculateUnitEconomics,
-	simulateUnitEconomics,
 	getBenchmarking,
 	analyzeSaas,
 	executeAction,
 });
+
+export type FinanceRouter = typeof financeRouter;
 

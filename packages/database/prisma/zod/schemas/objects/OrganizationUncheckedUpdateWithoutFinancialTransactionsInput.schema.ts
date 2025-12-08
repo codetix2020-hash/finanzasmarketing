@@ -19,7 +19,14 @@ import { MarketingLeadUncheckedUpdateManyWithoutOrganizationNestedInputObjectSch
 import { MarketingMemoryUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as MarketingMemoryUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './MarketingMemoryUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
 import { MarketingJobUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as MarketingJobUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './MarketingJobUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
 import { AutoSaasInboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasInboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasInboxUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
-import { AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInput.schema'
+import { AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { ApiUsageLogUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as ApiUsageLogUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './ApiUsageLogUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { MarketingConfigUncheckedUpdateOneWithoutOrganizationNestedInputObjectSchema as MarketingConfigUncheckedUpdateOneWithoutOrganizationNestedInputObjectSchema } from './MarketingConfigUncheckedUpdateOneWithoutOrganizationNestedInput.schema';
+import { FinancialMetricUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as FinancialMetricUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './FinancialMetricUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { TransactionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as TransactionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './TransactionUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { FinanceActionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as FinanceActionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './FinanceActionUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { PredictionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as PredictionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './PredictionUncheckedUpdateManyWithoutOrganizationNestedInput.schema';
+import { AnomalyUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema as AnomalyUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AnomalyUncheckedUpdateManyWithoutOrganizationNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -45,7 +52,14 @@ const makeSchema = () => z.object({
   marketingMemories: z.lazy(() => MarketingMemoryUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
   marketingJobs: z.lazy(() => MarketingJobUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
   autoSaasInbox: z.lazy(() => AutoSaasInboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
-  autoSaasOutbox: z.lazy(() => AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional()
+  autoSaasOutbox: z.lazy(() => AutoSaasOutboxUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  apiUsageLogs: z.lazy(() => ApiUsageLogUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  marketingConfig: z.lazy(() => MarketingConfigUncheckedUpdateOneWithoutOrganizationNestedInputObjectSchema).optional(),
+  financialMetrics: z.lazy(() => FinancialMetricUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  transactions: z.lazy(() => TransactionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  financeActions: z.lazy(() => FinanceActionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  predictions: z.lazy(() => PredictionUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  anomalies: z.lazy(() => AnomalyUncheckedUpdateManyWithoutOrganizationNestedInputObjectSchema).optional()
 }).strict();
 export const OrganizationUncheckedUpdateWithoutFinancialTransactionsInputObjectSchema: z.ZodType<Prisma.OrganizationUncheckedUpdateWithoutFinancialTransactionsInput> = makeSchema() as unknown as z.ZodType<Prisma.OrganizationUncheckedUpdateWithoutFinancialTransactionsInput>;
 export const OrganizationUncheckedUpdateWithoutFinancialTransactionsInputObjectZodSchema = makeSchema();

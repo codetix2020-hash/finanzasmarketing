@@ -19,7 +19,14 @@ import { MarketingLeadUpdateManyWithoutOrganizationNestedInputObjectSchema as Ma
 import { MarketingMemoryUpdateManyWithoutOrganizationNestedInputObjectSchema as MarketingMemoryUpdateManyWithoutOrganizationNestedInputObjectSchema } from './MarketingMemoryUpdateManyWithoutOrganizationNestedInput.schema';
 import { MarketingJobUpdateManyWithoutOrganizationNestedInputObjectSchema as MarketingJobUpdateManyWithoutOrganizationNestedInputObjectSchema } from './MarketingJobUpdateManyWithoutOrganizationNestedInput.schema';
 import { AutoSaasInboxUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasInboxUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasInboxUpdateManyWithoutOrganizationNestedInput.schema';
-import { AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasOutboxUpdateManyWithoutOrganizationNestedInput.schema'
+import { AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema as AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AutoSaasOutboxUpdateManyWithoutOrganizationNestedInput.schema';
+import { ApiUsageLogUpdateManyWithoutOrganizationNestedInputObjectSchema as ApiUsageLogUpdateManyWithoutOrganizationNestedInputObjectSchema } from './ApiUsageLogUpdateManyWithoutOrganizationNestedInput.schema';
+import { MarketingConfigUpdateOneWithoutOrganizationNestedInputObjectSchema as MarketingConfigUpdateOneWithoutOrganizationNestedInputObjectSchema } from './MarketingConfigUpdateOneWithoutOrganizationNestedInput.schema';
+import { FinancialMetricUpdateManyWithoutOrganizationNestedInputObjectSchema as FinancialMetricUpdateManyWithoutOrganizationNestedInputObjectSchema } from './FinancialMetricUpdateManyWithoutOrganizationNestedInput.schema';
+import { TransactionUpdateManyWithoutOrganizationNestedInputObjectSchema as TransactionUpdateManyWithoutOrganizationNestedInputObjectSchema } from './TransactionUpdateManyWithoutOrganizationNestedInput.schema';
+import { FinanceActionUpdateManyWithoutOrganizationNestedInputObjectSchema as FinanceActionUpdateManyWithoutOrganizationNestedInputObjectSchema } from './FinanceActionUpdateManyWithoutOrganizationNestedInput.schema';
+import { PredictionUpdateManyWithoutOrganizationNestedInputObjectSchema as PredictionUpdateManyWithoutOrganizationNestedInputObjectSchema } from './PredictionUpdateManyWithoutOrganizationNestedInput.schema';
+import { AnomalyUpdateManyWithoutOrganizationNestedInputObjectSchema as AnomalyUpdateManyWithoutOrganizationNestedInputObjectSchema } from './AnomalyUpdateManyWithoutOrganizationNestedInput.schema'
 
 const makeSchema = () => z.object({
   id: z.union([z.string(), z.lazy(() => StringFieldUpdateOperationsInputObjectSchema)]).optional(),
@@ -45,7 +52,14 @@ const makeSchema = () => z.object({
   marketingMemories: z.lazy(() => MarketingMemoryUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
   marketingJobs: z.lazy(() => MarketingJobUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
   autoSaasInbox: z.lazy(() => AutoSaasInboxUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
-  autoSaasOutbox: z.lazy(() => AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema).optional()
+  autoSaasOutbox: z.lazy(() => AutoSaasOutboxUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  apiUsageLogs: z.lazy(() => ApiUsageLogUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  marketingConfig: z.lazy(() => MarketingConfigUpdateOneWithoutOrganizationNestedInputObjectSchema).optional(),
+  financialMetrics: z.lazy(() => FinancialMetricUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  transactions: z.lazy(() => TransactionUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  financeActions: z.lazy(() => FinanceActionUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  predictions: z.lazy(() => PredictionUpdateManyWithoutOrganizationNestedInputObjectSchema).optional(),
+  anomalies: z.lazy(() => AnomalyUpdateManyWithoutOrganizationNestedInputObjectSchema).optional()
 }).strict();
 export const OrganizationUpdateWithoutInvitationsInputObjectSchema: z.ZodType<Prisma.OrganizationUpdateWithoutInvitationsInput> = makeSchema() as unknown as z.ZodType<Prisma.OrganizationUpdateWithoutInvitationsInput>;
 export const OrganizationUpdateWithoutInvitationsInputObjectZodSchema = makeSchema();

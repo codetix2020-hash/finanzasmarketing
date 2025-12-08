@@ -2,20 +2,32 @@ import { protectedProcedure } from "../../../orpc/procedures";
 import { z } from "zod";
 import { ActionExecutor } from "../services/action-executor";
 
-const inputSchema = z.object({
-  type: z.enum(['slack', 'email', 'stripe_pricing', 'alert']),
-  params: z.record(z.string(), z.any()),
-  autoExecute: z.boolean().default(false),
-});
+const actionExecutor = new ActionExecutor();
 
 export const executeAction = protectedProcedure
-  .route({ method: "POST", path: "/execute-action" })
-  .input(inputSchema)
-  .output(z.any())
+  .route({ method: "POST", path: "/finance/execute-action" })
+  .input(z.object({
+    actionId: z.string(),
+  }))
+  .output(z.object({
+    success: z.boolean(),
+    result: z.any().optional(),
+    error: z.string().optional(),
+  }))
   .handler(async ({ input }) => {
-    const executor = new ActionExecutor();
-    const result = await executor.execute(input);
+    const { actionId } = input;
     
-    return result;
+    try {
+      const result = await actionExecutor.executeAction(actionId);
+      return {
+        success: true,
+        result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
   });
 

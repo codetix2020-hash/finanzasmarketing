@@ -19,7 +19,14 @@ import { MarketingLeadOrderByRelationAggregateInputObjectSchema as MarketingLead
 import { MarketingMemoryOrderByRelationAggregateInputObjectSchema as MarketingMemoryOrderByRelationAggregateInputObjectSchema } from './MarketingMemoryOrderByRelationAggregateInput.schema';
 import { MarketingJobOrderByRelationAggregateInputObjectSchema as MarketingJobOrderByRelationAggregateInputObjectSchema } from './MarketingJobOrderByRelationAggregateInput.schema';
 import { AutoSaasInboxOrderByRelationAggregateInputObjectSchema as AutoSaasInboxOrderByRelationAggregateInputObjectSchema } from './AutoSaasInboxOrderByRelationAggregateInput.schema';
-import { AutoSaasOutboxOrderByRelationAggregateInputObjectSchema as AutoSaasOutboxOrderByRelationAggregateInputObjectSchema } from './AutoSaasOutboxOrderByRelationAggregateInput.schema'
+import { AutoSaasOutboxOrderByRelationAggregateInputObjectSchema as AutoSaasOutboxOrderByRelationAggregateInputObjectSchema } from './AutoSaasOutboxOrderByRelationAggregateInput.schema';
+import { ApiUsageLogOrderByRelationAggregateInputObjectSchema as ApiUsageLogOrderByRelationAggregateInputObjectSchema } from './ApiUsageLogOrderByRelationAggregateInput.schema';
+import { MarketingConfigOrderByWithRelationInputObjectSchema as MarketingConfigOrderByWithRelationInputObjectSchema } from './MarketingConfigOrderByWithRelationInput.schema';
+import { FinancialMetricOrderByRelationAggregateInputObjectSchema as FinancialMetricOrderByRelationAggregateInputObjectSchema } from './FinancialMetricOrderByRelationAggregateInput.schema';
+import { TransactionOrderByRelationAggregateInputObjectSchema as TransactionOrderByRelationAggregateInputObjectSchema } from './TransactionOrderByRelationAggregateInput.schema';
+import { FinanceActionOrderByRelationAggregateInputObjectSchema as FinanceActionOrderByRelationAggregateInputObjectSchema } from './FinanceActionOrderByRelationAggregateInput.schema';
+import { PredictionOrderByRelationAggregateInputObjectSchema as PredictionOrderByRelationAggregateInputObjectSchema } from './PredictionOrderByRelationAggregateInput.schema';
+import { AnomalyOrderByRelationAggregateInputObjectSchema as AnomalyOrderByRelationAggregateInputObjectSchema } from './AnomalyOrderByRelationAggregateInput.schema'
 
 const makeSchema = () => z.object({
   id: SortOrderSchema.optional(),
@@ -46,7 +53,14 @@ const makeSchema = () => z.object({
   marketingMemories: z.lazy(() => MarketingMemoryOrderByRelationAggregateInputObjectSchema).optional(),
   marketingJobs: z.lazy(() => MarketingJobOrderByRelationAggregateInputObjectSchema).optional(),
   autoSaasInbox: z.lazy(() => AutoSaasInboxOrderByRelationAggregateInputObjectSchema).optional(),
-  autoSaasOutbox: z.lazy(() => AutoSaasOutboxOrderByRelationAggregateInputObjectSchema).optional()
+  autoSaasOutbox: z.lazy(() => AutoSaasOutboxOrderByRelationAggregateInputObjectSchema).optional(),
+  apiUsageLogs: z.lazy(() => ApiUsageLogOrderByRelationAggregateInputObjectSchema).optional(),
+  marketingConfig: z.lazy(() => MarketingConfigOrderByWithRelationInputObjectSchema).optional(),
+  financialMetrics: z.lazy(() => FinancialMetricOrderByRelationAggregateInputObjectSchema).optional(),
+  transactions: z.lazy(() => TransactionOrderByRelationAggregateInputObjectSchema).optional(),
+  financeActions: z.lazy(() => FinanceActionOrderByRelationAggregateInputObjectSchema).optional(),
+  predictions: z.lazy(() => PredictionOrderByRelationAggregateInputObjectSchema).optional(),
+  anomalies: z.lazy(() => AnomalyOrderByRelationAggregateInputObjectSchema).optional()
 }).strict();
 export const OrganizationOrderByWithRelationInputObjectSchema: z.ZodType<Prisma.OrganizationOrderByWithRelationInput> = makeSchema() as unknown as z.ZodType<Prisma.OrganizationOrderByWithRelationInput>;
 export const OrganizationOrderByWithRelationInputObjectZodSchema = makeSchema();

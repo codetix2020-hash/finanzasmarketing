@@ -16,7 +16,14 @@ import { MarketingLeadCreateNestedManyWithoutOrganizationInputObjectSchema as Ma
 import { MarketingMemoryCreateNestedManyWithoutOrganizationInputObjectSchema as MarketingMemoryCreateNestedManyWithoutOrganizationInputObjectSchema } from './MarketingMemoryCreateNestedManyWithoutOrganizationInput.schema';
 import { MarketingJobCreateNestedManyWithoutOrganizationInputObjectSchema as MarketingJobCreateNestedManyWithoutOrganizationInputObjectSchema } from './MarketingJobCreateNestedManyWithoutOrganizationInput.schema';
 import { AutoSaasInboxCreateNestedManyWithoutOrganizationInputObjectSchema as AutoSaasInboxCreateNestedManyWithoutOrganizationInputObjectSchema } from './AutoSaasInboxCreateNestedManyWithoutOrganizationInput.schema';
-import { AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema as AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema } from './AutoSaasOutboxCreateNestedManyWithoutOrganizationInput.schema'
+import { AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema as AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema } from './AutoSaasOutboxCreateNestedManyWithoutOrganizationInput.schema';
+import { ApiUsageLogCreateNestedManyWithoutOrganizationInputObjectSchema as ApiUsageLogCreateNestedManyWithoutOrganizationInputObjectSchema } from './ApiUsageLogCreateNestedManyWithoutOrganizationInput.schema';
+import { MarketingConfigCreateNestedOneWithoutOrganizationInputObjectSchema as MarketingConfigCreateNestedOneWithoutOrganizationInputObjectSchema } from './MarketingConfigCreateNestedOneWithoutOrganizationInput.schema';
+import { FinancialMetricCreateNestedManyWithoutOrganizationInputObjectSchema as FinancialMetricCreateNestedManyWithoutOrganizationInputObjectSchema } from './FinancialMetricCreateNestedManyWithoutOrganizationInput.schema';
+import { TransactionCreateNestedManyWithoutOrganizationInputObjectSchema as TransactionCreateNestedManyWithoutOrganizationInputObjectSchema } from './TransactionCreateNestedManyWithoutOrganizationInput.schema';
+import { FinanceActionCreateNestedManyWithoutOrganizationInputObjectSchema as FinanceActionCreateNestedManyWithoutOrganizationInputObjectSchema } from './FinanceActionCreateNestedManyWithoutOrganizationInput.schema';
+import { PredictionCreateNestedManyWithoutOrganizationInputObjectSchema as PredictionCreateNestedManyWithoutOrganizationInputObjectSchema } from './PredictionCreateNestedManyWithoutOrganizationInput.schema';
+import { AnomalyCreateNestedManyWithoutOrganizationInputObjectSchema as AnomalyCreateNestedManyWithoutOrganizationInputObjectSchema } from './AnomalyCreateNestedManyWithoutOrganizationInput.schema'
 
 const makeSchema = () => z.object({
   id: z.string().optional(),
@@ -42,7 +49,14 @@ const makeSchema = () => z.object({
   marketingMemories: z.lazy(() => MarketingMemoryCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
   marketingJobs: z.lazy(() => MarketingJobCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
   autoSaasInbox: z.lazy(() => AutoSaasInboxCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
-  autoSaasOutbox: z.lazy(() => AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema).optional()
+  autoSaasOutbox: z.lazy(() => AutoSaasOutboxCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  apiUsageLogs: z.lazy(() => ApiUsageLogCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  marketingConfig: z.lazy(() => MarketingConfigCreateNestedOneWithoutOrganizationInputObjectSchema).optional(),
+  financialMetrics: z.lazy(() => FinancialMetricCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  transactions: z.lazy(() => TransactionCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  financeActions: z.lazy(() => FinanceActionCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  predictions: z.lazy(() => PredictionCreateNestedManyWithoutOrganizationInputObjectSchema).optional(),
+  anomalies: z.lazy(() => AnomalyCreateNestedManyWithoutOrganizationInputObjectSchema).optional()
 }).strict();
 export const OrganizationCreateWithoutFinancialTransactionsInputObjectSchema: z.ZodType<Prisma.OrganizationCreateWithoutFinancialTransactionsInput> = makeSchema() as unknown as z.ZodType<Prisma.OrganizationCreateWithoutFinancialTransactionsInput>;
 export const OrganizationCreateWithoutFinancialTransactionsInputObjectZodSchema = makeSchema();
