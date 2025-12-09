@@ -6,7 +6,12 @@ import {
   generateWeeklyAndSchedule,
   generateAndPublishOptimized
 } from "@repo/api/modules/marketing/services/publer-service";
-import { generateWeeklyContent } from "@repo/api/modules/marketing/services/content-generator-v2";
+import { 
+  generateWeeklyContent,
+  generateABVariants,
+  generateCarousel,
+  generateEditorialCalendar
+} from "@repo/api/modules/marketing/services/content-generator-v2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -104,8 +109,47 @@ export async function POST(request: NextRequest) {
         };
         break;
 
+      case "calendar":
+        const weeks = params.weeks || 4;
+        const calendarStart = params.startDate ? new Date(params.startDate) : new Date();
+        const editorialCalendar = generateEditorialCalendar(calendarStart, weeks);
+        result = { 
+          success: true, 
+          calendar: editorialCalendar,
+          totalPosts: editorialCalendar.reduce((acc, week) => acc + week.posts.length, 0),
+          message: `Calendario editorial de ${weeks} semanas generado`
+        };
+        break;
+
+      case "carousel":
+        const carouselResult = await generateCarousel(
+          {
+            name: params.productName,
+            description: params.productDescription,
+            targetAudience: params.targetAudience,
+            usp: params.usp
+          },
+          params.tema || "tips",
+          params.slides || 5
+        );
+        result = { success: true, ...carouselResult };
+        break;
+
+      case "ab-test":
+        const abResult = await generateABVariants(
+          {
+            name: params.productName,
+            description: params.productDescription,
+            targetAudience: params.targetAudience,
+            usp: params.usp
+          },
+          params.tipo || "educativo"
+        );
+        result = { success: true, ...abResult };
+        break;
+
       default:
-        result = { success: false, error: "Invalid action. Use: get-accounts, publish, generate-and-publish, generate-weekly, generate-single, preview" };
+        result = { success: false, error: "Invalid action. Use: get-accounts, publish, generate-and-publish, generate-weekly, generate-single, preview, calendar, carousel, ab-test" };
     }
 
     return NextResponse.json(result, { headers: corsHeaders });

@@ -171,3 +171,129 @@ export const PLATFORM_RULES = {
   }
 };
 
+// MEJORES HORAS POR PLATAFORMA Y DÍA (España)
+export const BEST_POSTING_TIMES = {
+  instagram: {
+    lunes: ["09:00", "12:00", "19:00"],
+    martes: ["09:00", "13:00", "19:00"],
+    miercoles: ["09:00", "11:00", "19:00"],
+    jueves: ["09:00", "12:00", "19:00", "21:00"],
+    viernes: ["09:00", "13:00", "19:00"],
+    sabado: ["10:00", "11:00", "14:00"],
+    domingo: ["10:00", "12:00", "18:00"]
+  },
+  tiktok: {
+    lunes: ["07:00", "10:00", "22:00"],
+    martes: ["09:00", "18:00", "22:00"],
+    miercoles: ["07:00", "11:00", "22:00"],
+    jueves: ["09:00", "12:00", "19:00"],
+    viernes: ["17:00", "19:00", "21:00"],
+    sabado: ["11:00", "19:00", "21:00"],
+    domingo: ["08:00", "16:00", "19:00"]
+  }
+};
+
+// EMOJIS POR CATEGORÍA (para consistencia de marca)
+export const EMOJI_SETS = {
+  peluqueria: {
+    principales: ["✂️", "💇‍♀️", "💇‍♂️", "💈", "💅"],
+    positivos: ["✨", "🌟", "💫", "⭐", "🔥"],
+    acciones: ["👇", "📲", "🔗", "📌", "💬"],
+    tiempo: ["⏰", "📅", "🕐", "⚡", "🚀"],
+    dinero: ["💰", "💸", "🎁", "🏷️", "✅"]
+  },
+  general: {
+    check: ["✅", "☑️", "✔️"],
+    alert: ["⚠️", "🚨", "❗", "‼️"],
+    question: ["❓", "🤔", "💭"],
+    celebration: ["🎉", "🥳", "🎊", "👏"]
+  }
+};
+
+// PALABRAS PODEROSAS (copywriting)
+export const POWER_WORDS = {
+  urgencia: ["ahora", "hoy", "última", "inmediato", "ya", "rápido", "limitado"],
+  exclusividad: ["secreto", "exclusivo", "VIP", "único", "especial", "premium"],
+  beneficio: ["gratis", "ahorra", "gana", "aumenta", "mejora", "transforma", "descubre"],
+  emocion: ["increíble", "sorprendente", "impresionante", "brutal", "espectacular"],
+  confianza: ["probado", "garantizado", "verificado", "real", "auténtico", "profesional"],
+  numeros: ["100%", "3x", "10x", "millones", "#1", "primero"]
+};
+
+// FÓRMULAS DE COPYWRITING PROBADAS
+export const COPYWRITING_FORMULAS = {
+  PAS: {
+    nombre: "Problem-Agitate-Solution",
+    estructura: "Problema → Agitar el dolor → Solución",
+    ejemplo: "¿Pierdes clientes por no contestar? Cada llamada perdida = dinero perdido. ReservaFácil contesta 24/7."
+  },
+  AIDA: {
+    nombre: "Attention-Interest-Desire-Action",
+    estructura: "Atención → Interés → Deseo → Acción",
+    ejemplo: "⚠️ El 60% de peluquerías pierden clientes por teléfono. Descubre cómo evitarlo. Sistema automático. Link en bio."
+  },
+  BAB: {
+    nombre: "Before-After-Bridge",
+    estructura: "Antes (problema) → Después (resultado) → Puente (solución)",
+    ejemplo: "Antes: 20 llamadas al día. Después: 0 llamadas, mismas reservas. El puente: ReservaFácil."
+  },
+  FAB: {
+    nombre: "Features-Advantages-Benefits",
+    estructura: "Característica → Ventaja → Beneficio",
+    ejemplo: "Recordatorios WhatsApp (feature) → Clientes no olvidan (ventaja) → 60% menos cancelaciones (beneficio)"
+  },
+  "4Us": {
+    nombre: "Useful-Urgent-Unique-Ultra-specific",
+    estructura: "Útil + Urgente + Único + Ultra-específico",
+    ejemplo: "Peluquerías de Madrid: Sistema de reservas con WhatsApp incluido. Solo 10 plazas este mes."
+  }
+};
+
+// TIPOS DE CONTENIDO POR OBJETIVO
+export const CONTENT_CALENDAR = {
+  awareness: {
+    tipos: ["educativo", "problema_solucion", "mitos", "estadisticas"],
+    frecuencia: "40% del contenido",
+    objetivo: "Que te conozcan"
+  },
+  engagement: {
+    tipos: ["pregunta", "encuesta", "reto", "detras_camaras", "meme"],
+    frecuencia: "30% del contenido", 
+    objetivo: "Que interactúen"
+  },
+  conversion: {
+    tipos: ["testimonio", "caso_exito", "oferta", "demo", "comparativa"],
+    frecuencia: "20% del contenido",
+    objetivo: "Que compren"
+  },
+  retention: {
+    tipos: ["tips_avanzados", "actualizaciones", "comunidad", "agradecimiento"],
+    frecuencia: "10% del contenido",
+    objetivo: "Que se queden"
+  }
+};
+
+// Templates de respuestas a comentarios comunes
+export const COMMENT_RESPONSES = {
+  precio: [
+    "¡Hola! Tenemos planes desde gratis 🎁 Te cuento por DM?",
+    "Precio súper accesible 💪 Escríbenos y te damos todos los detalles",
+    "¡Muy económico! DM y te paso la info completa 📩"
+  ],
+  info: [
+    "¡Claro! Te escribo por DM con toda la info 📩",
+    "Te cuento por privado 👋",
+    "DM enviado! Mira tu bandeja 💬"
+  ],
+  positivo: [
+    "¡Gracias! 🙌 Nos alegra que te guste",
+    "¡Mil gracias! 💜",
+    "🔥🔥🔥 Gracias por el apoyo!"
+  ],
+  duda: [
+    "Buena pregunta! Te respondemos por DM 📩",
+    "Te lo explicamos mejor por privado 👋",
+    "DM y te sacamos todas las dudas!"
+  ]
+};
+
