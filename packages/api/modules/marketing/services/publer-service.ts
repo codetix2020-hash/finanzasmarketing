@@ -118,20 +118,34 @@ export async function publishToSocial(params: {
     const accountIds = targetAccounts.map((a: any) => a.id).filter(Boolean);
     console.log("🔑 Account IDs:", accountIds);
 
-    // Formato correcto para Publer API
+    // Formato correcto para Publer API según documentación
+    // Endpoint: /api/v1/post/schedule/publish (publicar inmediatamente)
+    // o /api/v1/post/schedule (programar)
+    const endpoint = params.scheduleAt 
+      ? `${PUBLER_BASE_URL}/post/schedule`
+      : `${PUBLER_BASE_URL}/post/schedule/publish`;
+
+    // Construir el body según el formato de Publer
+    // Estructura: bulk { state, post: [{ type, text }], account: [{ id }] }
     const postData: any = {
-      text: params.content,
-      account_ids: accountIds,
+      bulk: {
+        state: params.scheduleAt ? "scheduled" : "published",
+        post: [{
+          type: params.imageUrl ? "photo" : "status",
+          text: params.content
+        }],
+        account: accountIds.map(id => ({ id }))
+      }
     };
 
     // Agregar imagen si existe
     if (params.imageUrl) {
-      postData.media_url = params.imageUrl;
+      postData.bulk.post[0].media = [{ url: params.imageUrl }];
     }
 
     // Programar si se especifica fecha
     if (params.scheduleAt) {
-      postData.scheduled_at = params.scheduleAt.toISOString();
+      postData.bulk.scheduled_at = params.scheduleAt.toISOString();
     }
 
     const headers: Record<string, string> = {
@@ -145,17 +159,17 @@ export async function publishToSocial(params: {
     }
     
     console.log("📦 Enviando a Publer:", JSON.stringify(postData, null, 2));
-    console.log("🔗 URL:", `${PUBLER_BASE_URL}/posts`);
+    console.log("🔗 URL:", endpoint);
 
     // Publer usa sistema asíncrono: POST devuelve 202 Accepted con job_id
-    const response = await fetch(`${PUBLER_BASE_URL}/posts`, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify(postData)
     });
 
     const responseText = await response.text();
-    console.log(`📨 Respuesta de Publer:`, response.status, responseText.substring(0, 200));
+    console.log(`📨 Respuesta de Publer:`, response.status, responseText.substring(0, 300));
 
     // Publer devuelve 202 Accepted para operaciones asíncronas
     if (response.status === 202 || response.ok) {
@@ -166,7 +180,7 @@ export async function publishToSocial(params: {
         result = { job_id: "unknown", message: responseText };
       }
 
-      // Si hay job_id, hacer polling (opcional, por ahora devolvemos éxito)
+      // Si hay job_id, el post está en cola
       if (result.job_id) {
         console.log("✅ Post en cola (job_id):", result.job_id);
         
