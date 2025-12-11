@@ -1,0 +1,17 @@
+name: Marketing Content Generation
+
+on:
+  schedule:
+    # Cada 6 horas: 08:00, 14:00, 20:00, 02:00 UTC
+    - cron: '0 8,14,20,2 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente
+
+jobs:
+  generate-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger content generation
+        run: |
+          curl -s -X GET "https://finanzas-production-8433.up.railway.app/api/cron/social-publish"
+          echo "Content generation triggered"
+
