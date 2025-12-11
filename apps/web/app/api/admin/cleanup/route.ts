@@ -29,12 +29,22 @@ export async function POST(request: NextRequest) {
         where: { productId: { in: idsToDelete } }
       });
 
-      // 3. Eliminar decisiones de esos productos
-      const deletedDecisions = await prisma.marketingDecision.deleteMany({
+      // 3. Eliminar campañas de esos productos
+      const deletedCampaigns = await prisma.marketingAdCampaign.deleteMany({
         where: { productId: { in: idsToDelete } }
       });
 
-      // 4. Eliminar los productos
+      // 4. Eliminar leads de esos productos
+      const deletedLeads = await prisma.marketingLead.deleteMany({
+        where: { productId: { in: idsToDelete } }
+      });
+
+      // 5. Eliminar jobs de esos productos
+      const deletedJobs = await prisma.marketingJob.deleteMany({
+        where: { productId: { in: idsToDelete } }
+      });
+
+      // 6. Eliminar los productos
       const deletedProducts = await prisma.saasProduct.deleteMany({
         where: { id: { in: idsToDelete } }
       });
@@ -47,7 +57,9 @@ export async function POST(request: NextRequest) {
           products: deletedProducts.count,
           productNames: productsToDelete.map(p => p.name),
           content: deletedContent.count,
-          decisions: deletedDecisions.count
+          campaigns: deletedCampaigns.count,
+          leads: deletedLeads.count,
+          jobs: deletedJobs.count
         },
         kept: keepProducts
       });
