@@ -104,6 +104,7 @@ import {
 	getSystemStatus,
 	toggleSystemPause
 } from './procedures/dashboard-data';
+import { cleanupTestContent } from './procedures/cleanup';
 
 export const marketingRouter = publicProcedure.router({
 	guardsFinancial,
@@ -179,4 +180,7 @@ export const marketingRouter = publicProcedure.router({
 	dashboardCosts: getApiCosts,
 	dashboardStatus: getSystemStatus,
 	dashboardTogglePause: toggleSystemPause,
+	
+	// Cleanup
+	cleanupTestContent,
 });
