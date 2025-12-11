@@ -119,11 +119,11 @@ export async function publishToSocial(params: {
     console.log("🔑 Account IDs:", accountIds);
 
     // Formato correcto para Publer API según documentación
-    // Endpoint: /api/v1/post/schedule/publish (publicar inmediatamente)
-    // o /api/v1/post/schedule (programar)
+    // Endpoint: /api/v1/posts/schedule/publish (publicar inmediatamente) - NOTA: es "posts" (plural)
+    // o /api/v1/posts/schedule (programar)
     const endpoint = params.scheduleAt 
-      ? `${PUBLER_BASE_URL}/post/schedule`
-      : `${PUBLER_BASE_URL}/post/schedule/publish`;
+      ? `${PUBLER_BASE_URL}/posts/schedule`
+      : `${PUBLER_BASE_URL}/posts/schedule/publish`;
 
     // Construir el body según el formato de Publer
     // Estructura: bulk { state, post: [{ type, text }], account: [{ id }] }
