@@ -158,3 +158,5 @@ https://finanzas-production-8433.up.railway.app/app/finance
 
 Deberías ver el dashboard financiero con las 4 métricas y la tabla de portfolio.
 
+
+

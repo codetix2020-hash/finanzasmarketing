@@ -125,27 +125,49 @@ export async function publishToSocial(params: {
       ? `${PUBLER_BASE_URL}/posts/schedule`
       : `${PUBLER_BASE_URL}/posts/schedule/publish`;
 
-    // Construir el body según el formato de Publer
-    // Estructura: bulk { state, post: [{ type, text }], account: [{ id }] }
+    // ✅ FIX: Construir body según formato correcto de Publer
+    // networks debe estar al MISMO NIVEL que posts, NO dentro
+    // Estructura correcta: bulk { state, networks: {...}, posts: [{ accounts: [...] }] }
     const postData: any = {
       bulk: {
         state: params.scheduleAt ? "scheduled" : "published",
-        post: [{
-          type: params.imageUrl ? "photo" : "status",
-          text: params.content
-        }],
-        account: accountIds.map(id => ({ id }))
+        
+        // networks: contenido por plataforma (mismo nivel que posts)
+        networks: {} as Record<string, any>,
+        
+        // posts: array con accounts
+        posts: [
+          {
+            accounts: accountIds.map(id => ({
+              id: id,
+              ...(params.scheduleAt && {
+                scheduled_at: params.scheduleAt.toISOString()
+              })
+            }))
+          }
+        ]
       }
     };
 
-    // Agregar imagen si existe
-    if (params.imageUrl) {
-      postData.bulk.post[0].media = [{ url: params.imageUrl }];
-    }
-
-    // Programar si se especifica fecha
-    if (params.scheduleAt) {
-      postData.bulk.scheduled_at = params.scheduleAt.toISOString();
+    // Construir networks según plataformas solicitadas
+    for (const platform of params.platforms) {
+      const platformKey = platform.toLowerCase();
+      
+      // Mapear nombres de plataforma a keys de Publer
+      let networkKey = platformKey;
+      if (platformKey === 'instagram') networkKey = 'instagram';
+      if (platformKey === 'facebook') networkKey = 'facebook';
+      if (platformKey === 'tiktok') networkKey = 'tiktok';
+      
+      postData.bulk.networks[networkKey] = {
+        type: params.imageUrl ? "photo" : "status",
+        text: params.content
+      };
+      
+      // Agregar media si existe
+      if (params.imageUrl) {
+        postData.bulk.networks[networkKey].media = [{ url: params.imageUrl }];
+      }
     }
 
     const headers: Record<string, string> = {
@@ -158,8 +180,12 @@ export async function publishToSocial(params: {
       headers["Publer-Workspace-Id"] = PUBLER_WORKSPACE_ID;
     }
     
-    console.log("📦 Enviando a Publer:", JSON.stringify(postData, null, 2));
-    console.log("🔗 URL:", endpoint);
+    // 🔥 LOGGING CRÍTICO PARA DEBUGGING
+    console.log('==========================================');
+    console.log('📤 PUBLER REQUEST BODY:');
+    console.log(JSON.stringify(postData, null, 2));
+    console.log('==========================================');
+    console.log('🔗 Endpoint:', endpoint);
 
     // Publer usa sistema asíncrono: POST devuelve 202 Accepted con job_id
     const response = await fetch(endpoint, {
@@ -169,7 +195,15 @@ export async function publishToSocial(params: {
     });
 
     const responseText = await response.text();
-    console.log(`📨 Respuesta de Publer:`, response.status, responseText.substring(0, 300));
+    
+    // 🔥 LOGGING RESPUESTA COMPLETA
+    console.log('==========================================');
+    console.log('📥 PUBLER RESPONSE:');
+    console.log('Status:', response.status);
+    console.log('Status Text:', response.statusText);
+    console.log('Headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Body:', responseText);
+    console.log('==========================================');
 
     // Publer devuelve 202 Accepted para operaciones asíncronas
     if (response.status === 202 || response.ok) {
