@@ -29,7 +29,7 @@
 	"scripts": {
 		"generate": "prisma generate --no-hints --schema=./prisma/schema.prisma",
 		"prepublishOnly": "pnpm run generate",
-		"push": "dotenv -c -e ../../.env -- prisma db push --skip-generate --schema=./prisma/schema.prisma",
+		"push": "dotenv -c -e ../../.env -- prisma db push --skip-generate --accept-data-loss --schema=./prisma/schema.prisma",
 		"migrate": "dotenv -c -e ../../.env -- prisma migrate dev --schema=./prisma/schema.prisma",
 		"studio": "dotenv -c -e ../../.env -- prisma studio --schema=./prisma/schema.prisma",
 		"create-user": "dotenv -c -e ../../.env -- tsx scripts/create-user.ts",
