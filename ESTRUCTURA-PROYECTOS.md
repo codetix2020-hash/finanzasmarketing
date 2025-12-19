@@ -248,6 +248,8 @@ finanzasmarketing/
 
 ## 📚 DOCUMENTACIÓN ADICIONAL
 
+- `.cursorrules` - ⭐ **Reglas automáticas para Cursor** (lee este archivo automáticamente)
+- `CURSOR-PROMPT-OPTIMIZADO.md` - ⭐ **Prompts mejorados para usar con Cursor**
 - `COMPARACION-FINANCE-vs-MARKETING.md` - Comparación técnica de módulos
 - `PROMPT-TEMPLATE-FINANZAS.md` - Template para trabajar en finanzas
 - `GUIA-PROMPTS-MARKETINGOS.md` - Guía para trabajar en marketing
@@ -307,7 +309,133 @@ Antes de hacer cualquier cambio, responde:
 
 ---
 
+## 🗺️ MAPA DE RUTAS DETALLADO
+
+### Rutas Frontend (apps/web/app/)
+
+**Ambos proyectos tienen la MISMA estructura de rutas:**
+
+```
+app/
+├── (marketing)/[locale]/     # Marketing público (requiere locale: /en/, /de/)
+│   ├── (home)/               # Página principal
+│   ├── blog/                 # Blog
+│   ├── docs/                 # Documentación
+│   ├── marketing/            # Páginas de marketing
+│   └── ...
+├── (saas)/                   # Aplicación SaaS
+│   ├── app/                  # Dashboard
+│   │   ├── (account)/        # Cuenta del usuario
+│   │   │   ├── finance/      # Dashboard de finanzas
+│   │   │   ├── chatbot/      # Chat con IA
+│   │   │   └── settings/     # Configuración
+│   │   └── (organizations)/  # Organizaciones
+│   ├── auth/                 # Autenticación
+│   └── ...
+└── api/                      # API Routes
+    ├── [[...rest]]/          # RPC Handler principal
+    ├── marketing/            # Endpoints de marketing
+    └── cron/                 # Cron jobs
+```
+
+**Diferencia clave:**
+- `finanzasmarketing/` tiene `middleware.ts` que redirige `/` a `/en/`
+- `finanzas/` NO tiene `middleware.ts` (puede dar 404 en raíz)
+
+### Rutas API (packages/api/modules/)
+
+**Estructura IDÉNTICA en ambos proyectos:**
+
+```
+modules/
+├── finance/          # ✅ Mismo código en ambos
+├── marketing/        # ⚠️ DIFERENTE (finanzasmarketing/ tiene Postiz)
+├── admin/            # ✅ Mismo código
+├── ai/               # ✅ Mismo código
+├── auth/             # ✅ Mismo código
+└── ...
+```
+
+**Diferencia crítica en Marketing:**
+
+| Archivo | `finanzas/` | `finanzasmarketing/` |
+|---------|-------------|---------------------|
+| `postiz-service.ts` | ❌ NO existe | ✅ Existe |
+| `publer-service.ts` | ✅ Existe | ✅ Existe (usa Postiz como default) |
+| `content-generator-v2.ts` | ⚠️ Básico | ✅ Avanzado |
+| `router.ts` | ⚠️ Menos procedures | ✅ Completo |
+
+### Endpoints RPC (oRPC)
+
+**Formato:** `/api/rpc/{module}.{procedure}`
+
+**Finance (igual en ambos):**
+- `finance.getOverview`
+- `finance.predictMetrics`
+- `finance.detectAnomalies`
+- `finance.getCohortAnalysis`
+- `finance.calculateUnitEconomics`
+- `finance.getBenchmarking`
+- `finance.analyzeSaas`
+- `finance.executeAction`
+
+**Marketing (diferente):**
+- `finanzas/`: Versión básica, menos endpoints
+- `finanzasmarketing/`: Versión completa con:
+  - `marketing.analytics.dashboard`
+  - `marketing.visual.generate`
+  - `marketing.content.generate`
+  - `marketing.social.publish` (usa Postiz)
+  - `marketing.crm.*`
+  - `marketing.email.*`
+  - `marketing.strategy.*`
+  - Y muchos más...
+
+### API Routes (Next.js)
+
+**Ambos tienen las mismas rutas:**
+- `/api/marketing/content-ready` - GET/POST
+- `/api/marketing/social-publish` - POST
+- `/api/cron/social-publish` - GET
+- `/api/admin/cleanup` - POST
+- `/api/docs-search` - GET
+
+**Diferencia:**
+- `finanzasmarketing/` usa Postiz en `/api/marketing/social-publish`
+- `finanzas/` usa solo Publer (o puede fallar)
+
+---
+
+## 🎯 RESUMEN DE DIFERENCIAS REALES
+
+### Código IDÉNTICO (mismo en ambos):
+- ✅ `packages/api/modules/finance/` - 100% igual
+- ✅ `packages/api/modules/admin/` - 100% igual
+- ✅ `packages/api/modules/ai/` - 100% igual
+- ✅ `packages/api/modules/auth/` - 100% igual
+- ✅ `apps/web/app/(saas)/` - 100% igual
+- ✅ `apps/web/app/(marketing)/` - Estructura igual, contenido puede variar
+- ✅ `next.config.ts` - 100% igual
+
+### Código DIFERENTE:
+- ⚠️ `packages/api/modules/marketing/` - `finanzasmarketing/` tiene Postiz y más features
+- ⚠️ `apps/web/middleware.ts` - Solo existe en `finanzasmarketing/`
+- ⚠️ `packages/api/modules/marketing/services/postiz-service.ts` - Solo en `finanzasmarketing/`
+
+### Archivos ÚNICOS en `finanzasmarketing/`:
+- `.cursorrules` - Reglas para Cursor
+- `CURSOR-PROMPT-OPTIMIZADO.md` - Prompts mejorados
+- `RAILWAY-POSTIZ-SETUP.md` - Setup de Postiz
+- `RAILWAY-CRON-CONFIGURACION.md` - Configuración de cron
+- `REPORTE-SISTEMA-MARKETING-SEMI-AUTOMATICO.md` - Reporte del sistema
+- `packages/api/modules/marketing/services/postiz-service.ts` - Servicio Postiz
+- `packages/api/test-postiz-integration.ts` - Tests de Postiz
+- `apps/web/middleware.ts` - Middleware de routing
+
+---
+
 **Última actualización:** 2025-01-XX  
 **Proyecto activo en producción:** `finanzasmarketing/`  
-**⚠️ RECUERDA: Son sistemas independientes - NO se tocan entre sí**
+**⚠️ RECUERDA: Son sistemas independientes - NO se tocan entre sí**  
+**⭐ Usa `.cursorrules` y `CURSOR-PROMPT-OPTIMIZADO.md` para trabajar con Cursor**
 
