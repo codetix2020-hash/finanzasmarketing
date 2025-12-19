@@ -1,0 +1,305 @@
+# 🎯 REGLAS PARA CURSOR - FINANZASMARKETING
+
+## ⚠️ IDENTIFICACIÓN CRÍTICA DEL PROYECTO
+
+**PROYECTO ACTUAL:** `finanzasmarketing/`
+**RUTA COMPLETA:** `C:\Users\bruno\OneDrive\Escritorio\carpeta\finanzasmarketing\`
+
+**⚠️ IMPORTANTE:** Este es un sistema INDEPENDIENTE de `finanzas/`. NO modificar `finanzas/` pensando que afecta a este proyecto.
+
+---
+
+## 📁 ESTRUCTURA DEL PROYECTO
+
+### Rutas Frontend (apps/web/app/)
+
+```
+apps/web/app/
+├── (marketing)/          # Rutas de marketing público
+│   └── [locale]/        # Rutas con locale (en, de)
+│       ├── (home)/      # Página principal
+│       ├── blog/        # Blog
+│       ├── docs/        # Documentación
+│       ├── marketing/   # Páginas de marketing
+│       └── ...
+├── (saas)/              # Rutas de aplicación SaaS
+│   ├── app/             # Dashboard principal
+│   │   ├── (account)/   # Cuenta del usuario
+│   │   │   ├── finance/ # Dashboard de finanzas
+│   │   │   ├── chatbot/ # Chat con IA
+│   │   │   └── settings/# Configuración
+│   │   └── (organizations)/ # Organizaciones
+│   ├── auth/            # Autenticación
+│   └── ...
+└── api/                 # API Routes
+    ├── [[...rest]]/     # RPC Handler principal
+    ├── marketing/       # Endpoints de marketing
+    └── cron/            # Cron jobs
+```
+
+### Rutas API (packages/api/modules/)
+
+```
+packages/api/modules/
+├── finance/             # ✅ Módulo de finanzas
+│   ├── procedures/      # Endpoints RPC
+│   └── services/        # Lógica de negocio
+├── marketing/           # ✅ Módulo de marketing (COMPLETO)
+│   ├── procedures/      # Endpoints RPC
+│   ├── services/        # Servicios (Postiz, Publer, etc.)
+│   └── utils/           # Utilidades
+├── admin/               # Administración
+├── ai/                  # Chat con IA
+├── auth/                # Autenticación
+└── ...
+```
+
+---
+
+## 🔌 ENDPOINTS API DISPONIBLES
+
+### RPC Endpoints (oRPC)
+
+**Formato:** `/api/rpc/{module}.{procedure}` o `/api/rpc/{module}.{submodule}.{procedure}`
+
+#### Finance Module
+- `finance.getOverview` - GET
+- `finance.predictMetrics` - GET
+- `finance.detectAnomalies` - GET
+- `finance.getCohortAnalysis` - GET
+- `finance.calculateUnitEconomics` - GET
+- `finance.getBenchmarking` - GET
+- `finance.analyzeSaas` - GET
+- `finance.executeAction` - POST
+
+#### Marketing Module
+- `marketing.analytics.dashboard` - GET
+- `marketing.visual.generate` - POST
+- `marketing.visual.variants` - POST
+- `marketing.content.generate` - POST
+- `marketing.social.publish` - POST
+- `marketing.social.schedule` - POST
+- `marketing.crm.*` - Varios endpoints CRM
+- `marketing.email.*` - Varios endpoints de email
+- `marketing.strategy.*` - Estrategias de marketing
+- `marketing.competitor.*` - Análisis de competidores
+- `marketing.facebookAds.*` - Facebook Ads
+- `marketing.googleAds.*` - Google Ads
+- `marketing.launch.*` - Lanzamientos
+- `marketing.orchestration.*` - Orquestación
+
+#### Otros Módulos
+- `admin.*` - Administración
+- `ai.*` - Chat con IA
+- `organizations.*` - Organizaciones
+- `payments.*` - Pagos
+- `users.*` - Usuarios
+
+### API Routes (Next.js)
+
+- `/api/marketing/content-ready` - GET/POST (contenido listo para publicar)
+- `/api/marketing/social-publish` - POST (publicar en redes sociales)
+- `/api/cron/social-publish` - GET (cron job para publicación automática)
+- `/api/admin/cleanup` - POST (limpieza de datos de prueba)
+- `/api/docs-search` - GET (búsqueda en documentación)
+- `/api/autosaas/webhook` - POST (webhook de AutoSaaS)
+
+---
+
+## 🛠️ SERVICIOS DE MARKETING
+
+### Postiz Service (⭐ ÚNICO EN FINANZASMARKETING)
+- **Archivo:** `packages/api/modules/marketing/services/postiz-service.ts`
+- **Propósito:** Integración con Postiz API para publicación social
+- **Métodos principales:**
+  - `publishToPostiz()` - Publicar contenido
+  - `getPostizAccounts()` - Obtener cuentas conectadas
+  - `schedulePost()` - Programar publicación
+
+### Publer Service
+- **Archivo:** `packages/api/modules/marketing/services/publer-service.ts`
+- **Propósito:** Integración con Publer API (fallback)
+- **Nota:** Postiz es el servicio por defecto
+
+### Otros Servicios
+- `content-agent.ts` - Generación de contenido con IA
+- `content-generator-v2.ts` - Generador avanzado de contenido
+- `social-agent.ts` - Agente de redes sociales
+- `visual-agent.ts` - Generación de imágenes
+- `voice-agent.ts` - Generación de audio
+- `crm-service.ts` - CRM
+- `analytics-service.ts` - Analytics
+- `strategy-agent.ts` - Estrategias de marketing
+
+---
+
+## 🚫 REGLAS CRÍTICAS
+
+### NO MODIFICAR (a menos que sea explícitamente necesario)
+
+1. **Base de datos compartida:**
+   - ⚠️ `packages/database/prisma/schema.prisma` puede estar compartido
+   - ⚠️ Verificar antes de modificar el schema
+   - ⚠️ Cambios en schema pueden afectar a `finanzas/` si comparten BD
+
+2. **Configuración base:**
+   - `config/index.ts` - Verificar si cambios afectan a ambos proyectos
+
+### ÁREAS SEGURAS PARA MODIFICAR
+
+✅ **Todo en `finanzasmarketing/` es seguro modificar:**
+- `apps/web/` - Frontend completo
+- `packages/api/modules/finance/` - Módulo de finanzas
+- `packages/api/modules/marketing/` - Módulo de marketing
+- `packages/api/modules/*` - Todos los módulos API
+- Configuraciones específicas del proyecto
+
+---
+
+## 🔍 IDENTIFICACIÓN DE ARCHIVOS
+
+### Cómo saber si estás en el proyecto correcto:
+
+1. **Ruta del archivo debe empezar con:**
+   ```
+   finanzasmarketing/
+   ```
+   NO `finanzas/`
+
+2. **Verificar en terminal:**
+   ```bash
+   pwd  # Debe mostrar: .../finanzasmarketing
+   ```
+
+3. **Verificar package.json:**
+   - Debe estar en `finanzasmarketing/package.json`
+   - NO en `finanzas/package.json`
+
+---
+
+## 📝 CONVENCIONES DE CÓDIGO
+
+### Estructura de Procedures (oRPC)
+
+```typescript
+// Ejemplo: packages/api/modules/marketing/procedures/content.ts
+import { protectedProcedure } from "../../../orpc/procedures";
+import { z } from "zod";
+
+export const generateContent = protectedProcedure
+  .route({ method: "POST", path: "/marketing/content/generate" })
+  .input(z.object({
+    // schema de input
+  }))
+  .output(z.object({
+    // schema de output
+  }))
+  .handler(async ({ input, context }) => {
+    // lógica aquí
+    return result;
+  });
+```
+
+### Estructura de Services
+
+```typescript
+// Ejemplo: packages/api/modules/marketing/services/postiz-service.ts
+export class PostizService {
+  async publishToPostiz(data: PublishData): Promise<PostizResponse> {
+    // implementación
+  }
+}
+```
+
+### Rutas Frontend
+
+```typescript
+// Ejemplo: apps/web/app/(saas)/app/(account)/finance/page.tsx
+"use client";
+
+export default function FinancePage() {
+  // componente
+}
+```
+
+---
+
+## 🎯 CUANDO TRABAJAR EN ESTE PROYECTO
+
+### Usa `finanzasmarketing/` para:
+
+✅ **Marketing:**
+- Cualquier feature de marketing
+- Integración con Postiz
+- Publicación social
+- Generación de contenido
+- CRM, Analytics, Ads
+
+✅ **Finanzas:**
+- Features de finanzas (igual que finanzas/)
+- Dashboard financiero
+- Métricas y análisis
+
+✅ **Despliegues:**
+- Producción (Railway)
+- Testing completo del sistema
+
+### NO uses `finanzasmarketing/` para:
+
+❌ Desarrollo aislado de finanzas sin marketing
+❌ Pruebas que no requieren marketing
+
+---
+
+## 🔗 INTEGRACIONES
+
+### Postiz API
+- **Variable de entorno:** `POSTIZ_API_KEY`
+- **Service:** `packages/api/modules/marketing/services/postiz-service.ts`
+- **Endpoints que usan:** `/api/marketing/social-publish`, `/api/cron/social-publish`
+
+### Publer API (Fallback)
+- **Variable de entorno:** `PUBLER_API_KEY`
+- **Service:** `packages/api/modules/marketing/services/publer-service.ts`
+
+### Base de Datos
+- **Prisma:** `packages/database/prisma/schema.prisma`
+- **⚠️ Puede estar compartida con `finanzas/`**
+
+---
+
+## 🚀 COMANDOS ÚTILES
+
+```bash
+# Desarrollo
+pnpm dev
+
+# Build
+pnpm build
+
+# Type check
+pnpm type-check
+
+# Database
+pnpm db:push      # Push schema a BD
+pnpm db:generate # Generar Prisma Client
+
+# Linting
+pnpm lint
+pnpm lint:fix
+```
+
+---
+
+## 📚 DOCUMENTACIÓN ADICIONAL
+
+- `ESTRUCTURA-PROYECTOS.md` - Comparación completa con `finanzas/`
+- `RAILWAY-POSTIZ-SETUP.md` - Configuración de Postiz
+- `GUIA-PROMPTS-MARKETINGOS.md` - Guía para trabajar en marketing
+- `SUPASTARTER-BLUEPRINT.md` - Arquitectura general
+
+---
+
+**Última actualización:** 2025-01-XX  
+**Proyecto:** `finanzasmarketing/` (Sistema completo - Finanzas + Marketing)
+
