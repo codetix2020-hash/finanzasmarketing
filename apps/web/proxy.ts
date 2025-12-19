@@ -9,13 +9,30 @@ const intlMiddleware = createMiddleware(routing);
 export default async function proxy(req: NextRequest) {
 	const { pathname } = req.nextUrl;
 
-	// Aplicar middleware de internacionalización solo para rutas con locale
-	if (pathname.startsWith("/en/") || pathname.startsWith("/es/")) {
-		return intlMiddleware(req);
+	// Permitir acceso directo a rutas que no necesitan locale (/app, /auth, /api, etc)
+	if (
+		pathname.startsWith("/app") ||
+		pathname.startsWith("/auth") ||
+		pathname.startsWith("/api") ||
+		pathname.startsWith("/image-proxy") ||
+		pathname.startsWith("/_next") ||
+		pathname.startsWith("/favicon") ||
+		pathname.startsWith("/icon") ||
+		pathname === "/sitemap.xml" ||
+		pathname === "/robots.txt"
+	) {
+		return NextResponse.next();
 	}
 
-	// Para todas las demás rutas (/app, /auth, etc), permitir acceso directo sin validación
-	return NextResponse.next();
+	// Para la raíz "/", redirigir al locale por defecto
+	if (pathname === "/") {
+		return NextResponse.redirect(
+			new URL(`/${routing.defaultLocale}`, req.url),
+		);
+	}
+
+	// Aplicar middleware de internacionalización para todas las demás rutas
+	return intlMiddleware(req);
 }
 
 export const config = {
