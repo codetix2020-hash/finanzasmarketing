@@ -36,6 +36,7 @@
 		"@repo/tsconfig": "workspace:*",
 		"@types/react": "19.2.5",
 		"encoding": "^0.1.13",
+		"tsx": "^4.20.6",
 		"typescript": "5.9.3"
 	},
 	"main": "./index.ts",
