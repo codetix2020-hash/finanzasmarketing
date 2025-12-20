@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { generateWeeklyContent, generateSinglePost, adaptToTikTok } from "./content-generator-v2";
+import { publishToPostiz } from "./postiz-service";
+import { publishToPostizMock, getPostizIntegrationsMock } from "./postiz-service-mock";
 
 const PUBLER_API_KEY = process.env.PUBLER_API_KEY;
 const PUBLER_WORKSPACE_ID = process.env.PUBLER_WORKSPACE_ID; // Opcional, requerido en algunos casos
@@ -21,6 +23,17 @@ interface PostResult {
 // Obtener cuentas conectadas
 export async function getPublerAccounts(): Promise<PublerAccount[]> {
   console.log("📱 Obteniendo cuentas de Publer...");
+  
+  // Usar MOCK si está activado
+  if (process.env.POSTIZ_USE_MOCK === "true") {
+    console.log("🔄 [MOCK] Usando integraciones mock");
+    const mockIntegrations = await getPostizIntegrationsMock();
+    return mockIntegrations.map(integration => ({
+      id: integration.id,
+      name: integration.name,
+      platform: integration.provider
+    }));
+  }
   
   if (!PUBLER_API_KEY) {
     console.error("❌ PUBLER_API_KEY no configurada");
@@ -57,26 +70,44 @@ export async function getPublerAccounts(): Promise<PublerAccount[]> {
 }
 
 // Publicar en redes sociales
+// Usa Postiz como default, Publer como fallback opcional
 export async function publishToSocial(params: {
   content: string;
   imageUrl?: string;
   platforms: string[]; // ["instagram", "tiktok"]
   scheduleAt?: Date;
+  usePublerOnly?: boolean; // Forzar uso de Publer (opcional)
 }): Promise<PostResult[]> {
   console.log("📤 Publicando en redes sociales...");
   console.log("  📝 Contenido:", params.content.substring(0, 50) + "...");
   console.log("  📱 Plataformas:", params.platforms.join(", "));
 
-  if (!PUBLER_API_KEY) {
-    console.error("❌ PUBLER_API_KEY no configurada");
-    return params.platforms.map(p => ({
-      success: false,
-      error: "API key not configured",
-      platform: p
-    }));
+  // Postiz es el default ahora
+  // Solo usar Publer si se fuerza explícitamente
+  if (!params.usePublerOnly) {
+    // Usar MOCK si POSTIZ_USE_MOCK está activado (para testing sin login)
+    if (process.env.POSTIZ_USE_MOCK === "true") {
+      console.log("🔄 [MOCK] Usando Postiz Mock (modo testing)");
+      return publishToPostizMock({
+        content: params.content,
+        imageUrl: params.imageUrl,
+        platforms: params.platforms,
+        scheduleAt: params.scheduleAt
+      });
+    }
+    
+    console.log("🔄 Usando Postiz (default)");
+    return publishToPostiz({
+      content: params.content,
+      imageUrl: params.imageUrl,
+      platforms: params.platforms,
+      scheduleAt: params.scheduleAt
+    });
   }
 
+  // Intentar primero con Publer
   try {
+    console.log("🔄 Intentando publicar con Publer...");
     // Obtener cuentas
     const accounts = await getPublerAccounts();
     console.log("📱 Cuentas obtenidas:", JSON.stringify(accounts, null, 2));
@@ -236,21 +267,73 @@ export async function publishToSocial(params: {
       }));
     }
 
-    // Si no es 202 ni 200, es un error
-    console.error("❌ Error publicando:", response.status, responseText);
-    return params.platforms.map(p => ({
-      success: false,
-      error: `API error: ${response.status} - ${responseText.substring(0, 100)}`,
-      platform: p
-    }));
+    // Si no es 202 ni 200, es un error - intentar con Postiz como fallback
+    console.error("❌ Error publicando con Publer:", response.status, responseText);
+    console.log("🔄 Intentando con Postiz como fallback...");
+    
+    try {
+      const postizResults = await publishToPostiz({
+        content: params.content,
+        imageUrl: params.imageUrl,
+        platforms: params.platforms,
+        scheduleAt: params.scheduleAt
+      });
+      
+      // Si Postiz tiene éxito, devolver esos resultados
+      if (postizResults.some(r => r.success)) {
+        console.log("✅ Postiz fallback exitoso");
+        return postizResults;
+      }
+      
+      // Si Postiz también falla, devolver error de Publer
+      console.error("❌ Postiz fallback también falló");
+      return params.platforms.map(p => ({
+        success: false,
+        error: `Publer error: ${response.status}, Postiz fallback failed`,
+        platform: p
+      }));
+    } catch (postizError: any) {
+      console.error("❌ Error en Postiz fallback:", postizError.message);
+      return params.platforms.map(p => ({
+        success: false,
+        error: `Publer: ${response.status}, Postiz: ${postizError.message}`,
+        platform: p
+      }));
+    }
 
   } catch (error: any) {
-    console.error("❌ Error en publishToSocial:", error.message);
-    return params.platforms.map(p => ({
-      success: false,
-      error: error.message,
-      platform: p
-    }));
+    console.error("❌ Error en publishToSocial (Publer):", error.message);
+    console.log("🔄 Intentando con Postiz como fallback...");
+    
+    // Intentar con Postiz como fallback cuando Publer falla
+    try {
+      const postizResults = await publishToPostiz({
+        content: params.content,
+        imageUrl: params.imageUrl,
+        platforms: params.platforms,
+        scheduleAt: params.scheduleAt
+      });
+      
+      if (postizResults.some(r => r.success)) {
+        console.log("✅ Postiz fallback exitoso");
+        return postizResults;
+      }
+      
+      // Si Postiz también falla
+      console.error("❌ Postiz fallback también falló");
+      return params.platforms.map(p => ({
+        success: false,
+        error: `Publer: ${error.message}, Postiz fallback failed`,
+        platform: p
+      }));
+    } catch (postizError: any) {
+      console.error("❌ Error en Postiz fallback:", postizError.message);
+      return params.platforms.map(p => ({
+        success: false,
+        error: `Publer: ${error.message}, Postiz: ${postizError.message}`,
+        platform: p
+      }));
+    }
   }
 }
 
