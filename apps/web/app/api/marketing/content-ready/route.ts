@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 
-const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
+const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
 
 export async function GET(request: NextRequest) {
   try {
