@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
+import { publishToSocial } from "@repo/api/modules/marketing/services/publer-service";
 
 // Configuración
 const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
@@ -226,6 +227,126 @@ Responde SOLO con el JSON.`;
 
     console.log("✅ Contenido generado y guardado:", savedInstagram.id, savedTikTok.id);
 
+    // Publicar automáticamente en Postiz (MOCK o real según POSTIZ_USE_MOCK)
+    console.log("\n📤 Publicando contenido automáticamente en Postiz...");
+    const useMock = process.env.POSTIZ_USE_MOCK === "true";
+    console.log(`  🔄 Modo: ${useMock ? "MOCK" : "REAL"}`);
+
+    const publishResults: Array<{
+      contentId: string;
+      platform: string;
+      success: boolean;
+      postId?: string;
+      error?: string;
+    }> = [];
+
+    // Publicar Instagram
+    try {
+      const instagramText = `${parsedContent.instagram.content}\n\n${Array.isArray(parsedContent.instagram.hashtags) ? parsedContent.instagram.hashtags.join(" ") : parsedContent.instagram.hashtags || ""}`.trim();
+      const instagramResults = await publishToSocial({
+        content: instagramText,
+        platforms: ["instagram"]
+      });
+
+      const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
+      
+      if (instagramResult?.success && instagramResult.postId) {
+        const existingMetadata = (savedInstagram.metadata as any) || {};
+        await prisma.marketingContent.update({
+          where: { id: savedInstagram.id },
+          data: {
+            status: "PUBLISHED",
+            metadata: {
+              ...existingMetadata,
+              postizPostId: instagramResult.postId,
+              publishedAt: new Date().toISOString(),
+              publishedOn: "instagram"
+            }
+          }
+        });
+        console.log(`✅ Instagram publicado automáticamente: ${instagramResult.postId}`);
+        publishResults.push({
+          contentId: savedInstagram.id,
+          platform: "instagram",
+          success: true,
+          postId: instagramResult.postId
+        });
+      } else {
+        console.warn(`⚠️ Instagram no se pudo publicar: ${instagramResult?.error || "Unknown error"}`);
+        publishResults.push({
+          contentId: savedInstagram.id,
+          platform: "instagram",
+          success: false,
+          error: instagramResult?.error || "Unknown error"
+        });
+      }
+    } catch (error: any) {
+      console.error(`❌ Error publicando Instagram: ${error.message}`);
+      publishResults.push({
+        contentId: savedInstagram.id,
+        platform: "instagram",
+        success: false,
+        error: error.message
+      });
+    }
+
+    // Publicar TikTok
+    try {
+      const tiktokText = `${parsedContent.tiktok.content}\n\n${Array.isArray(parsedContent.tiktok.hashtags) ? parsedContent.tiktok.hashtags.join(" ") : parsedContent.tiktok.hashtags || ""}`.trim();
+      const tiktokResults = await publishToSocial({
+        content: tiktokText,
+        platforms: ["tiktok"]
+      });
+
+      const tiktokResult = tiktokResults.find(r => r.platform.toLowerCase().includes("tiktok")) || tiktokResults[0];
+      
+      if (tiktokResult?.success && tiktokResult.postId) {
+        const existingMetadata = (savedTikTok.metadata as any) || {};
+        await prisma.marketingContent.update({
+          where: { id: savedTikTok.id },
+          data: {
+            status: "PUBLISHED",
+            metadata: {
+              ...existingMetadata,
+              postizPostId: tiktokResult.postId,
+              publishedAt: new Date().toISOString(),
+              publishedOn: "tiktok"
+            }
+          }
+        });
+        console.log(`✅ TikTok publicado automáticamente: ${tiktokResult.postId}`);
+        publishResults.push({
+          contentId: savedTikTok.id,
+          platform: "tiktok",
+          success: true,
+          postId: tiktokResult.postId
+        });
+      } else {
+        console.warn(`⚠️ TikTok no se pudo publicar: ${tiktokResult?.error || "Unknown error"}`);
+        publishResults.push({
+          contentId: savedTikTok.id,
+          platform: "tiktok",
+          success: false,
+          error: tiktokResult?.error || "Unknown error"
+        });
+      }
+    } catch (error: any) {
+      console.error(`❌ Error publicando TikTok: ${error.message}`);
+      publishResults.push({
+        contentId: savedTikTok.id,
+        platform: "tiktok",
+        success: false,
+        error: error.message
+      });
+    }
+
+    const successfulPublishes = publishResults.filter(r => r.success).length;
+    const failedPublishes = publishResults.filter(r => !r.success).length;
+
+    console.log(`\n📊 Resumen de publicación:`);
+    console.log(`   ✅ Exitosos: ${successfulPublishes}`);
+    console.log(`   ❌ Fallidos: ${failedPublishes}`);
+
     return NextResponse.json({
       success: true,
       contentIds: {
@@ -235,7 +356,12 @@ Responde SOLO con el JSON.`;
       tipo: contentType,
       instagram: parsedContent.instagram,
       tiktok: parsedContent.tiktok,
-      message: "Contenido generado. Disponible en dashboard para copiar."
+      published: publishResults,
+      publishedCount: successfulPublishes,
+      failedCount: failedPublishes,
+      message: successfulPublishes > 0 
+        ? `Contenido generado y publicado automáticamente en ${successfulPublishes} plataforma(s).`
+        : "Contenido generado. La publicación automática falló, disponible para publicación manual."
     });
 
   } catch (error: any) {
