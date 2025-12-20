@@ -231,6 +231,8 @@ Responde SOLO con el JSON.`;
     console.log("\n📤 Publicando contenido automáticamente en Postiz...");
     const useMock = process.env.POSTIZ_USE_MOCK === "true";
     console.log(`  🔄 Modo: ${useMock ? "MOCK" : "REAL"}`);
+    console.log(`  🔑 POSTIZ_USE_MOCK env: "${process.env.POSTIZ_USE_MOCK}"`);
+    console.log(`  📦 publishToSocial importado: ${typeof publishToSocial}`);
 
     const publishResults: Array<{
       contentId: string;
@@ -242,13 +244,20 @@ Responde SOLO con el JSON.`;
 
     // Publicar Instagram
     try {
+      console.log("  📱 Iniciando publicación automática de Instagram...");
       const instagramText = `${parsedContent.instagram.content}\n\n${Array.isArray(parsedContent.instagram.hashtags) ? parsedContent.instagram.hashtags.join(" ") : parsedContent.instagram.hashtags || ""}`.trim();
+      console.log("  📝 Texto Instagram (primeros 100 chars):", instagramText.substring(0, 100));
+      
       const instagramResults = await publishToSocial({
         content: instagramText,
         platforms: ["instagram"]
       });
 
+      console.log("  📊 Resultados de publishToSocial:", JSON.stringify(instagramResults, null, 2));
+      
       const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
+      
+      console.log("  🎯 Resultado seleccionado para Instagram:", JSON.stringify(instagramResult, null, 2));
       
       if (instagramResult?.success && instagramResult.postId) {
         const existingMetadata = (savedInstagram.metadata as any) || {};
@@ -292,13 +301,20 @@ Responde SOLO con el JSON.`;
 
     // Publicar TikTok
     try {
+      console.log("  📱 Iniciando publicación automática de TikTok...");
       const tiktokText = `${parsedContent.tiktok.content}\n\n${Array.isArray(parsedContent.tiktok.hashtags) ? parsedContent.tiktok.hashtags.join(" ") : parsedContent.tiktok.hashtags || ""}`.trim();
+      console.log("  📝 Texto TikTok (primeros 100 chars):", tiktokText.substring(0, 100));
+      
       const tiktokResults = await publishToSocial({
         content: tiktokText,
         platforms: ["tiktok"]
       });
 
+      console.log("  📊 Resultados de publishToSocial:", JSON.stringify(tiktokResults, null, 2));
+      
       const tiktokResult = tiktokResults.find(r => r.platform.toLowerCase().includes("tiktok")) || tiktokResults[0];
+      
+      console.log("  🎯 Resultado seleccionado para TikTok:", JSON.stringify(tiktokResult, null, 2));
       
       if (tiktokResult?.success && tiktokResult.postId) {
         const existingMetadata = (savedTikTok.metadata as any) || {};
