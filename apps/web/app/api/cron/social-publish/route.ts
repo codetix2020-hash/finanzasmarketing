@@ -3,7 +3,7 @@ import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
 
 // Configuración
-const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
+const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
 
 // Tipos de contenido que rota
 const CONTENT_TYPES = [
@@ -53,35 +53,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Obtener producto ReservasPro
-    let product = await prisma.saasProduct.findFirst({
+    // Obtener producto ReservasPro (debe existir en la base de datos)
+    const product = await prisma.saasProduct.findFirst({
       where: {
         organizationId: ORGANIZATION_ID,
         name: "ReservasPro"
       }
     });
 
-    // Si no existe, crearlo
+    // Si no existe, devolver error (el producto debe crearse manualmente o mediante otro proceso)
     if (!product) {
-      console.log("📦 Creando producto ReservasPro...");
-      product = await prisma.saasProduct.create({
-        data: {
-          id: `reservaspro-${Date.now()}`,
-          name: RESERVAS_PRO.name,
-          description: RESERVAS_PRO.description,
-          features: [
-            "Reservas online 24/7",
-            "Sistema XP y niveles",
-            "Recompensas automáticas",
-            "Página dark mode premium",
-            "Panel admin completo"
-          ],
-          targetAudience: RESERVAS_PRO.targetAudience,
-          organizationId: ORGANIZATION_ID,
-          marketingEnabled: true,
-          usp: RESERVAS_PRO.usp
-        }
-      });
+      console.error("❌ Producto ReservasPro no encontrado en la base de datos");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Producto ReservasPro no encontrado. El producto debe existir en la base de datos antes de generar contenido.",
+          organizationId: ORGANIZATION_ID
+        },
+        { status: 404 }
+      );
+    }
+
+    // Verificar que el producto tenga marketing habilitado
+    if (!product.marketingEnabled) {
+      console.warn("⚠️ Marketing no está habilitado para este producto");
     }
 
     // Verificar cuántos posts se han generado hoy
