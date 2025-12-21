@@ -20,12 +20,27 @@ interface PostResult {
   platform: string;
 }
 
+// Helper para leer POSTIZ_USE_MOCK de forma robusta
+function shouldUseMock(): boolean {
+  const useMock = process.env.POSTIZ_USE_MOCK;
+  console.log(`🔍 POSTIZ_USE_MOCK raw value: "${useMock}" (type: ${typeof useMock})`);
+  
+  // Verificar múltiples formas de "true"
+  const isTrue = useMock === "true" || 
+                 useMock === "TRUE" || 
+                 useMock === "True" ||
+                 useMock === "1";
+  
+  console.log(`🔍 shouldUseMock result: ${isTrue}`);
+  return isTrue;
+}
+
 // Obtener cuentas conectadas
 export async function getPublerAccounts(): Promise<PublerAccount[]> {
   console.log("📱 Obteniendo cuentas de Publer...");
   
   // Usar MOCK si está activado
-  if (process.env.POSTIZ_USE_MOCK === "true") {
+  if (shouldUseMock()) {
     console.log("🔄 [MOCK] Usando integraciones mock");
     const mockIntegrations = await getPostizIntegrationsMock();
     return mockIntegrations.map(integration => ({
@@ -86,7 +101,7 @@ export async function publishToSocial(params: {
   // Solo usar Publer si se fuerza explícitamente
   if (!params.usePublerOnly) {
     // Usar MOCK si POSTIZ_USE_MOCK está activado (para testing sin login)
-    if (process.env.POSTIZ_USE_MOCK === "true") {
+    if (shouldUseMock()) {
       console.log("🔄 [MOCK] Usando Postiz Mock (modo testing)");
       return publishToPostizMock({
         content: params.content,

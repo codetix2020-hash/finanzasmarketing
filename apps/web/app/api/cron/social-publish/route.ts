@@ -92,13 +92,17 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Máximo 4 posts por día (cada 6 horas)
-    if (postsToday >= 4) {
-      console.log("⏭️ Ya se generaron 4 posts hoy");
+    // Límite diario (aumentado para testing - puede ajustarse)
+    const DAILY_LIMIT = parseInt(process.env.DAILY_POST_LIMIT || "20", 10);
+    console.log(`📊 Posts hoy: ${postsToday}/${DAILY_LIMIT}`);
+    
+    if (postsToday >= DAILY_LIMIT) {
+      console.log(`⏭️ Límite diario alcanzado: ${postsToday}/${DAILY_LIMIT} posts`);
       return NextResponse.json({
         success: true,
-        message: "Daily limit reached (4 posts)",
-        postsToday
+        message: `Daily limit reached (${DAILY_LIMIT} posts)`,
+        postsToday,
+        limit: DAILY_LIMIT
       });
     }
 
@@ -229,10 +233,20 @@ Responde SOLO con el JSON.`;
 
     // Publicar automáticamente en Postiz (MOCK o real según POSTIZ_USE_MOCK)
     console.log("\n📤 Publicando contenido automáticamente en Postiz...");
-    const useMock = process.env.POSTIZ_USE_MOCK === "true";
-    console.log(`  🔄 Modo: ${useMock ? "MOCK" : "REAL"}`);
-    console.log(`  🔑 POSTIZ_USE_MOCK env: "${process.env.POSTIZ_USE_MOCK}"`);
+    
+    // Helper para leer POSTIZ_USE_MOCK de forma robusta
+    const useMockRaw = process.env.POSTIZ_USE_MOCK;
+    const useMock = useMockRaw === "true" || useMockRaw === "TRUE" || useMockRaw === "True" || useMockRaw === "1";
+    
+    console.log(`  🔑 POSTIZ_USE_MOCK env: "${useMockRaw}" (type: ${typeof useMockRaw})`);
+    console.log(`  🔄 Modo: ${useMock ? "MOCK ✅" : "REAL ⚠️"}`);
     console.log(`  📦 publishToSocial importado: ${typeof publishToSocial}`);
+    
+    if (!useMock) {
+      console.warn("  ⚠️ ADVERTENCIA: POSTIZ_USE_MOCK no está en 'true', se usará Postiz REAL");
+      console.warn("  ⚠️ Si no hay integraciones conectadas, dará error 401");
+      console.warn("  💡 Para usar MOCK, configura POSTIZ_USE_MOCK=true en Railway");
+    }
 
     const publishResults: Array<{
       contentId: string;
