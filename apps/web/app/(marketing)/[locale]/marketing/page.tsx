@@ -41,6 +41,18 @@ interface DashboardStatus {
   systemStatus: string
 }
 
+interface RecentActivity {
+  id: string
+  platform: string
+  title: string
+  content: string
+  date: string
+  metadata?: {
+    tipo?: string
+    postizPostId?: string
+  }
+}
+
 interface Costs {
   total: number
   anthropic: number
@@ -75,6 +87,7 @@ export default function MarketingDashboard() {
   const [decisions, setDecisions] = useState<Decision[]>([])
   const [costs, setCosts] = useState<Costs | null>(null)
   const [isPaused, setIsPaused] = useState(false)
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
 
   useEffect(() => {
     loadAllData()
@@ -84,40 +97,54 @@ export default function MarketingDashboard() {
 
   async function loadAllData() {
     setLoading(true)
-    const [statusRes, productsRes, contentRes, imagesRes, decisionsRes, costsRes] = await Promise.all([
-      fetchData('status'),
-      fetchData('products'),
-      fetchData('content'),
-      fetchData('images'),
-      fetchData('decisions'),
-      fetchData('costs')
-    ])
-    
-    if (statusRes?.status) {
-      setStatus({
-        products: statusRes.status.totalProducts || 0,
-        content: statusRes.status.totalContent || 0,
-        images: statusRes.status.totalImages || 0,
-        pendingJobs: statusRes.status.pendingJobs || 0,
-        lastActivity: statusRes.status.lastActivity?.createdAt || null,
-        systemStatus: statusRes.status.isPaused ? 'paused' : 'active'
-      })
-      setIsPaused(statusRes.status.isPaused || false)
+    try {
+      // Llamar al nuevo endpoint de stats
+      const statsRes = await fetch('/api/marketing/stats')
+      const statsData = await statsRes.json()
+      
+      if (statsData.success && statsData.stats) {
+        const stats = statsData.stats
+        
+        // Actualizar métricas principales
+        setStatus({
+          products: stats.products || 0,
+          content: stats.content || 0,
+          images: stats.images || 0,
+          pendingJobs: 0, // TODO: implementar si es necesario
+          lastActivity: stats.recentActivity?.[0]?.date || null,
+          systemStatus: isPaused ? 'paused' : 'active'
+        })
+        
+        // Actualizar actividad reciente
+        setRecentActivity(stats.recentActivity || [])
+        
+        // Actualizar costos
+        setCosts({
+          total: parseFloat(stats.cost) || 0,
+          anthropic: parseFloat(stats.cost) || 0, // Por ahora todo es Anthropic
+          replicate: 0,
+          openai: 0,
+          elevenlabs: 0
+        })
+      }
+      
+      // Mantener llamadas a otros endpoints si existen
+      const [productsRes, contentRes, imagesRes, decisionsRes] = await Promise.all([
+        fetchData('products').catch(() => null),
+        fetchData('content').catch(() => null),
+        fetchData('images').catch(() => null),
+        fetchData('decisions').catch(() => null)
+      ])
+      
+      if (productsRes?.products) setProducts(productsRes.products)
+      if (contentRes?.content) setContent(contentRes.content)
+      if (imagesRes?.images) setImages(imagesRes.images)
+      if (decisionsRes?.decisions) setDecisions(decisionsRes.decisions)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
     }
-    if (productsRes?.products) setProducts(productsRes.products)
-    if (contentRes?.content) setContent(contentRes.content)
-    if (imagesRes?.images) setImages(imagesRes.images)
-    if (decisionsRes?.decisions) setDecisions(decisionsRes.decisions)
-    if (costsRes?.costs) {
-      setCosts({
-        total: costsRes.costs.total || 0,
-        anthropic: costsRes.costs.anthropic?.cost || 0,
-        replicate: costsRes.costs.replicate?.cost || 0,
-        openai: costsRes.costs.openai?.cost || 0,
-        elevenlabs: costsRes.costs.elevenlabs?.cost || 0
-      })
-    }
-    setLoading(false)
   }
 
   async function togglePause() {
@@ -236,7 +263,7 @@ export default function MarketingDashboard() {
                 </div>
                 <div className="w-px h-8 bg-white/10" />
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-emerald-400">${costs?.total?.toFixed(2) || '0.00'}</p>
+                  <p className="text-2xl font-bold text-emerald-400">€{costs?.total?.toFixed(2) || '0.00'}</p>
                   <p className="text-xs text-gray-500">Gastado</p>
                 </div>
               </div>
@@ -338,7 +365,7 @@ export default function MarketingDashboard() {
                   <StatCard
                     icon="💰"
                     label="Gasto Total APIs"
-                    value={`$${costs?.total?.toFixed(2) || '0.00'}`}
+                    value={`€${costs?.total?.toFixed(2) || '0.00'}`}
                     gradient="from-emerald-500 to-green-500"
                     shadowColor="shadow-emerald-500/25"
                     isPrice
@@ -351,10 +378,41 @@ export default function MarketingDashboard() {
                     <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm">
                       ⚡
                     </span>
-                    Actividad Reciente
+                    Actividad Reciente (Posts Publicados)
                   </h2>
                   
-                  {decisions.length > 0 ? (
+                  {recentActivity.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentActivity.map((activity) => (
+                        <div key={activity.id} className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg shrink-0">
+                            {activity.platform === 'instagram' ? '📸' : activity.platform === 'tiktok' ? '🎵' : '📱'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-white">{activity.title}</span>
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                PUBLICADO
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
+                                {activity.platform}
+                              </span>
+                              {activity.metadata?.tipo && (
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                  {activity.metadata.tipo}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-400 line-clamp-2">{activity.content}</p>
+                            {activity.metadata?.postizPostId && (
+                              <p className="text-xs text-gray-500 mt-2">Post ID: {activity.metadata.postizPostId}</p>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500 shrink-0">{formatDate(activity.date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : decisions.length > 0 ? (
                     <div className="space-y-4">
                       {decisions.slice(0, 5).map((decision) => {
                         const parsed = parseDecision(decision)
@@ -511,8 +569,8 @@ export default function MarketingDashboard() {
                 {/* Total Card */}
                 <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-3xl border border-emerald-500/30 p-8">
                   <p className="text-emerald-400 text-sm font-medium mb-2">Gasto Total</p>
-                  <p className="text-5xl font-bold text-white">${costs?.total?.toFixed(4) || '0.0000'}</p>
-                  <p className="text-gray-400 text-sm mt-2">Este mes</p>
+                  <p className="text-5xl font-bold text-white">€{costs?.total?.toFixed(4) || '0.0000'}</p>
+                  <p className="text-gray-400 text-sm mt-2">Total acumulado</p>
                 </div>
 
                 {/* By Service */}
@@ -716,7 +774,7 @@ function CostCard({ icon, name, cost, color }: { icon: string; name: string; cos
     <div className={`bg-gradient-to-br ${colors[color]} rounded-2xl border p-5`}>
       <span className="text-2xl mb-3 block">{icon}</span>
       <p className="text-gray-400 text-sm mb-1">{name}</p>
-      <p className="text-2xl font-bold text-white">${cost.toFixed(4)}</p>
+      <p className="text-2xl font-bold text-white">€{cost.toFixed(4)}</p>
     </div>
   )
 }
