@@ -81,29 +81,81 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar cuántos posts se han generado hoy
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    // Usar inicio del día en UTC para consistencia
+    const todayStart = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0, 0, 0, 0
+    ));
+    const todayEnd = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+      0, 0, 0, 0
+    ));
+    
+    console.log("🔍 DEBUG DAILY LIMIT:");
+    console.log("  - Fecha actual (UTC):", now.toISOString());
+    console.log("  - Inicio día (UTC):", todayStart.toISOString());
+    console.log("  - Fin día (UTC):", todayEnd.toISOString());
     
     const postsToday = await prisma.marketingContent.count({
       where: {
         productId: product.id,
         type: "SOCIAL",
-        createdAt: { gte: today }
+        createdAt: { 
+          gte: todayStart,
+          lt: todayEnd
+        }
       }
     });
+    
+    console.log("  - Posts encontrados hoy:", postsToday);
 
     // Límite diario (aumentado para testing - puede ajustarse)
-    const DAILY_LIMIT = parseInt(process.env.DAILY_POST_LIMIT || "20", 10);
-    console.log(`📊 Posts hoy: ${postsToday}/${DAILY_LIMIT}`);
+    const DAILY_POST_LIMIT_RAW = process.env.DAILY_POST_LIMIT;
+    const DISABLE_LIMIT = process.env.DISABLE_DAILY_LIMIT === "true" || process.env.DISABLE_DAILY_LIMIT === "1";
     
-    if (postsToday >= DAILY_LIMIT) {
-      console.log(`⏭️ Límite diario alcanzado: ${postsToday}/${DAILY_LIMIT} posts`);
-      return NextResponse.json({
-        success: true,
-        message: `Daily limit reached (${DAILY_LIMIT} posts)`,
-        postsToday,
-        limit: DAILY_LIMIT
-      });
+    let DAILY_LIMIT: number | null = null;
+    if (!DISABLE_LIMIT) {
+      DAILY_LIMIT = DAILY_POST_LIMIT_RAW 
+        ? parseInt(DAILY_POST_LIMIT_RAW, 10) 
+        : 20;
+    }
+    
+    console.log("🔍 DEBUG DAILY LIMIT:");
+    console.log("  - DAILY_POST_LIMIT env (raw):", DAILY_POST_LIMIT_RAW);
+    console.log("  - DAILY_POST_LIMIT env (type):", typeof DAILY_POST_LIMIT_RAW);
+    console.log("  - DISABLE_DAILY_LIMIT env:", process.env.DISABLE_DAILY_LIMIT);
+    console.log("  - DISABLE_LIMIT parsed:", DISABLE_LIMIT);
+    console.log("  - DAILY_LIMIT parsed:", DAILY_LIMIT);
+    console.log("  - postsToday:", postsToday);
+    
+    if (!DISABLE_LIMIT && DAILY_LIMIT !== null) {
+      console.log("  - Comparación:", `${postsToday} >= ${DAILY_LIMIT} = ${postsToday >= DAILY_LIMIT}`);
+      
+      if (postsToday >= DAILY_LIMIT) {
+        console.log(`⏭️ Límite diario alcanzado: ${postsToday}/${DAILY_LIMIT} posts`);
+        return NextResponse.json({
+          success: true,
+          message: `Daily limit reached (${DAILY_LIMIT} posts)`,
+          postsToday,
+          limit: DAILY_LIMIT,
+          debug: {
+            envRaw: DAILY_POST_LIMIT_RAW,
+            envType: typeof DAILY_POST_LIMIT_RAW,
+            parsed: DAILY_LIMIT,
+            todayStart: today.toISOString(),
+            now: now.toISOString(),
+            disableLimit: DISABLE_LIMIT
+          }
+        });
+      }
+      console.log(`✅ Límite OK: ${postsToday}/${DAILY_LIMIT} posts (puede continuar)`);
+    } else {
+      console.log(`⚠️ Límite diario DESHABILITADO (DISABLE_DAILY_LIMIT=${process.env.DISABLE_DAILY_LIMIT})`);
     }
 
     // Seleccionar tipo de contenido (rota entre los tipos)
