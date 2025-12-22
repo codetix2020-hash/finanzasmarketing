@@ -2,8 +2,8 @@ name: Marketing Content Generation
 
 on:
   schedule:
-    # Cada 6 horas: 08:00, 14:00, 20:00, 02:00 UTC
-    - cron: '0 8,14,20,2 * * *'
+    # Cada 6 horas: 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
   workflow_dispatch: # Permite ejecutar manualmente
 
 jobs:
@@ -11,7 +11,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger content generation
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL || 'https://finanzas-production-8433.up.railway.app' }}
         run: |
-          curl -s -X GET "https://finanzas-production-8433.up.railway.app/api/cron/social-publish"
-          echo "Content generation triggered"
+          echo "⏰ Ejecutando cron de generación de contenido..."
+          echo "📍 URL: ${RAILWAY_URL}/api/cron/social-publish"
+          
+          if [ -z "$CRON_SECRET" ]; then
+            echo "⚠️ CRON_SECRET no configurado, ejecutando sin autenticación"
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "${RAILWAY_URL}/api/cron/social-publish")
+          else
+            echo "🔐 Usando autenticación con CRON_SECRET"
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              "${RAILWAY_URL}/api/cron/social-publish")
+          fi
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "📊 Status Code: $HTTP_CODE"
+          echo "📄 Response: $BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
+            echo "✅ Content generation triggered successfully"
+            exit 0
+          else
+            echo "❌ Error: HTTP $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
 
