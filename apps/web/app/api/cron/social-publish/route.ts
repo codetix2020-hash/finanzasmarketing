@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
 import { publishToSocial } from "@repo/api/modules/marketing/services/publer-service";
+import { generatePostImage } from "@repo/api/modules/marketing/services/image-generator";
+import { publishToInstagram } from "@repo/api/modules/marketing/services/instagram-publisher";
 
 // Configuración
 const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
@@ -214,13 +216,70 @@ Responde SOLO con el JSON.`;
     }
   });
 
+  // Generar imagen con DALL-E para Instagram
+  let imageUrl: string | undefined;
+  let imageCost = 0;
+  
+  try {
+    console.log(`  🎨 Generando imagen con DALL-E para ${product.name}...`);
+    const imageResult = await generatePostImage({
+      productName: product.name,
+      contentText: parsedContent.instagram.content,
+      platform: "instagram",
+      tipo: contentType,
+      description: product.description || undefined,
+      usp: product.usp || undefined
+    });
+    
+    imageUrl = imageResult.imageUrl;
+    imageCost = imageResult.cost;
+    
+    console.log(`  ✅ Imagen generada: ${imageUrl}`);
+    console.log(`  💰 Costo imagen: $${imageCost.toFixed(3)}`);
+    
+    // Actualizar metadata con la imagen
+    const existingMetadata = (savedInstagram.metadata as any) || {};
+    await prisma.marketingContent.update({
+      where: { id: savedInstagram.id },
+      data: {
+        metadata: {
+          ...existingMetadata,
+          imageUrl: imageUrl,
+          imageCost: imageCost,
+          imageGenerated: true,
+          imageGeneratedAt: new Date().toISOString()
+        }
+      }
+    });
+    
+    // También actualizar TikTok con la misma imagen
+    const existingTikTokMetadata = (savedTikTok.metadata as any) || {};
+    await prisma.marketingContent.update({
+      where: { id: savedTikTok.id },
+      data: {
+        metadata: {
+          ...existingTikTokMetadata,
+          imageUrl: imageUrl,
+          imageCost: imageCost,
+          imageGenerated: true,
+          imageGeneratedAt: new Date().toISOString()
+        }
+      }
+    });
+  } catch (imageError: any) {
+    console.error(`  ⚠️ Error generando imagen para ${product.name}:`, imageError.message);
+    console.log(`  ⚠️ Continuando sin imagen...`);
+    // Continuar sin imagen
+  }
+
   console.log(`  ✅ Contenido generado y guardado para ${product.name}:`, savedInstagram.id, savedTikTok.id);
 
-  // Publicar automáticamente en Postiz (MOCK o real según POSTIZ_USE_MOCK)
-  console.log(`  📤 Publicando contenido automáticamente en Postiz para ${product.name}...`);
+  // Publicar automáticamente
+  console.log(`  📤 Publicando contenido automáticamente para ${product.name}...`);
   
   const useMockRaw = process.env.POSTIZ_USE_MOCK;
   const useMock = useMockRaw === "true" || useMockRaw === "TRUE" || useMockRaw === "True" || useMockRaw === "1";
+  const useRealInstagram = !useMock && process.env.FACEBOOK_ACCESS_TOKEN && process.env.INSTAGRAM_ACCOUNT_ID;
 
   const publishResults: Array<{
     contentId: string;
@@ -231,55 +290,109 @@ Responde SOLO con el JSON.`;
   }> = [];
 
   // Publicar Instagram
+  let instagramPublished = false;
+  
   try {
     const instagramText = `${parsedContent.instagram.content}\n\n${Array.isArray(parsedContent.instagram.hashtags) ? parsedContent.instagram.hashtags.join(" ") : parsedContent.instagram.hashtags || ""}`.trim();
     
-    const instagramResults = await publishToSocial({
-      content: instagramText,
-      platforms: ["instagram"]
-    });
-
-    const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
-    
-    if (instagramResult?.success && instagramResult.postId) {
+    // Intentar publicación real en Instagram si está configurado
+    if (useRealInstagram && imageUrl) {
+      console.log(`  📱 Intentando publicación REAL en Instagram (Meta Graph API)...`);
+      
       try {
-        const existingMetadata = (savedInstagram.metadata as any) || {};
-        await prisma.marketingContent.update({
-          where: { id: savedInstagram.id },
-          data: {
-            status: "PUBLISHED" as const,
-            metadata: {
-              ...existingMetadata,
-              postizPostId: instagramResult.postId,
-              publishedAt: new Date().toISOString(),
-              publishedOn: "instagram"
+        const instagramResult = await publishToInstagram({
+          caption: instagramText,
+          imageUrl: imageUrl,
+          accessToken: process.env.FACEBOOK_ACCESS_TOKEN!
+        });
+        
+        if (instagramResult.success && instagramResult.postId) {
+          console.log(`  ✅ Instagram publicado REALMENTE: ${instagramResult.postId}`);
+          
+          const existingMetadata = (savedInstagram.metadata as any) || {};
+          await prisma.marketingContent.update({
+            where: { id: savedInstagram.id },
+            data: {
+              status: "PUBLISHED" as const,
+              metadata: {
+                ...existingMetadata,
+                instagramPostId: instagramResult.postId,
+                publishedAt: new Date().toISOString(),
+                publishedOn: "instagram",
+                publishedVia: "meta_graph_api"
+              }
             }
-          }
-        });
-        console.log(`  ✅ Instagram publicado para ${product.name}: ${instagramResult.postId}`);
+          });
+          
+          publishResults.push({
+            contentId: savedInstagram.id,
+            platform: "instagram",
+            success: true,
+            postId: instagramResult.postId
+          });
+          
+          instagramPublished = true;
+        } else {
+          console.warn(`  ⚠️ Publicación real falló: ${instagramResult.error}`);
+          console.log(`  🔄 Intentando con Postiz como fallback...`);
+        }
+      } catch (realInstagramError: any) {
+        console.error(`  ❌ Error en publicación real:`, realInstagramError.message);
+        console.log(`  🔄 Intentando con Postiz como fallback...`);
+      }
+    }
+    
+    // Fallback a Postiz (MOCK o real según configuración) si no se publicó directamente
+    if (!instagramPublished) {
+      const instagramResults = await publishToSocial({
+        content: instagramText,
+        imageUrl: imageUrl,
+        platforms: ["instagram"]
+      });
+
+      const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
+      
+      if (instagramResult?.success && instagramResult.postId) {
+        try {
+          const existingMetadata = (savedInstagram.metadata as any) || {};
+          await prisma.marketingContent.update({
+            where: { id: savedInstagram.id },
+            data: {
+              status: "PUBLISHED" as const,
+              metadata: {
+                ...existingMetadata,
+                postizPostId: instagramResult.postId,
+                publishedAt: new Date().toISOString(),
+                publishedOn: "instagram",
+                publishedVia: "postiz"
+              }
+            }
+          });
+          console.log(`  ✅ Instagram publicado via Postiz para ${product.name}: ${instagramResult.postId}`);
+          publishResults.push({
+            contentId: savedInstagram.id,
+            platform: "instagram",
+            success: true,
+            postId: instagramResult.postId
+          });
+        } catch (updateError: any) {
+          console.error(`  ❌ Error actualizando status para ${product.name} Instagram:`, updateError.message);
+          publishResults.push({
+            contentId: savedInstagram.id,
+            platform: "instagram",
+            success: true,
+            postId: instagramResult.postId,
+            error: `Publicado pero error actualizando status: ${updateError.message}`
+          });
+        }
+      } else {
         publishResults.push({
           contentId: savedInstagram.id,
           platform: "instagram",
-          success: true,
-          postId: instagramResult.postId
-        });
-      } catch (updateError: any) {
-        console.error(`  ❌ Error actualizando status para ${product.name} Instagram:`, updateError.message);
-        publishResults.push({
-          contentId: savedInstagram.id,
-          platform: "instagram",
-          success: true,
-          postId: instagramResult.postId,
-          error: `Publicado pero error actualizando status: ${updateError.message}`
+          success: false,
+          error: instagramResult?.error || "Unknown error"
         });
       }
-    } else {
-      publishResults.push({
-        contentId: savedInstagram.id,
-        platform: "instagram",
-        success: false,
-        error: instagramResult?.error || "Unknown error"
-      });
     }
   } catch (error: any) {
     console.error(`  ❌ Error publicando Instagram para ${product.name}:`, error.message);
