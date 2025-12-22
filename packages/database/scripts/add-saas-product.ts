@@ -9,8 +9,12 @@ if (result.error) {
   console.warn("⚠️  Warning: Could not load .env file:", envPath);
 }
 
-// Import Prisma AFTER setting DATABASE_URL
-import { db as prisma } from "../prisma/client";
+// Set DATABASE_URL from user-provided value if not in .env
+if (!process.env.DATABASE_URL) {
+  // Fallback: usar la URL de Neon si no está en .env
+  process.env.DATABASE_URL = "postgresql://neondb_owner:npg_6baOIu3gVYFo@ep-red-bush-ah8rov5p-pooler.c-3.us-east-1.aws.neon.tech/neondb";
+  console.log("✅ Using fallback DATABASE_URL");
+}
 
 const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
 
@@ -19,6 +23,9 @@ interface ProductData {
   description: string;
   targetAudience: string;
   usp: string;
+  websiteUrl?: string;
+  instagramAccount?: string;
+  tiktokAccount?: string;
   pricing?: {
     oferta?: string;
     normal?: string;
@@ -27,6 +34,9 @@ interface ProductData {
 }
 
 async function addSaasProduct(data: ProductData) {
+  // Import Prisma dinámicamente después de establecer DATABASE_URL
+  const { db: prisma } = await import("../prisma/client");
+  
   try {
     console.log("📦 Creando nuevo producto SaaS...");
     console.log("  Nombre:", data.name);
@@ -60,9 +70,11 @@ async function addSaasProduct(data: ProductData) {
     });
     
     console.log("✅ Producto creado exitosamente:");
-    console.log("  ID:", product.id);
-    console.log("  Nombre:", product.name);
-    console.log("  Marketing habilitado:", product.marketingEnabled);
+    console.log("  📦 Nombre:", product.name);
+    console.log("  🆔 ID:", product.id);
+    console.log("  🎯 Target:", product.targetAudience);
+    console.log("  ✨ USP:", product.usp);
+    console.log("  🚀 Marketing habilitado:", product.marketingEnabled);
     
     return product;
   } catch (error: any) {
@@ -71,28 +83,30 @@ async function addSaasProduct(data: ProductData) {
   }
 }
 
-// Ejemplo de uso - descomentar y editar para crear un nuevo producto
+// Crear CodeTix
 async function main() {
-  // Ejemplo: AutoSaaS Builder
   await addSaasProduct({
-    name: "AutoSaaS Builder",
-    description: "Plataforma para crear SaaS automáticamente con IA. De idea a SaaS funcionando en minutos.",
-    targetAudience: "Desarrolladores y emprendedores tech que quieren lanzar SaaS rápidamente",
-    usp: "De idea a SaaS funcionando en 5 minutos con IA. Sin código, sin complejidad.",
+    name: "CodeTix",
+    description: "Agencia de desarrollo que crea SaaS y sistemas a medida con código de calidad. Transformamos ideas en productos digitales escalables. Especializados en automatización, IA y arquitecturas modernas.",
+    targetAudience: "Emprendedores con ideas de SaaS, startups que necesitan MVP, empresas que quieren digitalizar procesos, negocios locales que buscan sistemas personalizados",
+    usp: "Desarrollamos tu SaaS completo en semanas, no meses. Código limpio, escalable y mantenible. Sin no-code, sin templates genéricos. 100% personalizado.",
+    websiteUrl: "https://codetix.es",
+    instagramAccount: "@codetix_dev",
+    tiktokAccount: "@codetix_dev",
     pricing: {
-      oferta: "14 días GRATIS",
-      normal: "$49/mes"
+      model: "project-based",
+      starting: "€3,000",
+      description: "Presupuesto personalizado según proyecto"
     }
   });
-  
-  // Agregar más productos aquí si es necesario
 }
 
 // Ejecutar solo si se llama directamente
 if (require.main === module) {
   main()
     .then(() => {
-      console.log("✅ Script completado");
+      console.log("\n🎉 CodeTix agregado a MarketingOS");
+      console.log("📊 El cron generará contenido automáticamente cada 6h");
       process.exit(0);
     })
     .catch((error) => {
