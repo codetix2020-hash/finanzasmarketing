@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     console.log("📋 Obteniendo contenido listo para publicar...");
     console.log("  Organization ID:", ORGANIZATION_ID);
 
-    // Obtener contenido listo para publicar
+    // Obtener contenido listo para publicar Y publicado
+    // Incluir tanto READY como PUBLISHED para mostrar todo el contenido
     // Intentar con include, pero manejar si la relación no existe
     let content;
     try {
@@ -16,10 +17,12 @@ export async function GET(request: NextRequest) {
         where: {
           organizationId: ORGANIZATION_ID,
           type: "SOCIAL",
-          status: "READY"
+          status: {
+            in: ["READY", "PUBLISHED"]
+          }
         },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 50, // Aumentado para mostrar más contenido
         include: {
           product: {
             select: { name: true }
@@ -33,14 +36,23 @@ export async function GET(request: NextRequest) {
         where: {
           organizationId: ORGANIZATION_ID,
           type: "SOCIAL",
-          status: "READY"
+          status: {
+            in: ["READY", "PUBLISHED"]
+          }
         },
         orderBy: { createdAt: "desc" },
-        take: 20
+        take: 50 // Aumentado para mostrar más contenido
       });
     }
 
     console.log(`✅ Contenido encontrado: ${content.length} items`);
+    
+    // Log de distribución por status
+    const statusCounts = content.reduce((acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    console.log(`📊 Distribución por status:`, statusCounts);
 
     // Formatear para fácil copia con manejo seguro de errores
     const formattedContent = content.map(item => {
