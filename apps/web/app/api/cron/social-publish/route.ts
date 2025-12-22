@@ -324,35 +324,70 @@ Responde SOLO con el JSON.`;
       const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
       
       console.log("  🎯 Resultado seleccionado para Instagram:", JSON.stringify(instagramResult, null, 2));
+      console.log("  🔍 Verificación de resultado:");
+      console.log("    - instagramResult existe:", !!instagramResult);
+      console.log("    - instagramResult.success:", instagramResult?.success);
+      console.log("    - instagramResult.postId:", instagramResult?.postId);
       
       if (instagramResult?.success && instagramResult.postId) {
-        const existingMetadata = (savedInstagram.metadata as any) || {};
-        await prisma.marketingContent.update({
-          where: { id: savedInstagram.id },
-          data: {
-            status: "PUBLISHED",
+        console.log(`✅ Instagram publicado exitosamente. Actualizando status a PUBLISHED...`);
+        console.log(`  📝 Content ID: ${savedInstagram.id}`);
+        console.log(`  📝 Post ID: ${instagramResult.postId}`);
+        
+        try {
+          const existingMetadata = (savedInstagram.metadata as any) || {};
+          const updateData = {
+            status: "PUBLISHED" as const,
             metadata: {
               ...existingMetadata,
               postizPostId: instagramResult.postId,
               publishedAt: new Date().toISOString(),
               publishedOn: "instagram"
             }
-          }
-        });
-        console.log(`✅ Instagram publicado automáticamente: ${instagramResult.postId}`);
-        publishResults.push({
-          contentId: savedInstagram.id,
-          platform: "instagram",
-          success: true,
-          postId: instagramResult.postId
-        });
+          };
+          
+          console.log("  📤 Datos de actualización:", JSON.stringify(updateData, null, 2));
+          
+          const updated = await prisma.marketingContent.update({
+            where: { id: savedInstagram.id },
+            data: updateData
+          });
+          
+          console.log(`✅ Status actualizado correctamente a PUBLISHED`);
+          console.log(`  📊 Status en DB: ${updated.status}`);
+          console.log(`  📊 PostId en metadata: ${(updated.metadata as any)?.postizPostId}`);
+          
+          publishResults.push({
+            contentId: savedInstagram.id,
+            platform: "instagram",
+            success: true,
+            postId: instagramResult.postId
+          });
+        } catch (updateError: any) {
+          console.error(`❌ Error actualizando status a PUBLISHED:`, updateError);
+          console.error(`  - Mensaje: ${updateError.message}`);
+          console.error(`  - Stack: ${updateError.stack}`);
+          console.error(`  - Code: ${updateError.code}`);
+          
+          // Aún así, consideramos la publicación exitosa
+          publishResults.push({
+            contentId: savedInstagram.id,
+            platform: "instagram",
+            success: true,
+            postId: instagramResult.postId,
+            error: `Publicado pero error actualizando status: ${updateError.message}`
+          });
+        }
       } else {
-        console.warn(`⚠️ Instagram no se pudo publicar: ${instagramResult?.error || "Unknown error"}`);
+        const errorMsg = instagramResult?.error || 
+          (!instagramResult?.success ? "success=false" : "postId missing");
+        console.warn(`⚠️ Instagram no se pudo publicar: ${errorMsg}`);
+        console.warn(`  📊 Resultado completo:`, JSON.stringify(instagramResult, null, 2));
         publishResults.push({
           contentId: savedInstagram.id,
           platform: "instagram",
           success: false,
-          error: instagramResult?.error || "Unknown error"
+          error: errorMsg
         });
       }
     } catch (error: any) {
@@ -381,35 +416,70 @@ Responde SOLO con el JSON.`;
       const tiktokResult = tiktokResults.find(r => r.platform.toLowerCase().includes("tiktok")) || tiktokResults[0];
       
       console.log("  🎯 Resultado seleccionado para TikTok:", JSON.stringify(tiktokResult, null, 2));
+      console.log("  🔍 Verificación de resultado:");
+      console.log("    - tiktokResult existe:", !!tiktokResult);
+      console.log("    - tiktokResult.success:", tiktokResult?.success);
+      console.log("    - tiktokResult.postId:", tiktokResult?.postId);
       
       if (tiktokResult?.success && tiktokResult.postId) {
-        const existingMetadata = (savedTikTok.metadata as any) || {};
-        await prisma.marketingContent.update({
-          where: { id: savedTikTok.id },
-          data: {
-            status: "PUBLISHED",
+        console.log(`✅ TikTok publicado exitosamente. Actualizando status a PUBLISHED...`);
+        console.log(`  📝 Content ID: ${savedTikTok.id}`);
+        console.log(`  📝 Post ID: ${tiktokResult.postId}`);
+        
+        try {
+          const existingMetadata = (savedTikTok.metadata as any) || {};
+          const updateData = {
+            status: "PUBLISHED" as const,
             metadata: {
               ...existingMetadata,
               postizPostId: tiktokResult.postId,
               publishedAt: new Date().toISOString(),
               publishedOn: "tiktok"
             }
-          }
-        });
-        console.log(`✅ TikTok publicado automáticamente: ${tiktokResult.postId}`);
-        publishResults.push({
-          contentId: savedTikTok.id,
-          platform: "tiktok",
-          success: true,
-          postId: tiktokResult.postId
-        });
+          };
+          
+          console.log("  📤 Datos de actualización:", JSON.stringify(updateData, null, 2));
+          
+          const updated = await prisma.marketingContent.update({
+            where: { id: savedTikTok.id },
+            data: updateData
+          });
+          
+          console.log(`✅ Status actualizado correctamente a PUBLISHED`);
+          console.log(`  📊 Status en DB: ${updated.status}`);
+          console.log(`  📊 PostId en metadata: ${(updated.metadata as any)?.postizPostId}`);
+          
+          publishResults.push({
+            contentId: savedTikTok.id,
+            platform: "tiktok",
+            success: true,
+            postId: tiktokResult.postId
+          });
+        } catch (updateError: any) {
+          console.error(`❌ Error actualizando status a PUBLISHED:`, updateError);
+          console.error(`  - Mensaje: ${updateError.message}`);
+          console.error(`  - Stack: ${updateError.stack}`);
+          console.error(`  - Code: ${updateError.code}`);
+          
+          // Aún así, consideramos la publicación exitosa
+          publishResults.push({
+            contentId: savedTikTok.id,
+            platform: "tiktok",
+            success: true,
+            postId: tiktokResult.postId,
+            error: `Publicado pero error actualizando status: ${updateError.message}`
+          });
+        }
       } else {
-        console.warn(`⚠️ TikTok no se pudo publicar: ${tiktokResult?.error || "Unknown error"}`);
+        const errorMsg = tiktokResult?.error || 
+          (!tiktokResult?.success ? "success=false" : "postId missing");
+        console.warn(`⚠️ TikTok no se pudo publicar: ${errorMsg}`);
+        console.warn(`  📊 Resultado completo:`, JSON.stringify(tiktokResult, null, 2));
         publishResults.push({
           contentId: savedTikTok.id,
           platform: "tiktok",
           success: false,
-          error: tiktokResult?.error || "Unknown error"
+          error: errorMsg
         });
       }
     } catch (error: any) {
