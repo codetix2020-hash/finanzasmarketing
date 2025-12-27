@@ -210,3 +210,6 @@ El endpoint `/api/marketing/content-ready` estaba crasheando con error 500 debid
 **Última actualización:** 2025-01-XX  
 **Estado:** ✅ Fix implementado y pusheado
 
+
+
+

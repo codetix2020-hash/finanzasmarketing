@@ -138,3 +138,6 @@ diagnoseAutoPublish()
     process.exit(1);
   });
 
+
+
+

@@ -216,7 +216,7 @@ Responde SOLO con el JSON.`;
     }
   });
 
-  // Generar imagen con DALL-E para Instagram
+  // Generar imagen con DALL-E ANTES de publicar
   let imageUrl: string | undefined;
   let imageCost = 0;
   
@@ -225,19 +225,17 @@ Responde SOLO con el JSON.`;
     const imageResult = await generatePostImage({
       productName: product.name,
       contentText: parsedContent.instagram.content,
-      platform: "instagram",
-      tipo: contentType,
-      description: product.description || undefined,
-      usp: product.usp || undefined
+      platform: "instagram".toLowerCase() as "instagram" | "tiktok",
+      tipo: "tip"
     });
     
     imageUrl = imageResult.imageUrl;
     imageCost = imageResult.cost;
     
     console.log(`  ✅ Imagen generada: ${imageUrl}`);
-    console.log(`  💰 Costo imagen: $${imageCost.toFixed(3)}`);
+    console.log(`  💰 Costo DALL-E: $${imageCost.toFixed(3)}`);
     
-    // Actualizar metadata con la imagen
+    // Actualizar metadata de Instagram con la imagen
     const existingMetadata = (savedInstagram.metadata as any) || {};
     await prisma.marketingContent.update({
       where: { id: savedInstagram.id },
@@ -267,9 +265,9 @@ Responde SOLO con el JSON.`;
       }
     });
   } catch (imageError: any) {
-    console.error(`  ⚠️ Error generando imagen para ${product.name}:`, imageError.message);
-    console.log(`  ⚠️ Continuando sin imagen...`);
-    // Continuar sin imagen
+    console.error(`  ⚠️ Error generando imagen DALL-E para ${product.name}:`, imageError.message);
+    console.log(`  ⚠️ Continuando sin imagen (skip imagen)...`);
+    // Continuar sin imagen - no bloquear publicación
   }
 
   console.log(`  ✅ Contenido generado y guardado para ${product.name}:`, savedInstagram.id, savedTikTok.id);
@@ -291,13 +289,14 @@ Responde SOLO con el JSON.`;
 
   // Publicar Instagram
   let instagramPublished = false;
+  const platform = "INSTAGRAM";
   
   try {
     const instagramText = `${parsedContent.instagram.content}\n\n${Array.isArray(parsedContent.instagram.hashtags) ? parsedContent.instagram.hashtags.join(" ") : parsedContent.instagram.hashtags || ""}`.trim();
     
-    // Intentar publicación real en Instagram si está configurado
-    if (useRealInstagram && imageUrl) {
-      console.log(`  📱 Intentando publicación REAL en Instagram (Meta Graph API)...`);
+    // SI platform === "INSTAGRAM" Y tenemos INSTAGRAM_ACCOUNT_ID: usar publishToInstagram()
+    if (platform === "INSTAGRAM" && process.env.INSTAGRAM_ACCOUNT_ID && imageUrl) {
+      console.log(`  📱 Publicando en Instagram REAL (Meta Graph API)...`);
       
       try {
         const instagramResult = await publishToInstagram({
@@ -334,16 +333,17 @@ Responde SOLO con el JSON.`;
           instagramPublished = true;
         } else {
           console.warn(`  ⚠️ Publicación real falló: ${instagramResult.error}`);
-          console.log(`  🔄 Intentando con Postiz como fallback...`);
+          console.log(`  🔄 Fallback a publishToSocial()...`);
         }
       } catch (realInstagramError: any) {
         console.error(`  ❌ Error en publicación real:`, realInstagramError.message);
-        console.log(`  🔄 Intentando con Postiz como fallback...`);
+        console.log(`  🔄 Fallback a publishToSocial()...`);
       }
     }
     
-    // Fallback a Postiz (MOCK o real según configuración) si no se publicó directamente
+    // Fallback a publishToSocial() si no hay Instagram config o falló
     if (!instagramPublished) {
+      console.log(`  📤 Publicando via publishToSocial() (fallback)...`);
       const instagramResults = await publishToSocial({
         content: instagramText,
         imageUrl: imageUrl,

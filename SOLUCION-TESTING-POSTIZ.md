@@ -219,3 +219,6 @@ Cuando el login de Postiz funcione:
 **Última actualización:** 2025-01-XX  
 **Estado:** ✅ Implementado y listo para usar
 
+
+
+

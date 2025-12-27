@@ -219,3 +219,6 @@ Aunque no hay UI en `/app/marketing`, los endpoints API están disponibles:
 **Última actualización:** 2025-01-XX  
 **Proyecto:** `finanzasmarketing/`
 
+
+
+

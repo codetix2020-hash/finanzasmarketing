@@ -170,3 +170,5 @@ Cada producto tiene su propio límite diario de posts:
 
 **Nota**: Una vez agregado un producto, el sistema lo procesará automáticamente en cada ejecución del cron sin necesidad de configuración adicional.
 
+
+
