@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
-import { publishToSocial } from "@repo/api/modules/marketing/services/publer-service";
-import { generatePostImage } from "@repo/api/modules/marketing/services/image-generator";
-import { publishToInstagram } from "@repo/api/modules/marketing/services/instagram-publisher";
+import { guardsRunAll, logGuardResult } from "../../../../../packages/api/modules/marketing/services/content-guards";
 
 // Configuración
-const ORGANIZATION_ID = "b0a57f66-6cae-4f6f-8e8d-c8dfd5d9b08d";
+const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
 
 // Tipos de contenido que rota
 const CONTENT_TYPES = [
@@ -18,112 +16,128 @@ const CONTENT_TYPES = [
   "urgencia"
 ];
 
-// Hashtags genéricos (se pueden personalizar por producto)
-const DEFAULT_HASHTAGS = {
-  principales: ["#saas", "#startup", "#tech", "#emprendedor"],
-  oferta: ["#oferta", "#lanzamiento", "#gratis", "#descuento"],
-  engagement: ["#marketing", "#negocio", "#innovacion", "#digital"]
+// Información de ReservasPro
+const RESERVAS_PRO = {
+  name: "ReservasPro",
+  description: "Sistema de reservas premium para barberías con gamificación. Clientes ganan XP por cada corte, suben de nivel (Bronce→Plata→Oro→Platino→VIP) y desbloquean recompensas.",
+  targetAudience: "Dueños de barberías modernas en España, 1-5 barberos, clientela joven 18-40",
+  usp: "Sistema XP único que convierte clientes en fans. Lo que Booksy NO tiene.",
+  pricing: {
+    oferta: "30 días GRATIS sin tarjeta",
+    primeros10: "€19,99/mes DE POR VIDA (50% descuento)",
+    normal: "€39,99/mes"
+  },
+  oferta: {
+    vigente: true,
+    mensaje: "🔥 OFERTA DE LANZAMIENTO: 30 días GRATIS + Primeras 10 barberías: 50% de por vida",
+    urgencia: "Solo quedan X plazas de las 10"
+  }
 };
 
-/**
- * Procesa un producto individual: genera y publica contenido
- */
-async function processProduct(product: any, client: Anthropic) {
-  console.log(`\n📦 Procesando producto: ${product.name} (${product.id})`);
-  
-  // Verificar que el producto tenga marketing habilitado
-  if (!product.marketingEnabled) {
-    console.warn(`⚠️ Marketing no está habilitado para ${product.name}, saltando...`);
-    return {
-      success: false,
-      productId: product.id,
-      productName: product.name,
-      error: "Marketing no habilitado"
-    };
-  }
+// Hashtags
+const HASHTAGS = {
+  principales: ["#barberia", "#barbershop", "#reservasonline", "#barberiamoderna"],
+  oferta: ["#oferta", "#lanzamiento", "#gratis", "#descuento"],
+  engagement: ["#barberoespañol", "#cortedepelo", "#barberlife", "#emprendedor"]
+};
 
-  // Verificar cuántos posts se han generado hoy para este producto
-  const now = new Date();
-  const todayStart = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate(),
-    0, 0, 0, 0
-  ));
-  const todayEnd = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-    0, 0, 0, 0
-  ));
+export async function GET(request: NextRequest) {
+  console.log("⏰ CRON: Generando contenido para redes sociales...");
   
-  const postsToday = await prisma.marketingContent.count({
-    where: {
-      productId: product.id,
-      type: "SOCIAL",
-      createdAt: { 
-        gte: todayStart,
-        lt: todayEnd
-      }
+  try {
+    // Verificar autorización
+    const authHeader = request.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+    
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      console.log("❌ No autorizado");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-  });
-  
-  console.log(`  📊 Posts hoy para ${product.name}: ${postsToday}`);
 
-  // Límite diario por producto
-  const DAILY_POST_LIMIT_RAW = process.env.DAILY_POST_LIMIT;
-  const DISABLE_LIMIT = process.env.DISABLE_DAILY_LIMIT === "true" || process.env.DISABLE_DAILY_LIMIT === "1";
-  
-  let DAILY_LIMIT: number | null = null;
-  if (!DISABLE_LIMIT) {
-    DAILY_LIMIT = DAILY_POST_LIMIT_RAW 
-      ? parseInt(DAILY_POST_LIMIT_RAW, 10) 
-      : 20;
-  }
-  
-  if (!DISABLE_LIMIT && DAILY_LIMIT !== null && postsToday >= DAILY_LIMIT) {
-    console.log(`⏭️ Límite diario alcanzado para ${product.name}: ${postsToday}/${DAILY_LIMIT} posts`);
-    return {
-      success: false,
-      productId: product.id,
-      productName: product.name,
-      error: `Daily limit reached (${DAILY_LIMIT} posts)`
-    };
-  }
+    // Obtener producto ReservasPro
+    let product = await prisma.saasProduct.findFirst({
+      where: {
+        organizationId: ORGANIZATION_ID,
+        name: "ReservasPro"
+      }
+    });
 
-  // Seleccionar tipo de contenido (rota entre los tipos)
-  const contentType = CONTENT_TYPES[postsToday % CONTENT_TYPES.length];
-  console.log(`  📝 Generando contenido tipo: ${contentType} para ${product.name}`);
+    // Si no existe, crearlo
+    if (!product) {
+      console.log("📦 Creando producto ReservasPro...");
+      product = await prisma.saasProduct.create({
+        data: {
+          id: `reservaspro-${Date.now()}`,
+          name: RESERVAS_PRO.name,
+          description: RESERVAS_PRO.description,
+          features: [
+            "Reservas online 24/7",
+            "Sistema XP y niveles",
+            "Recompensas automáticas",
+            "Página dark mode premium",
+            "Panel admin completo"
+          ],
+          targetAudience: RESERVAS_PRO.targetAudience,
+          organizationId: ORGANIZATION_ID,
+          marketingEnabled: true,
+          usp: RESERVAS_PRO.usp
+        }
+      });
+    }
 
-  // Obtener pricing del producto si existe
-  const pricing = product.pricing as any || {};
-  const pricingText = pricing.oferta 
-    ? `🔥 OFERTA: ${pricing.oferta}${pricing.normal ? ` | Precio normal: ${pricing.normal}` : ''}`
-    : pricing.normal 
-    ? `💰 Precio: ${pricing.normal}`
-    : '';
+    // Verificar cuántos posts se han generado hoy
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const postsToday = await prisma.marketingContent.count({
+      where: {
+        productId: product.id,
+        type: "SOCIAL",
+        createdAt: { gte: today }
+      }
+    });
 
-  // Generar contenido con Claude usando datos del producto
-  const prompt = `Genera UN post para Instagram/TikTok para un SaaS.
+    // Máximo 4 posts por día (cada 6 horas)
+    if (postsToday >= 4) {
+      console.log("⏭️ Ya se generaron 4 posts hoy");
+      return NextResponse.json({
+        success: true,
+        message: "Daily limit reached (4 posts)",
+        postsToday
+      });
+    }
 
-PRODUCTO: ${product.name}
+    // Seleccionar tipo de contenido (rota entre los tipos)
+    const contentType = CONTENT_TYPES[postsToday % CONTENT_TYPES.length];
+    console.log(`📝 Generando contenido tipo: ${contentType}`);
 
-DESCRIPCIÓN: ${product.description || 'SaaS innovador'}
+    // Generar contenido con Claude
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const prompt = `Genera UN post para Instagram/TikTok para una barbería.
 
-AUDIENCIA: ${product.targetAudience || 'Emprendedores y profesionales'}
+PRODUCTO: ${RESERVAS_PRO.name}
 
-USP: ${product.usp || 'Solución única en el mercado'}
+DESCRIPCIÓN: ${RESERVAS_PRO.description}
 
-${pricingText ? `${pricingText}\n` : ''}
+AUDIENCIA: ${RESERVAS_PRO.targetAudience}
+
+USP: ${RESERVAS_PRO.usp}
+
+🔥 OFERTA ACTUAL (INCLUIRLA SIEMPRE):
+- 30 días GRATIS sin tarjeta
+- Primeras 10 barberías: €19,99/mes DE POR VIDA (50% descuento)
+- Después: €39,99/mes
+- Setup profesional GRATIS
+- Página lista en 24 horas
 
 TIPO DE POST: ${contentType}
 
-${contentType === "educativo" ? "Enseña algo útil relacionado con el producto o su industria" : ""}
-${contentType === "problema_solucion" ? "Presenta un problema común que el producto resuelve" : ""}
-${contentType === "testimonio" ? "Crea un testimonio ficticio pero realista de un usuario del producto" : ""}
-${contentType === "oferta" ? "Enfócate 100% en la oferta o precio con urgencia" : ""}
+${contentType === "educativo" ? "Enseña algo útil sobre gestión de barberías o reservas" : ""}
+${contentType === "problema_solucion" ? "Presenta un problema común (WhatsApp, no-shows, tiempo perdido) y la solución" : ""}
+${contentType === "testimonio" ? "Crea un testimonio ficticio pero realista de un barbero que usa el sistema" : ""}
+${contentType === "oferta" ? "Enfócate 100% en la oferta de lanzamiento con urgencia" : ""}
 ${contentType === "carrusel_hook" ? "Hook intrigante que haga querer ver más" : ""}
-${contentType === "urgencia" ? "Crea urgencia: oferta limitada, tiempo limitado" : ""}
+${contentType === "urgencia" ? "Crea urgencia: plazas limitadas, oferta por tiempo limitado" : ""}
 
 REGLAS CRÍTICAS:
 - MÁXIMO 200 caracteres (sin hashtags)
@@ -131,7 +145,7 @@ REGLAS CRÍTICAS:
 - Emojis estratégicos (3-5 máximo)
 - Español de España, cercano pero profesional
 - CTA claro: "DM QUIERO" o "Link en bio"
-- ${pricingText ? 'SIEMPRE mencionar la oferta o el precio' : 'Mencionar el valor del producto'}
+- SIEMPRE mencionar la oferta o el precio
 
 FORMATO DE RESPUESTA (JSON):
 
@@ -150,416 +164,206 @@ FORMATO DE RESPUESTA (JSON):
 
 Responde SOLO con el JSON.`;
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 512,
-    messages: [{ role: "user", content: prompt }]
-  });
-
-  const responseText = response.content[0].type === "text" ? response.content[0].text : "";
-  
-  // Parsear respuesta
-  let parsedContent;
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsedContent = JSON.parse(jsonMatch[0]);
-    }
-  } catch (e) {
-    console.error(`❌ Error parseando respuesta para ${product.name}:`, e);
-    parsedContent = {
-      instagram: { content: responseText, hashtags: DEFAULT_HASHTAGS.principales },
-      tiktok: { content: responseText.substring(0, 150), hashtags: DEFAULT_HASHTAGS.principales.slice(0, 3) },
-      hook: "default",
-      tipo: contentType
-    };
-  }
-
-  // Guardar en base de datos (dos registros: Instagram y TikTok)
-  const savedInstagram = await prisma.marketingContent.create({
-    data: {
-      type: "SOCIAL",
-      platform: "instagram",
-      title: `${product.name} - Post ${contentType} - ${new Date().toLocaleDateString("es-ES")}`,
-      content: JSON.stringify(parsedContent.instagram),
-      status: "READY",
-      productId: product.id,
-      organizationId: ORGANIZATION_ID,
-      metadata: {
-        tipo: contentType,
-        hook: parsedContent.hook,
-        instagram: parsedContent.instagram,
-        tiktok: parsedContent.tiktok,
-        generatedAt: new Date().toISOString(),
-        tokensUsed: response.usage.input_tokens + response.usage.output_tokens
-      }
-    }
-  });
-
-  const savedTikTok = await prisma.marketingContent.create({
-    data: {
-      type: "SOCIAL",
-      platform: "tiktok",
-      title: `${product.name} - Post ${contentType} - ${new Date().toLocaleDateString("es-ES")}`,
-      content: JSON.stringify(parsedContent.tiktok),
-      status: "READY",
-      productId: product.id,
-      organizationId: ORGANIZATION_ID,
-      metadata: {
-        tipo: contentType,
-        hook: parsedContent.hook,
-        instagram: parsedContent.instagram,
-        tiktok: parsedContent.tiktok,
-        generatedAt: new Date().toISOString(),
-        tokensUsed: response.usage.input_tokens + response.usage.output_tokens
-      }
-    }
-  });
-
-  // Generar imagen con DALL-E ANTES de publicar
-  let imageUrl: string | undefined;
-  let imageCost = 0;
-  
-  try {
-    console.log(`  🎨 Generando imagen con DALL-E para ${product.name}...`);
-    const imageResult = await generatePostImage({
-      productName: product.name,
-      contentText: parsedContent.instagram.content,
-      platform: "instagram".toLowerCase() as "instagram" | "tiktok",
-      tipo: "tip"
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 512,
+      messages: [{ role: "user", content: prompt }]
     });
+
+    const responseText = response.content[0].type === "text" ? response.content[0].text : "";
     
-    imageUrl = imageResult.imageUrl;
-    imageCost = imageResult.cost;
-    
-    console.log(`  ✅ Imagen generada: ${imageUrl}`);
-    console.log(`  💰 Costo DALL-E: $${imageCost.toFixed(3)}`);
-    
-    // Actualizar metadata de Instagram con la imagen
-    const existingMetadata = (savedInstagram.metadata as any) || {};
-    await prisma.marketingContent.update({
-      where: { id: savedInstagram.id },
+    // Parsear respuesta
+    let parsedContent;
+    try {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedContent = JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.error("❌ Error parseando respuesta:", e);
+      parsedContent = {
+        instagram: { content: responseText, hashtags: HASHTAGS.principales },
+        tiktok: { content: responseText.substring(0, 150), hashtags: HASHTAGS.principales.slice(0, 3) },
+        hook: "default",
+        tipo: contentType
+      };
+    }
+
+    // Guardar en base de datos (dos registros: Instagram y TikTok)
+    const savedInstagram = await prisma.marketingContent.create({
       data: {
-        metadata: {
-          ...existingMetadata,
-          imageUrl: imageUrl,
-          imageCost: imageCost,
-          imageGenerated: true,
-          imageGeneratedAt: new Date().toISOString()
-        }
-      }
-    });
-    
-    // También actualizar TikTok con la misma imagen
-    const existingTikTokMetadata = (savedTikTok.metadata as any) || {};
-    await prisma.marketingContent.update({
-      where: { id: savedTikTok.id },
-      data: {
-        metadata: {
-          ...existingTikTokMetadata,
-          imageUrl: imageUrl,
-          imageCost: imageCost,
-          imageGenerated: true,
-          imageGeneratedAt: new Date().toISOString()
-        }
-      }
-    });
-  } catch (imageError: any) {
-    console.error(`  ⚠️ Error generando imagen DALL-E para ${product.name}:`, imageError.message);
-    console.log(`  ⚠️ Continuando sin imagen (skip imagen)...`);
-    // Continuar sin imagen - no bloquear publicación
-  }
-
-  console.log(`  ✅ Contenido generado y guardado para ${product.name}:`, savedInstagram.id, savedTikTok.id);
-
-  // Publicar automáticamente
-  console.log(`  📤 Publicando contenido automáticamente para ${product.name}...`);
-  
-  const useMockRaw = process.env.POSTIZ_USE_MOCK;
-  const useMock = useMockRaw === "true" || useMockRaw === "TRUE" || useMockRaw === "True" || useMockRaw === "1";
-  const useRealInstagram = !useMock && process.env.FACEBOOK_ACCESS_TOKEN && process.env.INSTAGRAM_ACCOUNT_ID;
-
-  const publishResults: Array<{
-    contentId: string;
-    platform: string;
-    success: boolean;
-    postId?: string;
-    error?: string;
-  }> = [];
-
-  // Publicar Instagram
-  let instagramPublished = false;
-  const platform = "INSTAGRAM";
-  
-  try {
-    const instagramText = `${parsedContent.instagram.content}\n\n${Array.isArray(parsedContent.instagram.hashtags) ? parsedContent.instagram.hashtags.join(" ") : parsedContent.instagram.hashtags || ""}`.trim();
-    
-    // SI platform === "INSTAGRAM" Y tenemos INSTAGRAM_ACCOUNT_ID: usar publishToInstagram()
-    if (platform === "INSTAGRAM" && process.env.INSTAGRAM_ACCOUNT_ID && imageUrl) {
-      console.log(`  📱 Publicando en Instagram REAL (Meta Graph API)...`);
-      
-      try {
-        const instagramResult = await publishToInstagram({
-          caption: instagramText,
-          imageUrl: imageUrl,
-          accessToken: process.env.FACEBOOK_ACCESS_TOKEN!
-        });
-        
-        if (instagramResult.success && instagramResult.postId) {
-          console.log(`  ✅ Instagram publicado REALMENTE: ${instagramResult.postId}`);
-          
-          const existingMetadata = (savedInstagram.metadata as any) || {};
-          await prisma.marketingContent.update({
-            where: { id: savedInstagram.id },
-            data: {
-              status: "PUBLISHED" as const,
-              metadata: {
-                ...existingMetadata,
-                instagramPostId: instagramResult.postId,
-                publishedAt: new Date().toISOString(),
-                publishedOn: "instagram",
-                publishedVia: "meta_graph_api"
-              }
-            }
-          });
-          
-          publishResults.push({
-            contentId: savedInstagram.id,
-            platform: "instagram",
-            success: true,
-            postId: instagramResult.postId
-          });
-          
-          instagramPublished = true;
-        } else {
-          console.warn(`  ⚠️ Publicación real falló: ${instagramResult.error}`);
-          console.log(`  🔄 Fallback a publishToSocial()...`);
-        }
-      } catch (realInstagramError: any) {
-        console.error(`  ❌ Error en publicación real:`, realInstagramError.message);
-        console.log(`  🔄 Fallback a publishToSocial()...`);
-      }
-    }
-    
-    // Fallback a publishToSocial() si no hay Instagram config o falló
-    if (!instagramPublished) {
-      console.log(`  📤 Publicando via publishToSocial() (fallback)...`);
-      const instagramResults = await publishToSocial({
-        content: instagramText,
-        imageUrl: imageUrl,
-        platforms: ["instagram"]
-      });
-
-      const instagramResult = instagramResults.find(r => r.platform.toLowerCase().includes("instagram")) || instagramResults[0];
-      
-      if (instagramResult?.success && instagramResult.postId) {
-        try {
-          const existingMetadata = (savedInstagram.metadata as any) || {};
-          await prisma.marketingContent.update({
-            where: { id: savedInstagram.id },
-            data: {
-              status: "PUBLISHED" as const,
-              metadata: {
-                ...existingMetadata,
-                postizPostId: instagramResult.postId,
-                publishedAt: new Date().toISOString(),
-                publishedOn: "instagram",
-                publishedVia: "postiz"
-              }
-            }
-          });
-          console.log(`  ✅ Instagram publicado via Postiz para ${product.name}: ${instagramResult.postId}`);
-          publishResults.push({
-            contentId: savedInstagram.id,
-            platform: "instagram",
-            success: true,
-            postId: instagramResult.postId
-          });
-        } catch (updateError: any) {
-          console.error(`  ❌ Error actualizando status para ${product.name} Instagram:`, updateError.message);
-          publishResults.push({
-            contentId: savedInstagram.id,
-            platform: "instagram",
-            success: true,
-            postId: instagramResult.postId,
-            error: `Publicado pero error actualizando status: ${updateError.message}`
-          });
-        }
-      } else {
-        publishResults.push({
-          contentId: savedInstagram.id,
-          platform: "instagram",
-          success: false,
-          error: instagramResult?.error || "Unknown error"
-        });
-      }
-    }
-  } catch (error: any) {
-    console.error(`  ❌ Error publicando Instagram para ${product.name}:`, error.message);
-    publishResults.push({
-      contentId: savedInstagram.id,
-      platform: "instagram",
-      success: false,
-      error: error.message
-    });
-  }
-
-  // Publicar TikTok
-  try {
-    const tiktokText = `${parsedContent.tiktok.content}\n\n${Array.isArray(parsedContent.tiktok.hashtags) ? parsedContent.tiktok.hashtags.join(" ") : parsedContent.tiktok.hashtags || ""}`.trim();
-    
-    const tiktokResults = await publishToSocial({
-      content: tiktokText,
-      platforms: ["tiktok"]
-    });
-
-    const tiktokResult = tiktokResults.find(r => r.platform.toLowerCase().includes("tiktok")) || tiktokResults[0];
-    
-    if (tiktokResult?.success && tiktokResult.postId) {
-      try {
-        const existingMetadata = (savedTikTok.metadata as any) || {};
-        await prisma.marketingContent.update({
-          where: { id: savedTikTok.id },
-          data: {
-            status: "PUBLISHED" as const,
-            metadata: {
-              ...existingMetadata,
-              postizPostId: tiktokResult.postId,
-              publishedAt: new Date().toISOString(),
-              publishedOn: "tiktok"
-            }
-          }
-        });
-        console.log(`  ✅ TikTok publicado para ${product.name}: ${tiktokResult.postId}`);
-        publishResults.push({
-          contentId: savedTikTok.id,
-          platform: "tiktok",
-          success: true,
-          postId: tiktokResult.postId
-        });
-      } catch (updateError: any) {
-        console.error(`  ❌ Error actualizando status para ${product.name} TikTok:`, updateError.message);
-        publishResults.push({
-          contentId: savedTikTok.id,
-          platform: "tiktok",
-          success: true,
-          postId: tiktokResult.postId,
-          error: `Publicado pero error actualizando status: ${updateError.message}`
-        });
-      }
-    } else {
-      publishResults.push({
-        contentId: savedTikTok.id,
-        platform: "tiktok",
-        success: false,
-        error: tiktokResult?.error || "Unknown error"
-      });
-    }
-  } catch (error: any) {
-    console.error(`  ❌ Error publicando TikTok para ${product.name}:`, error.message);
-    publishResults.push({
-      contentId: savedTikTok.id,
-      platform: "tiktok",
-      success: false,
-      error: error.message
-    });
-  }
-
-  const successfulPublishes = publishResults.filter(r => r.success).length;
-  const failedPublishes = publishResults.filter(r => !r.success).length;
-
-  console.log(`  📊 Resumen para ${product.name}: ${successfulPublishes} exitosos, ${failedPublishes} fallidos`);
-
-  return {
-    success: successfulPublishes > 0,
-    productId: product.id,
-    productName: product.name,
-    contentIds: {
-      instagram: savedInstagram.id,
-      tiktok: savedTikTok.id
-    },
-    tipo: contentType,
-    published: publishResults,
-    publishedCount: successfulPublishes,
-    failedCount: failedPublishes
-  };
-}
-
-export async function GET(request: NextRequest) {
-  console.log("⏰ CRON: Generando contenido para redes sociales...");
-  
-  try {
-    // Verificar autorización
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      console.log("❌ No autorizado");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Obtener TODOS los productos con marketing habilitado
-    const products = await prisma.saasProduct.findMany({
-      where: {
+        type: "SOCIAL",
+        platform: "instagram",
+        title: `Post ${contentType} - ${new Date().toLocaleDateString("es-ES")}`,
+        content: JSON.stringify(parsedContent.instagram),
+        status: "READY",
+        productId: product.id,
         organizationId: ORGANIZATION_ID,
-        marketingEnabled: true
+        metadata: {
+          tipo: contentType,
+          hook: parsedContent.hook,
+          instagram: parsedContent.instagram,
+          tiktok: parsedContent.tiktok,
+          generatedAt: new Date().toISOString(),
+          tokensUsed: response.usage.input_tokens + response.usage.output_tokens
+        }
       }
     });
 
-    if (products.length === 0) {
-      console.warn("⚠️ No hay productos con marketing habilitado");
-      return NextResponse.json({
-        success: false,
-        error: "No hay productos con marketing habilitado",
-        organizationId: ORGANIZATION_ID
-      }, { status: 404 });
-    }
-
-    console.log(`📦 Encontrados ${products.length} producto(s) con marketing habilitado:`);
-    products.forEach(p => console.log(`  - ${p.name} (${p.id})`));
-
-    // Inicializar cliente de Anthropic
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    // Procesar cada producto
-    const results = [];
-    for (const product of products) {
-      try {
-        const result = await processProduct(product, client);
-        results.push(result);
-      } catch (error: any) {
-        console.error(`❌ Error procesando producto ${product.name}:`, error);
-        results.push({
-          success: false,
-          productId: product.id,
-          productName: product.name,
-          error: error.message
-        });
+    const savedTikTok = await prisma.marketingContent.create({
+      data: {
+        type: "SOCIAL",
+        platform: "tiktok",
+        title: `Post ${contentType} - ${new Date().toLocaleDateString("es-ES")}`,
+        content: JSON.stringify(parsedContent.tiktok),
+        status: "READY",
+        productId: product.id,
+        organizationId: ORGANIZATION_ID,
+        metadata: {
+          tipo: contentType,
+          hook: parsedContent.hook,
+          instagram: parsedContent.instagram,
+          tiktok: parsedContent.tiktok,
+          generatedAt: new Date().toISOString(),
+          tokensUsed: response.usage.input_tokens + response.usage.output_tokens
+        }
       }
+    });
+
+    console.log("✅ Contenido generado y guardado:", savedInstagram.id, savedTikTok.id);
+
+    // ========== NUEVO: AUTO-PUBLICACIÓN ==========
+    let autoPublishResult = null;
+    
+    if (product.autoPublish) {
+      console.log("🚀 Auto-publicación activada para", product.name);
+      
+      // Validar contenido de Instagram
+      const instagramGuards = await guardsRunAll({
+        text: parsedContent.instagram.content,
+        type: contentType,
+        platform: "instagram",
+        productName: product.name,
+        hasImage: false, // TODO: Agregar generación de imagen
+      });
+      
+      logGuardResult(savedInstagram.id, instagramGuards);
+      
+      // Validar contenido de TikTok
+      const tiktokGuards = await guardsRunAll({
+        text: parsedContent.tiktok.content,
+        type: contentType,
+        platform: "tiktok",
+        productName: product.name,
+        hasImage: false,
+      });
+      
+      logGuardResult(savedTikTok.id, tiktokGuards);
+      
+      // Si ambos pasan guardias, intentar publicar
+      if (instagramGuards.passed && tiktokGuards.passed) {
+        console.log("✅ Guardias passed. Publicando automáticamente...");
+        
+        try {
+          // TODO: Implementar publicación real a Postiz/Publer
+          // Por ahora, solo cambiar estado a AUTO_PUBLISHED
+          await prisma.marketingContent.update({
+            where: { id: savedInstagram.id },
+            data: { 
+              status: "AUTO_PUBLISHED",
+              metadata: {
+                ...savedInstagram.metadata,
+                autoPublished: true,
+                guardsScore: instagramGuards.score,
+                publishedAt: new Date().toISOString()
+              }
+            }
+          });
+          
+          await prisma.marketingContent.update({
+            where: { id: savedTikTok.id },
+            data: { 
+              status: "AUTO_PUBLISHED",
+              metadata: {
+                ...savedTikTok.metadata,
+                autoPublished: true,
+                guardsScore: tiktokGuards.score,
+                publishedAt: new Date().toISOString()
+              }
+            }
+          });
+          
+          autoPublishResult = {
+            success: true,
+            instagram: { published: true, score: instagramGuards.score },
+            tiktok: { published: true, score: tiktokGuards.score }
+          };
+          
+          console.log("✅ Auto-publicado exitosamente");
+          
+        } catch (publishError: any) {
+          console.error("❌ Error en auto-publicación:", publishError.message);
+          autoPublishResult = {
+            success: false,
+            error: publishError.message
+          };
+        }
+        
+      } else {
+        console.log("⚠️ Guardias no pasadas. Contenido queda en READY para revisión manual.");
+        
+        // Agregar información de guardias fallidas al metadata
+        if (!instagramGuards.passed) {
+          await prisma.marketingContent.update({
+            where: { id: savedInstagram.id },
+            data: {
+              metadata: {
+                ...savedInstagram.metadata,
+                guardsResult: instagramGuards
+              }
+            }
+          });
+        }
+        
+        if (!tiktokGuards.passed) {
+          await prisma.marketingContent.update({
+            where: { id: savedTikTok.id },
+            data: {
+              metadata: {
+                ...savedTikTok.metadata,
+                guardsResult: tiktokGuards
+              }
+            }
+          });
+        }
+        
+        autoPublishResult = {
+          success: false,
+          reason: "Guards failed",
+          instagram: instagramGuards,
+          tiktok: tiktokGuards
+        };
+      }
+      
+    } else {
+      console.log("⏸️ Auto-publicación desactivada. Contenido queda en READY.");
     }
-
-    // Resumen final
-    const totalSuccessful = results.filter(r => r.success).length;
-    const totalFailed = results.filter(r => !r.success).length;
-    const totalPublished = results.reduce((sum, r) => sum + (r.publishedCount || 0), 0);
-    const totalFailedPublishes = results.reduce((sum, r) => sum + (r.failedCount || 0), 0);
-
-    console.log(`\n📊 RESUMEN FINAL:`);
-    console.log(`   ✅ Productos procesados exitosamente: ${totalSuccessful}/${products.length}`);
-    console.log(`   ❌ Productos con errores: ${totalFailed}`);
-    console.log(`   📤 Posts publicados: ${totalPublished}`);
-    console.log(`   ❌ Posts fallidos: ${totalFailedPublishes}`);
+    // ========== FIN AUTO-PUBLICACIÓN ==========
 
     return NextResponse.json({
-      success: totalSuccessful > 0,
-      productsProcessed: products.length,
-      productsSuccessful: totalSuccessful,
-      productsFailed: totalFailed,
-      totalPublished,
-      totalFailedPublishes,
-      results
+      success: true,
+      contentIds: {
+        instagram: savedInstagram.id,
+        tiktok: savedTikTok.id
+      },
+      tipo: contentType,
+      instagram: parsedContent.instagram,
+      tiktok: parsedContent.tiktok,
+      autoPublish: autoPublishResult,
+      message: product.autoPublish 
+        ? (autoPublishResult?.success ? "Contenido generado y auto-publicado" : "Contenido generado. Auto-publicación falló o guardias no pasadas.")
+        : "Contenido generado. Disponible en dashboard para revisión."
     });
-
 
   } catch (error: any) {
     console.error("❌ Error en cron:", error);

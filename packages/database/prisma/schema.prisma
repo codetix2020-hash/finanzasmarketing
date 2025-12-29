@@ -10,11 +10,11 @@ generator client {
 }
 
 generator zod {
-  provider = "prisma-zod-generator"
-  output   = "./zod"
-  useDecimalJs = true
+  provider              = "prisma-zod-generator"
+  output                = "./zod"
+  useDecimalJs          = true
   prismaJsonNullability = true
-  createIndexFile = true
+  createIndexFile       = true
 }
 
 model User {
@@ -130,7 +130,7 @@ model TwoFactor {
 }
 
 model Organization {
-  id                    String                @id @default(cuid())
+  id                    String                 @id @default(cuid())
   name                  String
   slug                  String?
   logo                  String?
@@ -142,26 +142,26 @@ model Organization {
   purchases             Purchase[]
   aiChats               AiChat[]
   financialTransactions FinancialTransaction[]
-  saasMetrics          SaasMetrics[]
-  costTrackings        CostTracking[]
-  agentDecisions       AgentDecision[]
-  saasProducts         SaasProduct[]
-  marketingAdCampaigns MarketingAdCampaign[]
-  marketingContent     MarketingContent[]
-  marketingDecisions   MarketingDecision[]
-  marketingGuards      MarketingGuard[]
-  marketingLeads       MarketingLead[]
-  marketingMemories    MarketingMemory[]
-  marketingJobs        MarketingJob[]
-  autoSaasInbox        AutoSaasInbox[]
-  autoSaasOutbox       AutoSaasOutbox[]
-  apiUsageLogs         ApiUsageLog[]
-  marketingConfig      MarketingConfig?
-  financialMetrics     FinancialMetric[]
-  transactions         Transaction[]
-  financeActions       FinanceAction[]
-  predictions          Prediction[]
-  anomalies            Anomaly[]
+  saasMetrics           SaasMetrics[]
+  costTrackings         CostTracking[]
+  agentDecisions        AgentDecision[]
+  saasProducts          SaasProduct[]
+  marketingAdCampaigns  MarketingAdCampaign[]
+  marketingContent      MarketingContent[]
+  marketingDecisions    MarketingDecision[]
+  marketingGuards       MarketingGuard[]
+  marketingLeads        MarketingLead[]
+  marketingMemories     MarketingMemory[]
+  marketingJobs         MarketingJob[]
+  autoSaasInbox         AutoSaasInbox[]
+  autoSaasOutbox        AutoSaasOutbox[]
+  apiUsageLogs          ApiUsageLog[]
+  marketingConfig       MarketingConfig?
+  financialMetrics      FinancialMetric[]
+  transactions          Transaction[]
+  financeActions        FinanceAction[]
+  predictions           Prediction[]
+  anomalies             Anomaly[]
 
   @@unique([slug])
   @@map("organization")
@@ -268,22 +268,22 @@ enum SaasStatus {
 }
 
 model SaasMetrics {
-  id             String     @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  date           DateTime
-  mrr            Decimal    @db.Decimal(10, 2)
-  arr            Decimal    @db.Decimal(10, 2)
-  totalRevenue   Decimal    @db.Decimal(10, 2)
-  totalCosts     Decimal    @db.Decimal(10, 2)
-  netProfit      Decimal    @db.Decimal(10, 2)
-  roi            Float
-  apiCostsMTD    Decimal    @db.Decimal(10, 2)
-  adCostsMTD     Decimal    @db.Decimal(10, 2)
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  date            DateTime
+  mrr             Decimal      @db.Decimal(10, 2)
+  arr             Decimal      @db.Decimal(10, 2)
+  totalRevenue    Decimal      @db.Decimal(10, 2)
+  totalCosts      Decimal      @db.Decimal(10, 2)
+  netProfit       Decimal      @db.Decimal(10, 2)
+  roi             Float
+  apiCostsMTD     Decimal      @db.Decimal(10, 2)
+  adCostsMTD      Decimal      @db.Decimal(10, 2)
   activeCustomers Int
-  churnRate      Float
-  status         SaasStatus
-  updatedAt      DateTime   @updatedAt
+  churnRate       Float
+  status          SaasStatus
+  updatedAt       DateTime     @updatedAt
 
   @@unique([organizationId, date])
   @@map("saas_metrics")
@@ -347,22 +347,22 @@ model AttributionEvent {
   updatedAt DateTime @updatedAt
 
   // User Tracking
-  userId       String?
-  sessionId    String
-  visitorId    String // Anonymous tracking
+  userId         String?
+  sessionId      String
+  visitorId      String // Anonymous tracking
   organizationId String?
 
   // Event Data
-  eventType String // 'ad_click', 'page_view', 'signup', 'purchase', 'trial_start'
+  eventType  String // 'ad_click', 'page_view', 'signup', 'purchase', 'trial_start'
   eventValue Float? // Value in euros for purchase events
 
   // Attribution Data
-  source      String? // 'google_ads', 'meta_ads', 'organic', 'direct', 'referral'
-  medium      String? // 'cpc', 'social', 'email', 'organic'
-  campaign    String? // Campaign name
-  adGroup     String? // Ad group name
-  keyword     String? // Keyword for search ads
-  adId        String? // Specific ad ID
+  source   String? // 'google_ads', 'meta_ads', 'organic', 'direct', 'referral'
+  medium   String? // 'cpc', 'social', 'email', 'organic'
+  campaign String? // Campaign name
+  adGroup  String? // Ad group name
+  keyword  String? // Keyword for search ads
+  adId     String? // Specific ad ID
 
   // Marketing Context
   landingPage String?
@@ -374,12 +374,12 @@ model AttributionEvent {
   utmTerm     String?
 
   // Device & Location
-  device      String? // 'mobile', 'desktop', 'tablet'
-  country     String?
-  city        String?
+  device  String? // 'mobile', 'desktop', 'tablet'
+  country String?
+  city    String?
 
   // Metadata
-  metadata    Json?
+  metadata Json?
 
   @@index([userId])
   @@index([sessionId])
@@ -416,14 +416,14 @@ model CustomerJourney {
   linearValue     Float @default(0) // Revenue distributed linearly
 
   // Conversion Data
-  hasConverted      Boolean  @default(false)
-  conversionDate    DateTime?
-  conversionValue   Float?
-  lifetimeValue     Float    @default(0)
+  hasConverted    Boolean   @default(false)
+  conversionDate  DateTime?
+  conversionValue Float?
+  lifetimeValue   Float     @default(0)
 
   // Journey Stats
-  touchpointsCount  Int      @default(0)
-  daysToConversion  Int?
+  touchpointsCount Int  @default(0)
+  daysToConversion Int?
 
   // Metadata
   metadata Json?
@@ -452,7 +452,7 @@ model CampaignPerformance {
   endDate   DateTime?
 
   // Spend Data
-  totalSpend      Float @default(0)
+  totalSpend      Float  @default(0)
   dailyBudget     Float?
   budgetRemaining Float?
 
@@ -475,16 +475,16 @@ model CampaignPerformance {
   linearRevenue     Float @default(0)
 
   // Finance Integration
-  profitMargin    Float?
-  netProfit       Float?
-  ltv             Float?
-  paybackPeriod   Float?
+  profitMargin  Float?
+  netProfit     Float?
+  ltv           Float?
+  paybackPeriod Float?
 
   // AI Recommendations
-  recommendedAction   String? // 'scale', 'maintain', 'optimize', 'pause'
-  recommendedBudget   Float?
-  confidenceScore     Float?
-  lastAnalyzedAt      DateTime?
+  recommendedAction String? // 'scale', 'maintain', 'optimize', 'pause'
+  recommendedBudget Float?
+  confidenceScore   Float?
+  lastAnalyzedAt    DateTime?
 
   // Metadata
   metadata Json?
@@ -506,9 +506,9 @@ model BudgetAllocation {
   organizationId String
 
   // Budget Data
-  totalBudget      Float
-  allocatedBudget  Float @default(0)
-  remainingBudget  Float
+  totalBudget     Float
+  allocatedBudget Float @default(0)
+  remainingBudget Float
 
   // Period
   period      String // 'monthly', 'weekly', 'daily'
@@ -516,24 +516,24 @@ model BudgetAllocation {
   periodEnd   DateTime
 
   // Channel Allocation
-  googleAdsBudget  Float @default(0)
-  metaAdsBudget    Float @default(0)
-  contentBudget    Float @default(0)
-  emailBudget      Float @default(0)
-  otherBudget      Float @default(0)
+  googleAdsBudget Float @default(0)
+  metaAdsBudget   Float @default(0)
+  contentBudget   Float @default(0)
+  emailBudget     Float @default(0)
+  otherBudget     Float @default(0)
 
   // Performance Tracking
-  totalSpent       Float @default(0)
-  totalRevenue     Float @default(0)
-  totalROI         Float @default(0)
+  totalSpent   Float @default(0)
+  totalRevenue Float @default(0)
+  totalROI     Float @default(0)
 
   // AI Control
-  managedByAI         Boolean @default(false)
-  lastAIAdjustment    DateTime?
-  aiAdjustmentReason  String?
+  managedByAI        Boolean   @default(false)
+  lastAIAdjustment   DateTime?
+  aiAdjustmentReason String?
 
   // Approval
-  requiresApproval Boolean @default(true)
+  requiresApproval Boolean   @default(true)
   approvedBy       String?
   approvedAt       DateTime?
 
@@ -561,9 +561,9 @@ model IntegrationEvent {
   severity    String // 'info', 'warning', 'critical'
 
   // Action Taken
-  actionType     String? // 'scale_budget', 'pause_campaign', 'send_alert'
-  actionStatus   String? // 'pending', 'executed', 'failed'
-  actionResult   String?
+  actionType   String? // 'scale_budget', 'pause_campaign', 'send_alert'
+  actionStatus String? // 'pending', 'executed', 'failed'
+  actionResult String?
 
   // Related Entities
   campaignId String?
@@ -584,44 +584,45 @@ model IntegrationEvent {
 // ═══════════════════════════════════════════════════════
 
 model SaasProduct {
-  id             String   @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name           String
-  description    String?  @db.Text
-  targetAudience String?
-  usp            String?
-  pricing        Json?
-  marketingEnabled Boolean @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  campaigns      MarketingAdCampaign[]
-  content        MarketingContent[]
-  leads          MarketingLead[]
-  marketingJobs  MarketingJob[]
-  
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?      @db.Text
+  targetAudience   String?
+  usp              String?
+  pricing          Json?
+  marketingEnabled Boolean      @default(false)
+  autoPublish      Boolean      @default(false) // Publicación automática si pasa guardias
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  campaigns     MarketingAdCampaign[]
+  content       MarketingContent[]
+  leads         MarketingLead[]
+  marketingJobs MarketingJob[]
+
   @@index([organizationId])
   @@map("saas_product")
 }
 
 model MarketingAdCampaign {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   productId      String?
   product        SaasProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
   name           String
-  platform       String   // 'facebook', 'google', 'linkedin', etc.
-  status         String   @default("DRAFT") // DRAFT, ACTIVE, PAUSED, COMPLETED
+  platform       String // 'facebook', 'google', 'linkedin', etc.
+  status         String       @default("DRAFT") // DRAFT, ACTIVE, PAUSED, COMPLETED
   budget         Json?
   targeting      Json?
   performance    Json?
   startDate      DateTime?
   endDate        DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
   @@index([organizationId])
   @@index([productId])
   @@index([platform])
@@ -630,21 +631,21 @@ model MarketingAdCampaign {
 }
 
 model MarketingContent {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   productId      String?
   product        SaasProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  type           String   // 'POST', 'AD', 'EMAIL', etc.
-  platform       String   // 'facebook', 'google', 'linkedin', 'email', etc.
+  type           String // 'POST', 'AD', 'EMAIL', etc.
+  platform       String // 'facebook', 'google', 'linkedin', 'email', etc.
   title          String?
   content        Json?
-  status         String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  status         String       @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   performance    Json?
   metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
   @@index([organizationId])
   @@index([productId])
   @@index([platform])
@@ -653,36 +654,36 @@ model MarketingContent {
 }
 
 model MarketingDecision {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  agentType      String   // 'ads', 'content', 'budget', etc.
+  agentType      String // 'ads', 'content', 'budget', etc.
   decision       Json
-  reasoning      String?  @db.Text
+  reasoning      String?      @db.Text
   context        Json?
   executedAt     DateTime?
-  createdAt      DateTime @default(now())
-  
+  createdAt      DateTime     @default(now())
+
   @@index([organizationId])
   @@index([agentType])
   @@map("marketing_decision")
 }
 
 model MarketingGuard {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  guardType      String   // 'financial', 'reputation', 'legal'
+  guardType      String // 'financial', 'reputation', 'legal'
   metric         String
   threshold      Float
   currentValue   Float
-  status         String   // 'ok', 'warning', 'critical'
-  triggered      Boolean  @default(false)
+  status         String // 'ok', 'warning', 'critical'
+  triggered      Boolean      @default(false)
   action         Json?
   lastCheck      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
   @@index([organizationId])
   @@index([guardType])
   @@index([status])
@@ -690,47 +691,47 @@ model MarketingGuard {
 }
 
 model MarketingLead {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  productId       String?
-  product         SaasProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        SaasProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   // Info del lead
-  email           String
-  name            String?
-  company         String?
-  phone           String?
-  website         String?
-  
+  email   String
+  name    String?
+  company String?
+  phone   String?
+  website String?
+
   // Scoring
-  score           Int      @default(0)
-  temperature     String   @default("cold") // cold, warm, hot, qualified
-  stage           String   @default("new") // new, contacted, qualified, proposal, negotiation, won, lost
-  
+  score       Int    @default(0)
+  temperature String @default("cold") // cold, warm, hot, qualified
+  stage       String @default("new") // new, contacted, qualified, proposal, negotiation, won, lost
+
   // Source
-  source          String?  // organic, ads, referral, email, social
-  campaign        String?
-  medium          String?
-  
+  source   String? // organic, ads, referral, email, social
+  campaign String?
+  medium   String?
+
   // Engagement
-  engagementData  Json?    // { pageViews, emailOpens, clicks, downloads }
-  lastActivity    DateTime?
-  
+  engagementData Json? // { pageViews, emailOpens, clicks, downloads }
+  lastActivity   DateTime?
+
   // AI Analysis
-  aiAnalysis      Json?    // { buyIntent, budget, timeline, painPoints }
-  
+  aiAnalysis Json? // { buyIntent, budget, timeline, painPoints }
+
   // Assignment
-  assignedTo      String?
-  
+  assignedTo String?
+
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  convertedAt     DateTime?
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  convertedAt DateTime?
+
   // Relations
-  activities      MarketingLeadActivity[]
-  
+  activities MarketingLeadActivity[]
+
   @@index([organizationId])
   @@index([productId])
   @@index([email])
@@ -740,13 +741,13 @@ model MarketingLead {
 }
 
 model MarketingLeadActivity {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   leadId    String
   lead      MarketingLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  type      String   // email_sent, email_opened, page_view, form_submit, call, meeting, note
+  type      String // email_sent, email_opened, page_view, form_submit, call, meeting, note
   data      Json?
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime      @default(now())
+
   @@index([leadId])
   @@map("marketing_lead_activity")
 }
@@ -756,51 +757,51 @@ model MarketingLeadActivity {
 // ============================================
 
 model MarketingMemory {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
-  
-  memoryType     String   // business_dna, learning, prompt_template
-  content        String   @db.Text
-  embedding      Json?    // Vector embedding para búsqueda semántica
-  metadata       Json?
-  importance     Int      @default(5) // 1-10
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
+  memoryType String // business_dna, learning, prompt_template
+  content    String @db.Text
+  embedding  Json? // Vector embedding para búsqueda semántica
+  metadata   Json?
+  importance Int    @default(5) // 1-10
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
   @@index([memoryType])
   @@map("marketing_memory")
 }
 
 model MarketingJob {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   organizationId String
   productId      String?
-  
-  jobType        String   // content_generation, image_generation, email_sequence, voice_generation, campaign_optimization
-  status         String   @default("pending") // pending, running, completed, failed
-  priority       Int      @default(5) // 1-10
-  
-  input          Json     // Parámetros del job
-  output         Json?    // Resultado del job
-  error          String?  @db.Text // Error si falló
-  
-  progress       Int      @default(0) // 0-100
-  attempts       Int      @default(0)
-  maxAttempts    Int      @default(3)
-  
-  scheduledAt    DateTime?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  product        SaasProduct? @relation(fields: [productId], references: [id])
-  
+
+  jobType  String // content_generation, image_generation, email_sequence, voice_generation, campaign_optimization
+  status   String @default("pending") // pending, running, completed, failed
+  priority Int    @default(5) // 1-10
+
+  input  Json // Parámetros del job
+  output Json? // Resultado del job
+  error  String? @db.Text // Error si falló
+
+  progress    Int @default(0) // 0-100
+  attempts    Int @default(0)
+  maxAttempts Int @default(3)
+
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      SaasProduct? @relation(fields: [productId], references: [id])
+
   @@index([organizationId])
   @@index([status])
   @@index([jobType])
@@ -809,51 +810,51 @@ model MarketingJob {
 }
 
 model AutoSaasInbox {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
-  
-  messageType    String   // new_product, product_update, feature_request_response
-  payload        Json
-  processed      Boolean  @default(false)
-  processedAt    DateTime?
-  
-  createdAt      DateTime @default(now())
-  
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
+  messageType String // new_product, product_update, feature_request_response
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
   @@index([processed])
   @@map("auto_saas_inbox")
 }
 
 model AutoSaasOutbox {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   organizationId String
-  
-  messageType    String   // feature_request, performance_report, optimization_suggestion
-  payload        Json
-  sent           Boolean  @default(false)
-  sentAt         DateTime?
-  
-  createdAt      DateTime @default(now())
-  
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
+  messageType String // feature_request, performance_report, optimization_suggestion
+  payload     Json
+  sent        Boolean   @default(false)
+  sentAt      DateTime?
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId])
   @@index([sent])
   @@map("auto_saas_outbox")
 }
 
 model ApiUsageLog {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  apiName        String   // anthropic, openai, replicate, elevenlabs
+  apiName        String // anthropic, openai, replicate, elevenlabs
   endpoint       String?
   tokens         Int?
   cost           Float?
   metadata       Json?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
 
   @@index([organizationId])
   @@index([apiName])
@@ -862,13 +863,13 @@ model ApiUsageLog {
 }
 
 model MarketingConfig {
-  id             String   @id @default(cuid())
-  organizationId String   @unique
+  id             String       @id @default(cuid())
+  organizationId String       @unique
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  isPaused       Boolean  @default(false)
+  isPaused       Boolean      @default(false)
   settings       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@map("marketing_config")
 }
@@ -878,24 +879,24 @@ model MarketingConfig {
 // ==========================================
 
 model FinancialMetric {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   // Métricas principales
-  mrr            Float    @default(0)
-  arr            Float    @default(0)
-  revenue30d     Float    @default(0)
-  revenue90d     Float    @default(0)
-  profit         Float    @default(0)
-  costs          Float    @default(0)
-  churnRate      Float    @default(0)
-  growthRate     Float    @default(0)
-  
+  mrr        Float @default(0)
+  arr        Float @default(0)
+  revenue30d Float @default(0)
+  revenue90d Float @default(0)
+  profit     Float @default(0)
+  costs      Float @default(0)
+  churnRate  Float @default(0)
+  growthRate Float @default(0)
+
   // Metadata
-  period         String   // 'YYYY-MM' format
-  calculatedAt   DateTime @default(now())
-  
+  period       String // 'YYYY-MM' format
+  calculatedAt DateTime @default(now())
+
   @@unique([organizationId, period])
   @@index([organizationId])
   @@index([period])
@@ -903,29 +904,29 @@ model FinancialMetric {
 }
 
 model Transaction {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   // Datos de transacción
-  amount         Float
-  currency       String   @default("EUR")
-  type           String   // 'income' | 'expense'
-  category       String   // 'subscription' | 'one-time' | 'refund' | 'cost' | etc
-  description    String?
-  
+  amount      Float
+  currency    String  @default("EUR")
+  type        String // 'income' | 'expense'
+  category    String // 'subscription' | 'one-time' | 'refund' | 'cost' | etc
+  description String?
+
   // Relacionado con clientes (opcional)
-  customerId     String?
-  customerName   String?
-  
+  customerId   String?
+  customerName String?
+
   // Metadata
-  date           DateTime
-  stripeId       String?  @unique
-  source         String   @default("manual") // 'stripe' | 'manual' | 'import'
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  date     DateTime
+  stripeId String?  @unique
+  source   String   @default("manual") // 'stripe' | 'manual' | 'import'
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([organizationId])
   @@index([date])
   @@index([type])
@@ -933,29 +934,29 @@ model Transaction {
 }
 
 model FinanceAction {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   // Acción
-  type           String   // 'alert' | 'email' | 'slack' | 'stripe_pricing' | 'notification'
-  status         String   @default("pending") // 'pending' | 'executed' | 'failed'
-  
+  type   String // 'alert' | 'email' | 'slack' | 'stripe_pricing' | 'notification'
+  status String @default("pending") // 'pending' | 'executed' | 'failed'
+
   // Datos de la acción
-  title          String
-  description    String?
-  severity       String?  // 'info' | 'warning' | 'critical'
-  params         Json?    // Parámetros específicos de la acción
-  
+  title       String
+  description String?
+  severity    String? // 'info' | 'warning' | 'critical'
+  params      Json? // Parámetros específicos de la acción
+
   // Resultado
-  result         Json?    // Resultado de la ejecución
-  error          String?
-  
+  result Json? // Resultado de la ejecución
+  error  String?
+
   // Metadata
-  triggeredBy    String   @default("system") // 'system' | 'user' | 'agent'
-  executedAt     DateTime?
-  createdAt      DateTime @default(now())
-  
+  triggeredBy String    @default("system") // 'system' | 'user' | 'agent'
+  executedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
   @@index([organizationId])
   @@index([status])
   @@index([createdAt])
@@ -963,25 +964,25 @@ model FinanceAction {
 }
 
 model Prediction {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   // Predicción
-  metric         String   // 'mrr' | 'revenue' | 'churn' | 'runway'
+  metric         String // 'mrr' | 'revenue' | 'churn' | 'runway'
   currentValue   Float
   predictedValue Float
-  period         String   // 'YYYY-MM' format del periodo predicho
-  confidence     Float    @default(0.7) // 0-1
-  
+  period         String // 'YYYY-MM' format del periodo predicho
+  confidence     Float  @default(0.7) // 0-1
+
   // Escenarios
-  bestCase       Float?
-  worstCase      Float?
-  
+  bestCase  Float?
+  worstCase Float?
+
   // Metadata
-  model          String   @default("claude-sonnet") // Modelo de IA usado
-  createdAt      DateTime @default(now())
-  
+  model     String   @default("claude-sonnet") // Modelo de IA usado
+  createdAt DateTime @default(now())
+
   @@index([organizationId])
   @@index([metric])
   @@index([period])
@@ -989,30 +990,30 @@ model Prediction {
 }
 
 model Anomaly {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   // Anomalía
-  type           String   // 'mrr_drop' | 'churn_spike' | 'payment_failure' | etc
-  severity       String   // 'low' | 'medium' | 'high' | 'critical'
-  
+  type     String // 'mrr_drop' | 'churn_spike' | 'payment_failure' | etc
+  severity String // 'low' | 'medium' | 'high' | 'critical'
+
   // Datos
-  metric         String   // Métrica afectada
-  expectedValue  Float
-  actualValue    Float
-  deviation      Float    // % de desviación
-  
+  metric        String // Métrica afectada
+  expectedValue Float
+  actualValue   Float
+  deviation     Float // % de desviación
+
   // Análisis
-  cause          String?  // Causa probable identificada por IA
-  impact         String?  // Impacto financiero estimado
-  recommendation String?  // Recomendación de acción
-  
+  cause          String? // Causa probable identificada por IA
+  impact         String? // Impacto financiero estimado
+  recommendation String? // Recomendación de acción
+
   // Metadata
-  detectedAt     DateTime @default(now())
-  resolvedAt     DateTime?
-  status         String   @default("active") // 'active' | 'investigating' | 'resolved'
-  
+  detectedAt DateTime  @default(now())
+  resolvedAt DateTime?
+  status     String    @default("active") // 'active' | 'investigating' | 'resolved'
+
   @@index([organizationId])
   @@index([severity])
   @@index([status])
