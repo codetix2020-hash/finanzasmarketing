@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
-import { guardsRunAll, logGuardResult } from "@repo/api/modules/marketing/services/content-guards";
+import { validateContent } from "@repo/api/modules/marketing/services/content-guards";
 
 // Configuración
 const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
@@ -239,26 +239,24 @@ Responde SOLO con el JSON.`;
       console.log("🚀 Auto-publicación activada para", product.name);
       
       // Validar contenido de Instagram
-      const instagramGuards = await guardsRunAll({
-        text: parsedContent.instagram.content,
-        type: contentType,
+      const instagramGuards = await validateContent({
+        content: { text: parsedContent.instagram.content },
         platform: "instagram",
         productName: product.name,
         hasImage: false, // TODO: Agregar generación de imagen
       });
       
-      logGuardResult(savedInstagram.id, instagramGuards);
+      console.log(`📊 Instagram guards: ${instagramGuards.score}/100, passed: ${instagramGuards.passed}`, instagramGuards.issues);
       
       // Validar contenido de TikTok
-      const tiktokGuards = await guardsRunAll({
-        text: parsedContent.tiktok.content,
-        type: contentType,
+      const tiktokGuards = await validateContent({
+        content: { text: parsedContent.tiktok.content },
         platform: "tiktok",
         productName: product.name,
         hasImage: false,
       });
       
-      logGuardResult(savedTikTok.id, tiktokGuards);
+      console.log(`📊 TikTok guards: ${tiktokGuards.score}/100, passed: ${tiktokGuards.passed}`, tiktokGuards.issues);
       
       // Si ambos pasan guardias, intentar publicar
       if (instagramGuards.passed && tiktokGuards.passed) {
