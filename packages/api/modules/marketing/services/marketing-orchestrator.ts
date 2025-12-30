@@ -16,7 +16,7 @@ import { prisma } from '@repo/database';
 import { logger } from './logger';
 import { contentCalendar } from './content-calendar';
 import { copywriterAI } from './copywriter-ai';
-import { visualAgent } from './visual-agent';
+import { generateImage } from './visual-agent';
 import { validateContent } from './content-guards';
 import { campaignOptimizer } from './campaign-optimizer';
 import { analyticsForecaster } from './analytics-forecaster';
@@ -149,7 +149,7 @@ export class MarketingOrchestrator {
               // 2.2 - Generar imagen con Visual Agent
               let imageUrl = '';
               try {
-                const visualResult = await visualAgent.generateImage({
+                const visualResult = await generateImage({
                   productId,
                   prompt: `Professional social media post about: ${post.topic}`,
                   aspectRatio: post.platform === 'instagram' ? '1:1' : '9:16'
