@@ -8,7 +8,7 @@ import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook
  * 
  * Ejecutar cada 6 horas para sincronizar métricas de todas las campañas activas
  * 
- * Railway/Vercel Cron: 0 */6 * * *
+ * Railway/Vercel Cron: 0 (star)/6 * * * (replace star with asterisk)
  * 
  * Autenticación: Bearer token con CRON_SECRET
  */
