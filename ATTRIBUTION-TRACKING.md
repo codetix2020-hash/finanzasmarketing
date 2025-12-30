@@ -530,3 +530,4 @@ const session = await stripe.checkout.sessions.create({
 **Versión:** 1.0.0  
 **Status:** ✅ Implementado y funcional
 
+
