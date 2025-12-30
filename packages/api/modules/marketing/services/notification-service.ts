@@ -1,23 +1,23 @@
 /**
- * Notification Service
+ * Notification Service - Sistema centralizado de notificaciones
  * 
- * Envía notificaciones vía Slack y Email
+ * Envía alertas importantes vía:
+ * - Slack (webhooks)
+ * - Email (Resend API)
+ * 
+ * Tipos de notificaciones:
+ * - Contenido publicado
+ * - Guardias fallidas
+ * - Alertas de performance de campañas
+ * - Conversiones importantes
+ * - Anomalías detectadas
  */
 
-interface SlackMessage {
-  text: string;
-  blocks?: any[];
-}
-
-interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
-}
+import { logger } from './logger';
 
 export class NotificationService {
-  private slackWebhookUrl?: string;
-  private resendApiKey?: string;
+  private slackWebhookUrl: string | undefined;
+  private resendApiKey: string | undefined;
 
   constructor() {
     this.slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
@@ -25,161 +25,226 @@ export class NotificationService {
   }
 
   /**
-   * Enviar notificación a Slack
+   * Envía notificación a Slack
    */
-  async sendSlackNotification(message: string, details?: any): Promise<boolean> {
+  async sendSlackNotification(message: string, metadata?: any): Promise<void> {
     if (!this.slackWebhookUrl) {
-      console.warn("⚠️ SLACK_WEBHOOK_URL not configured. Skipping Slack notification.");
-      return false;
+      logger.warning('Slack webhook URL not configured, skipping notification');
+      return;
     }
 
     try {
-      const payload: SlackMessage = {
-        text: message,
-        blocks: details
-          ? [
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: message,
-                },
-              },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `\`\`\`${JSON.stringify(details, null, 2)}\`\`\``,
-                },
-              },
-            ]
-          : undefined,
-      };
-
       const response = await fetch(this.slackWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: message,
+          ...(metadata && { blocks: this.formatSlackBlocks(message, metadata) })
+        })
       });
 
       if (!response.ok) {
-        console.error("❌ Slack notification failed:", await response.text());
-        return false;
+        throw new Error(`Slack API error: ${response.statusText}`);
       }
 
-      console.log("✅ Slack notification sent");
-      return true;
-    } catch (error: any) {
-      console.error("❌ Error sending Slack notification:", error.message);
-      return false;
+      logger.debug('Slack notification sent', { message });
+    } catch (error) {
+      logger.error('Failed to send Slack notification', error, { message });
     }
   }
 
   /**
-   * Enviar email con Resend
+   * Envía notificación por email
    */
-  async sendEmailNotification(options: EmailOptions): Promise<boolean> {
+  async sendEmailNotification(params: {
+    to: string | string[];
+    subject: string;
+    html: string;
+    from?: string;
+  }): Promise<void> {
     if (!this.resendApiKey) {
-      console.warn("⚠️ RESEND_API_KEY not configured. Skipping email notification.");
-      return false;
+      logger.warning('Resend API key not configured, skipping email');
+      return;
     }
 
     try {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.resendApiKey}`
         },
         body: JSON.stringify({
-          from: "MarketingOS <notifications@yourdomain.com>",
-          to: options.to,
-          subject: options.subject,
-          html: options.html,
-        }),
+          from: params.from || 'MarketingOS <alerts@marketingos.com>',
+          to: Array.isArray(params.to) ? params.to : [params.to],
+          subject: params.subject,
+          html: params.html
+        })
       });
 
       if (!response.ok) {
-        console.error("❌ Email notification failed:", await response.text());
-        return false;
+        const errorData = await response.text();
+        throw new Error(`Resend API error: ${errorData}`);
       }
 
-      console.log("✅ Email notification sent");
-      return true;
-    } catch (error: any) {
-      console.error("❌ Error sending email notification:", error.message);
-      return false;
+      logger.debug('Email notification sent', { to: params.to, subject: params.subject });
+    } catch (error) {
+      logger.error('Failed to send email notification', error, { to: params.to });
     }
   }
 
   /**
-   * Notificaciones específicas del sistema
+   * Notifica cuando se publica contenido automáticamente
    */
+  async notifyContentPublished(content: {
+    platform: string;
+    text: string;
+    id: string;
+    scheduledTime?: Date;
+  }): Promise<void> {
+    const preview = content.text.substring(0, 100);
+    const message = `✅ *Nuevo post publicado*
+📱 Plataforma: ${content.platform}
+📝 Contenido: ${preview}...
+🆔 ID: ${content.id}
+${content.scheduledTime ? `⏰ Programado para: ${content.scheduledTime.toLocaleString()}` : ''}`;
 
-  // 1. Cuando guardia falla
-  async notifyGuardFailed(contentId: string, score: number, issues: string[]) {
-    const message = `⚠️ *Contenido bloqueado*\nID: ${contentId}\nScore: ${score}/100 (mínimo 60)\nProblemas: ${issues.join(", ")}`;
     await this.sendSlackNotification(message);
   }
 
-  // 2. Cuando se auto-publica
-  async notifyContentPublished(platform: string, handle: string, contentId: string) {
-    const message = `✅ *Nuevo post publicado*\nPlataforma: ${platform}\nCuenta: ${handle}\nID: ${contentId}`;
+  /**
+   * Notifica cuando las guardias de contenido fallan
+   */
+  async notifyGuardFailed(content: {
+    platform: string;
+    score: number;
+    issues: string[];
+    id?: string;
+  }): Promise<void> {
+    const message = `⚠️ *Contenido bloqueado por guardias*
+🎯 Score: ${content.score}/100 (mínimo requerido: 60)
+📱 Plataforma: ${content.platform}
+${content.id ? `🆔 ID: ${content.id}` : ''}
+
+❌ Problemas detectados:
+${content.issues.map(issue => `  • ${issue}`).join('\n')}
+
+👉 Revisa y corrige antes de publicar.`;
+
     await this.sendSlackNotification(message);
   }
 
-  // 3. Cuando campaña alcanza presupuesto
-  async notifyBudgetReached(campaignName: string, dailyBudget: number) {
-    const message = `💰 *Presupuesto alcanzado*\nCampaña: ${campaignName}\nPresupuesto diario: €${dailyBudget}`;
-    await this.sendSlackNotification(message);
-  }
-
-  // 4. Cuando ROI baja mucho
-  async notifyLowROI(campaignName: string, roi: number) {
-    const message = `📉 *Alerta de ROI*\nCampaña: ${campaignName}\nROI: ${roi}% (negativo)`;
-    await this.sendSlackNotification(message);
-  }
-
-  // 5. Conversión importante
-  async notifyHighValueConversion(amount: number, campaign: string, details?: any) {
-    const message = `🎉 *Nueva conversión de alto valor*\nMonto: €${amount}\nCampaña: ${campaign}`;
-    await this.sendSlackNotification(message, details);
-  }
-
-  // 6. Error crítico
-  async notifyCriticalError(service: string, error: string, details?: any) {
-    const message = `🚨 *Error crítico*\nServicio: ${service}\nError: ${error}`;
-    
-    // Enviar a Slack
-    await this.sendSlackNotification(message, details);
-
-    // Enviar email si es muy crítico
-    if (process.env.ADMIN_EMAIL) {
-      await this.sendEmailNotification({
-        to: process.env.ADMIN_EMAIL,
-        subject: `🚨 Error Crítico en ${service}`,
-        html: `
-          <h2>Error Crítico Detectado</h2>
-          <p><strong>Servicio:</strong> ${service}</p>
-          <p><strong>Error:</strong> ${error}</p>
-          <pre>${JSON.stringify(details, null, 2)}</pre>
-        `,
-      });
-    }
-  }
-
-  // 7. Resumen diario
-  async sendDailySummary(stats: {
-    postsGenerated: number;
-    postsPublished: number;
+  /**
+   * Notifica cuando una campaña tiene ROI bajo
+   */
+  async notifyLowROI(campaign: {
+    name: string;
+    platform: string;
+    roi: number;
+    spend: number;
     revenue: number;
-    conversions: number;
-  }) {
-    const message = `📊 *Resumen Diario*\n• Posts generados: ${stats.postsGenerated}\n• Posts publicados: ${stats.postsPublished}\n• Revenue: €${stats.revenue}\n• Conversiones: ${stats.conversions}`;
+  }): Promise<void> {
+    const message = `📉 *Alerta: Campaña con ROI bajo*
+📢 Campaña: "${campaign.name}"
+🎯 Plataforma: ${campaign.platform}
+💰 ROI: ${campaign.roi.toFixed(2)}x
+💸 Gastado: €${campaign.spend}
+💵 Revenue: €${campaign.revenue}
+
+⚠️ Acción recomendada: Revisar segmentación, creatividades o pausar campaña.`;
+
     await this.sendSlackNotification(message);
+  }
+
+  /**
+   * Notifica cuando se detecta una conversión importante
+   */
+  async notifyConversion(event: {
+    value: number;
+    source?: string;
+    campaign?: string;
+    userId?: string;
+  }): Promise<void> {
+    // Solo notificar conversiones > €500
+    if (event.value < 500) return;
+
+    const message = `🎉 *¡Nueva conversión importante!*
+💰 Valor: €${event.value}
+${event.source ? `📍 Fuente: ${event.source}` : ''}
+${event.campaign ? `📢 Campaña: ${event.campaign}` : ''}
+${event.userId ? `👤 Usuario: ${event.userId}` : ''}`;
+
+    await this.sendSlackNotification(message);
+  }
+
+  /**
+   * Notifica cuando se detecta una anomalía en métricas
+   */
+  async notifyAnomaly(anomaly: {
+    metric: string;
+    current: number;
+    expected: number;
+    change: number;
+    severity: 'low' | 'medium' | 'high';
+  }): Promise<void> {
+    const emoji = anomaly.severity === 'high' ? '🚨' : anomaly.severity === 'medium' ? '⚠️' : 'ℹ️';
+    const changeSymbol = anomaly.change > 0 ? '+' : '';
+    
+    const message = `${emoji} *Anomalía detectada en métricas*
+📊 Métrica: ${anomaly.metric}
+📈 Valor actual: ${anomaly.current}
+📉 Valor esperado: ${anomaly.expected}
+🔄 Cambio: ${changeSymbol}${anomaly.change.toFixed(1)}%
+⚡ Severidad: ${anomaly.severity.toUpperCase()}
+
+👉 Investiga la causa de este cambio inusual.`;
+
+    await this.sendSlackNotification(message);
+  }
+
+  /**
+   * Notifica cuando se completa el ciclo de marketing automático
+   */
+  async notifyMarketingCycleComplete(result: {
+    productName: string;
+    postsCreated: number;
+    campaignsOptimized: number;
+    healthScore: number;
+  }): Promise<void> {
+    const message = `🎉 *Ciclo de marketing completado*
+🎯 Producto: ${result.productName}
+📝 Posts programados: ${result.postsCreated}
+🎯 Campañas optimizadas: ${result.campaignsOptimized}
+💯 Health Score: ${result.healthScore}/100
+
+✨ El sistema está funcionando en piloto automático.`;
+
+    await this.sendSlackNotification(message);
+  }
+
+  /**
+   * Formatea bloques enriquecidos para Slack
+   */
+  private formatSlackBlocks(message: string, metadata: any): any[] {
+    return [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: message
+        }
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `_${new Date().toLocaleString()}_`
+          }
+        ]
+      }
+    ];
   }
 }
 
-// Exportar instancia singleton
 export const notificationService = new NotificationService();
-
