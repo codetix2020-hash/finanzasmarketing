@@ -1,5 +1,6 @@
 import { prisma } from '@repo/database'
 import Anthropic from '@anthropic-ai/sdk'
+import { FacebookAdsClient } from './facebook-ads-client'
 
 let anthropicClient: Anthropic | null = null
 
@@ -163,7 +164,7 @@ Responde SOLO con JSON:
 }
 
 // ============================================
-// CREAR CAMPAÑA EN BD (preparada para API)
+// CREAR CAMPAÑA CON FACEBOOK ADS API (REAL)
 // ============================================
 export async function createCampaign(params: CreateCampaignParams) {
   console.log('📢 Creando campaña FB...', params.objective)
@@ -174,14 +175,34 @@ export async function createCampaign(params: CreateCampaignParams) {
 
   if (!product) throw new Error('Product not found')
 
-  // Crear registro de campaña
+  // Crear campaña en Facebook Ads API (mock o real)
+  const fbClient = new FacebookAdsClient()
+  
+  // Mapear objective
+  const fbObjective = {
+    'awareness': 'REACH',
+    'traffic': 'LINK_CLICKS',
+    'engagement': 'POST_ENGAGEMENT',
+    'leads': 'LEAD_GENERATION',
+    'sales': 'CONVERSIONS'
+  }[params.objective] || 'LINK_CLICKS'
+  
+  const fbCampaign = await fbClient.createCampaign({
+    name: `${product.name} - ${params.objective}`,
+    objective: fbObjective,
+    dailyBudget: params.budget.daily,
+    status: 'PAUSED'
+  })
+
+  // Crear registro de campaña en BD
   const campaign = await prisma.marketingAdCampaign.create({
     data: {
       organizationId: product.organizationId,
       productId: params.productId,
       name: `${product.name} - ${params.objective} Campaign`,
       platform: 'facebook',
-      status: 'DRAFT',
+      facebookCampaignId: fbCampaign.id, // ID de Facebook Ads
+      status: 'ACTIVE',
       budget: {
         daily: params.budget.daily,
         currency: params.budget.currency,
@@ -202,7 +223,7 @@ export async function createCampaign(params: CreateCampaignParams) {
     }
   })
 
-  console.log(`✅ Campaña creada: ${campaign.id}`)
+  console.log(`✅ Campaña creada: ${campaign.id} (Facebook ID: ${fbCampaign.id})`)
 
   return campaign
 }
@@ -425,13 +446,10 @@ export async function updateCampaignStatus(
 }
 
 // ============================================
-// OBTENER MÉTRICAS (placeholder para FB API)
+// SYNC CAMPAIGN METRICS (IMPLEMENTACIÓN REAL)
 // ============================================
 export async function syncCampaignMetrics(campaignId: string) {
-  // TODO: Integrar con Facebook Marketing API real
-  // Por ahora, simula actualización de métricas
-
-  console.log('📊 Sincronizando métricas de campaña...')
+  console.log('📊 Sincronizando métricas de Facebook Ads...')
 
   const campaign = await prisma.marketingAdCampaign.findUnique({
     where: { id: campaignId }
@@ -439,13 +457,35 @@ export async function syncCampaignMetrics(campaignId: string) {
 
   if (!campaign) throw new Error('Campaign not found')
 
-  // Placeholder: En producción, esto llamaría a FB API
-  // const fbMetrics = await facebookApi.getInsights(campaign.externalId)
-
-  return {
-    message: 'Metrics sync placeholder - integrate Facebook Marketing API',
-    campaignId,
-    currentPerformance: campaign.performance
+  if (!campaign.facebookCampaignId) {
+    throw new Error('No Facebook Campaign ID found')
   }
+
+  // Obtener insights de Facebook Ads API
+  const fbClient = new FacebookAdsClient()
+  const insights = await fbClient.syncInsights(campaign.facebookCampaignId)
+
+  // Actualizar en BD
+  await prisma.marketingAdCampaign.update({
+    where: { id: campaignId },
+    data: {
+      performance: {
+        impressions: insights.impressions,
+        clicks: insights.clicks,
+        conversions: insights.conversions,
+        ctr: insights.ctr,
+        cpc: insights.cpc,
+        cpm: insights.cpm,
+        cpa: insights.spend / (insights.conversions || 1),
+        roas: 0, // Calcular según revenue tracking
+        spend: insights.spend,
+        lastSyncAt: new Date().toISOString()
+      }
+    }
+  })
+
+  console.log(`✅ Métricas sincronizadas para campaña ${campaignId}`)
+
+  return insights
 }
 

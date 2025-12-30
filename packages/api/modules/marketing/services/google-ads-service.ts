@@ -1,5 +1,6 @@
 import { prisma } from '@repo/database'
 import Anthropic from '@anthropic-ai/sdk'
+import { GoogleAdsClient } from './google-ads-client'
 
 let anthropicClient: Anthropic | null = null
 
@@ -258,7 +259,7 @@ Responde SOLO con JSON:
 }
 
 // ============================================
-// CREAR CAMPAÑA EN BD
+// CREAR CAMPAÑA EN GOOGLE ADS (REAL)
 // ============================================
 export async function createGoogleCampaign(params: GoogleCampaignParams) {
   console.log('📢 Creando campaña Google Ads...', params.campaignType)
@@ -269,13 +270,24 @@ export async function createGoogleCampaign(params: GoogleCampaignParams) {
 
   if (!product) throw new Error('Product not found')
 
+  // Crear campaña en Google Ads API (mock o real)
+  const googleClient = new GoogleAdsClient()
+  const googleCampaign = await googleClient.createCampaign({
+    name: `${product.name} - Google ${params.campaignType}`,
+    budget: params.budget.daily,
+    keywords: params.targeting.keywords,
+    targetLocation: params.targeting.locations?.[0],
+  })
+
+  // Guardar en BD
   const campaign = await prisma.marketingAdCampaign.create({
     data: {
       organizationId: product.organizationId,
       productId: params.productId,
       name: `${product.name} - Google ${params.campaignType} Campaign`,
       platform: 'google',
-      status: 'DRAFT',
+      googleCampaignId: googleCampaign.id, // ID de Google Ads
+      status: 'ACTIVE',
       budget: {
         daily: params.budget.daily,
         currency: params.budget.currency,
@@ -298,7 +310,7 @@ export async function createGoogleCampaign(params: GoogleCampaignParams) {
     }
   })
 
-  console.log(`✅ Campaña Google creada: ${campaign.id}`)
+  console.log(`✅ Campaña Google creada: ${campaign.id} (Google ID: ${googleCampaign.id})`)
 
   return campaign
 }
@@ -512,16 +524,44 @@ Responde SOLO con JSON:
 }
 
 // ============================================
-// SYNC METRICS (placeholder)
+// SYNC METRICS (IMPLEMENTACIÓN REAL)
 // ============================================
 export async function syncGoogleMetrics(campaignId: string) {
   console.log('📊 Sincronizando métricas Google Ads...')
 
-  // TODO: Integrar con Google Ads API real
+  const campaign = await prisma.marketingAdCampaign.findUnique({
+    where: { id: campaignId }
+  })
 
-  return {
-    message: 'Metrics sync placeholder - integrate Google Ads API',
-    campaignId
+  if (!campaign || !campaign.googleCampaignId) {
+    throw new Error('Campaign not found or no Google Campaign ID')
   }
+
+  // Obtener métricas de Google Ads API
+  const googleClient = new GoogleAdsClient()
+  const metrics = await googleClient.syncMetrics(campaign.googleCampaignId)
+
+  // Actualizar en BD
+  await prisma.marketingAdCampaign.update({
+    where: { id: campaignId },
+    data: {
+      performance: {
+        impressions: metrics.impressions,
+        clicks: metrics.clicks,
+        conversions: metrics.conversions,
+        ctr: metrics.ctr,
+        cpc: metrics.cpc,
+        cpa: metrics.cost / (metrics.conversions || 1),
+        roas: 0, // Calcular según revenue tracking
+        qualityScore: 0, // Obtener de Google Ads
+        spend: metrics.cost,
+        lastSyncAt: new Date().toISOString()
+      }
+    }
+  })
+
+  console.log(`✅ Métricas sincronizadas para campaña ${campaignId}`)
+
+  return metrics
 }
 
