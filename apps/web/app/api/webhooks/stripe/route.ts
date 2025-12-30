@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { attributionTracker } from "../../../../../packages/api/modules/marketing/services/attribution-tracker";
+import { attributionTracker } from "@repo/api/modules/marketing/services/attribution-tracker";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {

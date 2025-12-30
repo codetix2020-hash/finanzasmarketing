@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { attributionTracker } from "../../../../../packages/api/modules/marketing/services/attribution-tracker";
+import { attributionTracker } from "@repo/api/modules/marketing/services/attribution-tracker";
 
 /**
  * Tracking Pixel Endpoint

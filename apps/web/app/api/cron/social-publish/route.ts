@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
-import { guardsRunAll, logGuardResult } from "../../../../../packages/api/modules/marketing/services/content-guards";
+import { guardsRunAll, logGuardResult } from "@repo/api/modules/marketing/services/content-guards";
 
 // Configuración
 const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
