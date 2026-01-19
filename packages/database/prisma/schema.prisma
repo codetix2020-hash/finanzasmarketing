@@ -162,6 +162,7 @@ model Organization {
   financeActions        FinanceAction[]
   predictions           Prediction[]
   anomalies             Anomaly[]
+  socialAccounts        SocialAccount[]
 
   @@unique([slug])
   @@map("organization")
@@ -1019,4 +1020,38 @@ model Anomaly {
   @@index([status])
   @@index([detectedAt])
   @@map("anomaly")
+}
+
+// ============================================
+// SOCIAL ACCOUNTS - MULTITENANT SYSTEM
+// ============================================
+
+model SocialAccount {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  platform       String   // 'instagram', 'facebook', 'tiktok', 'linkedin', 'twitter'
+  accountId      String   // ID de la cuenta en la plataforma
+  accountName    String   // @username o nombre visible
+  avatarUrl      String?  // Foto de perfil
+  
+  accessToken    String   // Token de acceso (TODO: encriptar)
+  refreshToken   String?  // Para plataformas que lo usan
+  tokenExpiresAt DateTime? // Cuándo expira el token
+  
+  // Metadata específica de plataforma
+  pageId         String?  // Facebook Page ID
+  businessId     String?  // Instagram Business Account ID
+  
+  isActive       Boolean  @default(true)
+  lastSyncAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@unique([organizationId, platform, accountId])
+  @@index([organizationId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("social_account")
 }
