@@ -109,9 +109,10 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       
-      // Usar /app como callback - Better Auth redirigirá ahí después del OAuth
-      // La página /app manejará el redirect inteligente después del login
-      const callbackURL = new URL('/app', window.location.origin);
+      // Usar /app/auth-callback como callback
+      // Esta página obtendrá las organizaciones DESPUÉS de la autenticación
+      // y redirigirá al dashboard correcto o a onboarding
+      const callbackURL = new URL('/app/auth-callback', window.location.origin);
       
       // Better Auth manejará el redirect automáticamente
       await authClient.signIn.social({
