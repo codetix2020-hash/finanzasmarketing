@@ -13,6 +13,10 @@ import { Label } from '@ui/components/label';
 import { Logo } from '@shared/components/Logo';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { authClient } from '@repo/auth/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { sessionQueryKey } from '@saas/auth/lib/api';
+import { config } from '@repo/config';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,6 +27,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,32 +39,81 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const getRedirectPath = async (): Promise<string> => {
+    try {
+      // Obtener organizaciones del usuario
+      const { data: organizations, error } = await authClient.organization.list();
+
+      if (error || !organizations || organizations.length === 0) {
+        // No tiene organizaciones, ir a onboarding
+        return '/onboarding';
+      }
+
+      // Tiene organizaciones, redirigir al dashboard de la primera
+      const firstOrg = organizations[0];
+      if (firstOrg.slug) {
+        return `/app/${firstOrg.slug}`;
+      }
+      
+      // Si no tiene slug, usar el redirect por defecto
+      return config.auth.redirectAfterSignIn || '/app';
+    } catch (error) {
+      console.error('Error getting organizations:', error);
+      // En caso de error, usar el redirect por defecto
+      return config.auth.redirectAfterSignIn || '/app';
+    }
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // TODO: Implementar autenticación real
-      // const response = await fetch('/api/auth/sign-in', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
+      const { data: signInData, error } = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      });
 
-      // Simulación de login
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (error) {
+        throw error;
+      }
 
+      // Verificar si requiere 2FA
+      if ((signInData as any)?.twoFactorRedirect) {
+        router.push('/auth/verify');
+        return;
+      }
+
+      // Invalidar cache de sesión
+      queryClient.invalidateQueries({
+        queryKey: sessionQueryKey,
+      });
+
+      // Obtener ruta de redirección basada en organizaciones
+      const redirectPath = await getRedirectPath();
+      
       toast.success('Welcome back!');
-      router.push('/app');
-    } catch (error) {
-      toast.error('Invalid email or password');
+      router.push(redirectPath);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Invalid email or password';
+      toast.error(errorMessage);
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    // TODO: Implementar OAuth de Google
-    window.location.href = '/api/auth/sign-in/social?provider=google';
+  const handleGoogleLogin = async () => {
+    try {
+      const redirectPath = await getRedirectPath();
+      const callbackURL = new URL(redirectPath, window.location.origin);
+      
+      await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: callbackURL.toString(),
+      });
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to sign in with Google');
+      console.error('Google login error:', error);
+    }
   };
 
   return (
