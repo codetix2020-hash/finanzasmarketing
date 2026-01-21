@@ -17,13 +17,22 @@ export async function generateMetadata() {
 }
 
 export default async function OnboardingPage() {
-	const session = await getSession();
+	try {
+		const session = await getSession();
 
-	if (!session) {
-		redirect("/auth/login");
-	}
+		if (!session) {
+			// Si no hay sesión, redirigir a login (pero con locale)
+			redirect("/en/login");
+		}
 
-	if (!config.users.enableOnboarding || session.user.onboardingComplete) {
+		// Si el onboarding está deshabilitado o ya está completo, redirigir a /app
+		if (!config.users.enableOnboarding || session.user.onboardingComplete) {
+			redirect("/app");
+		}
+	} catch (error) {
+		// Si hay error obteniendo la sesión (puede pasar justo después del OAuth)
+		// Esperar un momento y redirigir a /app para que intente de nuevo
+		console.error("Error obteniendo sesión en onboarding:", error);
 		redirect("/app");
 	}
 

@@ -109,15 +109,16 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       
-      // Usar el redirect por defecto de Better Auth
+      // Usar /app como callback - Better Auth redirigirá ahí después del OAuth
       // La página /app manejará el redirect inteligente después del login
-      const callbackURL = new URL(config.auth.redirectAfterSignIn, window.location.origin);
+      const callbackURL = new URL('/app', window.location.origin);
       
+      // Better Auth manejará el redirect automáticamente
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: callbackURL.toString(),
       });
-      // No necesitamos setIsLoading(false) aquí porque la página redirigirá
+      // No necesitamos setIsLoading(false) aquí porque Better Auth redirigirá
     } catch (error: any) {
       // Manejar errores específicos
       let errorMessage = 'Failed to sign in with Google';
