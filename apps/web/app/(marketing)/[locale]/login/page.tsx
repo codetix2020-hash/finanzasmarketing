@@ -54,12 +54,13 @@ export default function LoginPage() {
       }
 
       // Tiene organizaciones, redirigir al dashboard de marketing de la primera
-      const slug = organizations[0]?.slug;
-      if (slug) {
-        return `/app/${slug}/marketing/dashboard`;
+      // Usar acceso directo con optional chaining para evitar problemas de TypeScript narrowing
+      const firstOrgSlug = organizations[0]?.slug;
+      if (firstOrgSlug) {
+        return `/app/${firstOrgSlug}/marketing/dashboard`;
       }
       
-      // Si no tiene slug o no existe firstOrg, ir a onboarding para crear/actualizar org
+      // Si no tiene slug, ir a onboarding para crear/actualizar org
       return '/app/onboarding';
     } catch (error) {
       console.error('Error getting organizations:', error);
