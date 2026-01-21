@@ -1,6 +1,6 @@
 'use client';
 
-import { useSocialAccounts } from '@/hooks/use-social-accounts';
+import { useSocialAccounts } from '@/lib/hooks/use-social-accounts';
 import { PlatformCard } from '@/components/integrations/platform-card';
 import { 
   Instagram, 
