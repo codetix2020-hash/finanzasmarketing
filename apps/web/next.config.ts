@@ -13,9 +13,6 @@ const nextConfig: NextConfig = {
 		typescript: {
 						ignoreBuildErrors: true, // Permitir errores en marketing/docs
 				},
-				eslint: {
-								ignoreDuringBuilds: true,
-				},
 				transpilePackages: ["@repo/api", "@repo/auth", "@repo/database"],
 				images: {
 								remotePatterns: [
