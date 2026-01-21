@@ -10,6 +10,7 @@ import {
 	Settings2Icon,
 	TriangleAlertIcon,
 	Users2Icon,
+	Plug,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -57,6 +58,11 @@ export default async function SettingsLayout({
 					title: t("settings.menu.organization.members"),
 					href: `${organizationSettingsBasePath}/members`,
 					icon: <Users2Icon className="size-4 opacity-50" />,
+				},
+				{
+					title: "Integrations",
+					href: `${organizationSettingsBasePath}/integrations`,
+					icon: <Plug className="size-4 opacity-50" />,
 				},
 				...(config.organizations.enable &&
 				config.organizations.enableBilling &&
