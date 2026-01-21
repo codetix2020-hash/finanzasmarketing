@@ -75,7 +75,7 @@ export function useSocialAccounts() {
     accounts: accounts || [],
     isLoading,
     connectAccount,
-    disconnectAccount: disconnectMutation.mutate,
+    disconnectAccount: (id: string) => disconnectMutation.mutate({ id }),
     isDisconnecting: disconnectMutation.isPending,
   };
 }
