@@ -104,6 +104,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
+      
       // Usar el redirect por defecto de Better Auth
       // La página /app manejará el redirect inteligente después del login
       const callbackURL = new URL(config.auth.redirectAfterSignIn, window.location.origin);
@@ -114,7 +115,16 @@ export default function LoginPage() {
       });
       // No necesitamos setIsLoading(false) aquí porque la página redirigirá
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to sign in with Google');
+      // Manejar errores específicos
+      let errorMessage = 'Failed to sign in with Google';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.status === 500) {
+        errorMessage = 'Google OAuth no está configurado. Por favor, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el archivo .env';
+      }
+      
+      toast.error(errorMessage);
       console.error('Google login error:', error);
       setIsLoading(false);
     }
