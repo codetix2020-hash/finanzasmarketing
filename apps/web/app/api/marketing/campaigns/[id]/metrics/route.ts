@@ -3,6 +3,9 @@ import { prisma } from "@repo/database";
 import { GoogleAdsClient } from "@repo/api/modules/marketing/services/google-ads-client";
 import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook-ads-client";
 
+// Force dynamic rendering - no pre-render during build
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/marketing/campaigns/[id]/metrics
  * 

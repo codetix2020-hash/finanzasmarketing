@@ -3,6 +3,8 @@ import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
 import { validateContent } from "@repo/api/modules/marketing/services/content-guards";
 
+export const dynamic = 'force-dynamic';
+
 // Configuración
 const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
 

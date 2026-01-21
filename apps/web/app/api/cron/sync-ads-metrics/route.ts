@@ -3,6 +3,8 @@ import { prisma } from "@repo/database";
 import { GoogleAdsClient } from "@repo/api/modules/marketing/services/google-ads-client";
 import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook-ads-client";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Cron Job: Sync Ads Metrics
  * 

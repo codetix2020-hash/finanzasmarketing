@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { handleNewProduct } from "@repo/api/modules/autosaas/webhook-handler";
 
+export const dynamic = 'force-dynamic';
+
 // Permitir CORS para que Auto-SaaS pueda llamar desde cualquier origen
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/marketing/dashboard-data
  * 

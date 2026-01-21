@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import { headers } from "next/headers";
 import { attributionTracker } from "@repo/api/modules/marketing/services/attribution-tracker";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-12-18.acacia",
-});
+// Lazy initialization - solo se crea cuando se usa
+let stripeInstance: Stripe | null = null;
+const getStripe = () => {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: "2024-12-18.acacia",
+    });
+  }
+  return stripeInstance;
+};
 
 /**
  * Stripe Webhooks Handler
@@ -26,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify webhook signature
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET || ""
@@ -178,7 +191,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   try {
     // Get subscription to extract metadata
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
     const metadata = subscription.metadata || {};
 
     await attributionTracker.trackEvent({

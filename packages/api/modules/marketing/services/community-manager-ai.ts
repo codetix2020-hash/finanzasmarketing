@@ -30,14 +30,21 @@ interface AutoReplyResult {
 }
 
 export class CommunityManagerAI {
-  private anthropic: Anthropic;
+  private anthropic: Anthropic | null = null;
 
   constructor() {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY required for CommunityManagerAI');
+    // Lazy initialization - solo se crea cuando se usa
+  }
+
+  private getAnthropic(): Anthropic {
+    if (!this.anthropic) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        throw new Error('ANTHROPIC_API_KEY required for CommunityManagerAI');
+      }
+      this.anthropic = new Anthropic({ apiKey });
     }
-    this.anthropic = new Anthropic({ apiKey });
+    return this.anthropic;
   }
 
   /**
@@ -74,7 +81,7 @@ Retorna JSON EXACTO:
   "detectedIntent": "Descripción breve de la intención"
 }`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
         messages: [{ role: 'user', content: prompt }]
@@ -160,7 +167,7 @@ ${analysis.category === 'sales' ? 'IMPORTANTE: No seas pushy. Ofrece informació
 
 Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }]
@@ -307,7 +314,7 @@ Retorna JSON:
 - report: Contenido ofensivo, reportar a plataforma
 - block_user: Spammer/troll persistente, bloquear`;
 
-        const response = await this.anthropic.messages.create({
+        const response = await this.getAnthropic().messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 200,
           messages: [{ role: 'user', content: prompt }]

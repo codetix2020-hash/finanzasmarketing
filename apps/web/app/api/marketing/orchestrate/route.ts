@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { marketingOrchestrator } from '@repo/api/modules/marketing/services/marketing-orchestrator';
 import { logger } from '@repo/api/modules/marketing/services/logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { productId, mode } = await request.json();

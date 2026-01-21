@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { communityManagerAI } from '@repo/api/modules/marketing/services/community-manager-ai';
 import { logger } from '@repo/api/modules/marketing/services/logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { platform, commentId, text, postId, productName } = await request.json();

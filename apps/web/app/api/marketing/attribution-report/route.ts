@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { attributionTracker } from "@repo/api/modules/marketing/services/attribution-tracker";
 
+export const dynamic = 'force-dynamic';
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",

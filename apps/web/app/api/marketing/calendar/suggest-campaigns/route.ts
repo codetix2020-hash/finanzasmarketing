@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { contentCalendar } from '@repo/api/modules/marketing/services/content-calendar';
 import { logger } from '@repo/api/modules/marketing/services/logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { productId } = await request.json();

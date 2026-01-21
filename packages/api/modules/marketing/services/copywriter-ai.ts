@@ -79,14 +79,21 @@ interface LandingPageCopy {
 }
 
 export class CopywriterAI {
-  private anthropic: Anthropic;
+  private anthropic: Anthropic | null = null;
 
   constructor() {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY is required for CopywriterAI');
+    // Lazy initialization - solo se crea cuando se usa
+  }
+
+  private getAnthropic(): Anthropic {
+    if (!this.anthropic) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        throw new Error('ANTHROPIC_API_KEY is required for CopywriterAI');
+      }
+      this.anthropic = new Anthropic({ apiKey });
     }
-    this.anthropic = new Anthropic({ apiKey });
+    return this.anthropic;
   }
 
   /**
@@ -172,7 +179,7 @@ Retorna JSON EXACTO:
 
 Performance es 0-10 estimando engagement esperado.`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 3000,
         messages: [{ role: 'user', content: prompt }]
@@ -274,7 +281,7 @@ Retorna JSON:
   "expectedConversion": 0.15
 }`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
         messages: [{ role: 'user', content: prompt }]
@@ -361,7 +368,7 @@ Retorna JSON:
   "seoKeywords": ["keyword1", "keyword2", ...]
 }`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 3500,
         messages: [{ role: 'user', content: prompt }]
@@ -432,7 +439,7 @@ Retorna JSON:
 
 Scores de 0-10. Spam likelihood debe ser < 3.`;
 
-      const response = await this.anthropic.messages.create({
+      const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
         messages: [{ role: 'user', content: prompt }]

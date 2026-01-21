@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 
+export const dynamic = 'force-dynamic';
+
 const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
 
 export async function GET(request: NextRequest) {

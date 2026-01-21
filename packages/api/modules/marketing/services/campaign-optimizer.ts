@@ -53,12 +53,25 @@ interface OptimizationResult {
 }
 
 export class CampaignOptimizer {
-  private googleClient: GoogleAdsClient;
-  private facebookClient: FacebookAdsClient;
+  private googleClient: GoogleAdsClient | null = null;
+  private facebookClient: FacebookAdsClient | null = null;
 
   constructor() {
-    this.googleClient = new GoogleAdsClient();
-    this.facebookClient = new FacebookAdsClient();
+    // Lazy initialization - solo se crean cuando se usan
+  }
+
+  private getGoogleClient(): GoogleAdsClient {
+    if (!this.googleClient) {
+      this.googleClient = new GoogleAdsClient();
+    }
+    return this.googleClient;
+  }
+
+  private getFacebookClient(): FacebookAdsClient {
+    if (!this.facebookClient) {
+      this.facebookClient = new FacebookAdsClient();
+    }
+    return this.facebookClient;
   }
 
   /**
