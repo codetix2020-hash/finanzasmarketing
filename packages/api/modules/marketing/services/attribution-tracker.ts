@@ -322,36 +322,22 @@ export class AttributionTracker {
       try {
         const roi = await this.getROI(campaign.id, timeRange);
 
-        // Actualizar o crear CampaignPerformance
-        await prisma.campaignPerformance.upsert({
-          where: {
-            organizationId_campaignId_periodStart: {
-              organizationId,
-              campaignId: campaign.id,
-              periodStart: timeRange?.start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        // Actualizar performance en MarketingAdCampaign directamente
+        await prisma.marketingAdCampaign.update({
+          where: { id: campaign.id },
+          data: {
+            performance: {
+              ...((campaign.performance as any) || {}),
+              totalSpent: roi.totalSpend,
+              totalRevenue: roi.totalRevenue,
+              roi: roi.roi,
+              roas: roi.roas,
+              conversions: roi.conversions,
+              lastUpdated: new Date().toISOString(),
+              periodStart: timeRange?.start?.toISOString() || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+              periodEnd: timeRange?.end?.toISOString() || new Date().toISOString(),
             },
-          },
-          update: {
-            totalSpent: roi.totalSpend,
-            totalRevenue: roi.totalRevenue,
-            roi: roi.roi,
-            roas: roi.roas,
-            conversions: roi.conversions,
             updatedAt: new Date(),
-          },
-          create: {
-            organizationId,
-            campaignId: campaign.id,
-            campaignName: campaign.name,
-            source: campaign.platform,
-            status: campaign.status,
-            periodStart: timeRange?.start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            periodEnd: timeRange?.end || new Date(),
-            totalSpent: roi.totalSpend,
-            totalRevenue: roi.totalRevenue,
-            roi: roi.roi,
-            roas: roi.roas,
-            conversions: roi.conversions,
           },
         });
 
