@@ -103,16 +103,20 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const redirectPath = await getRedirectPath();
-      const callbackURL = new URL(redirectPath, window.location.origin);
+      setIsLoading(true);
+      // Usar el redirect por defecto de Better Auth
+      // La página /app manejará el redirect inteligente después del login
+      const callbackURL = new URL(config.auth.redirectAfterSignIn, window.location.origin);
       
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: callbackURL.toString(),
       });
+      // No necesitamos setIsLoading(false) aquí porque la página redirigirá
     } catch (error: any) {
       toast.error(error?.message || 'Failed to sign in with Google');
       console.error('Google login error:', error);
+      setIsLoading(false);
     }
   };
 
