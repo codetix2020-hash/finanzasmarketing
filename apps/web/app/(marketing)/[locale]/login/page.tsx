@@ -45,8 +45,8 @@ export default function LoginPage() {
       const { data: organizations, error } = await authClient.organization.list();
 
       if (error || !organizations || organizations.length === 0) {
-        // No tiene organizaciones, ir a onboarding
-        return '/onboarding';
+        // No tiene organizaciones, ir a onboarding (ruta sin locale)
+        return '/app/onboarding';
       }
 
       // Tiene organizaciones, redirigir al dashboard de marketing de la primera
@@ -56,11 +56,11 @@ export default function LoginPage() {
       }
       
       // Si no tiene slug, ir a onboarding para crear/actualizar org
-      return '/onboarding';
+      return '/app/onboarding';
     } catch (error) {
       console.error('Error getting organizations:', error);
       // En caso de error, ir a onboarding
-      return '/onboarding';
+      return '/app/onboarding';
     }
   };
 
