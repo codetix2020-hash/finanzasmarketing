@@ -49,18 +49,18 @@ export default function LoginPage() {
         return '/onboarding';
       }
 
-      // Tiene organizaciones, redirigir al dashboard de la primera
+      // Tiene organizaciones, redirigir al dashboard de marketing de la primera
       const firstOrg = organizations[0];
       if (firstOrg.slug) {
-        return `/app/${firstOrg.slug}`;
+        return `/app/${firstOrg.slug}/marketing/dashboard`;
       }
       
-      // Si no tiene slug, usar el redirect por defecto
-      return config.auth.redirectAfterSignIn || '/app';
+      // Si no tiene slug, ir a onboarding para crear/actualizar org
+      return '/onboarding';
     } catch (error) {
       console.error('Error getting organizations:', error);
-      // En caso de error, usar el redirect por defecto
-      return config.auth.redirectAfterSignIn || '/app';
+      // En caso de error, ir a onboarding
+      return '/onboarding';
     }
   };
 
