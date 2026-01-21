@@ -30,6 +30,10 @@ export default function LoginPage() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Verificar si Google OAuth está disponible (solo en cliente)
+  // En desarrollo sin credenciales, el botón mostrará un error útil
+  const isGoogleOAuthAvailable = typeof window !== 'undefined';
 
   const {
     register,
