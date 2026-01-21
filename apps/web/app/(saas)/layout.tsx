@@ -17,22 +17,34 @@ import type { PropsWithChildren } from "react";
 export default async function SaaSLayout({ children }: PropsWithChildren) {
 	const locale = await getLocale();
 	const messages = await getMessages();
-	// AUTENTICACIÓN DESHABILITADA - session mock para compatibilidad
-	const session = null;
+	
+	// Intentar obtener sesión real (funciona en producción, puede fallar en desarrollo)
+	let session = null;
+	try {
+		session = await getSession();
+	} catch (error) {
+		// En desarrollo sin DB configurada, session será null
+		console.warn("No se pudo obtener sesión (desarrollo sin DB?):", error);
+	}
 
 	const queryClient = getServerQueryClient();
 
-	// Prefetch queries sin validación de auth
+	// Prefetch queries con sesión real o null
 	await queryClient.prefetchQuery({
 		queryKey: sessionQueryKey,
 		queryFn: () => session,
 	});
 
 	if (config.organizations.enable) {
-		await queryClient.prefetchQuery({
-			queryKey: organizationListQueryKey,
-			queryFn: getOrganizationList,
-		});
+		try {
+			await queryClient.prefetchQuery({
+				queryKey: organizationListQueryKey,
+				queryFn: getOrganizationList,
+			});
+		} catch (error) {
+			// En desarrollo sin DB, esto puede fallar - está bien
+			console.warn("No se pudieron obtener organizaciones (desarrollo sin DB?):", error);
+		}
 	}
 
 	if (config.users.enableBilling) {
