@@ -483,3 +483,6 @@ Dashboard: `/marketing-dashboard`
 **Versión:** 1.0  
 **Última actualización:** Dec 30, 2025
 
+
+
+

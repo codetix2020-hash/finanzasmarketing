@@ -465,3 +465,6 @@ Scores de 0-10. Spam likelihood debe ser < 3.`;
 
 export const copywriterAI = new CopywriterAI();
 
+
+
+

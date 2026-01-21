@@ -8,7 +8,6 @@ import { cn } from "@ui/lib";
 import {
 	BotMessageSquareIcon,
 	ChevronRightIcon,
-	DollarSign,
 	HomeIcon,
 	SettingsIcon,
 	UserCog2Icon,
@@ -45,12 +44,6 @@ export function NavBar() {
 				: "/app/chatbot",
 			icon: BotMessageSquareIcon,
 			isActive: pathname.includes("/chatbot"),
-		},
-		{
-			label: "Finance",
-			href: "/app/finance",
-			icon: DollarSign,
-			isActive: pathname.startsWith("/app/finance"),
 		},
 		...(activeOrganization && isOrganizationAdmin
 			? [

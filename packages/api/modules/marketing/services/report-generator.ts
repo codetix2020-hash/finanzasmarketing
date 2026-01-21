@@ -427,3 +427,6 @@ Generado automáticamente por MarketingOS
 
 export const reportGenerator = new ReportGenerator();
 
+
+
+

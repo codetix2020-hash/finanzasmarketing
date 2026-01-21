@@ -34,7 +34,6 @@
 		"studio": "dotenv -c -e ../../.env -- prisma studio --schema=./prisma/schema.prisma",
 		"create-user": "dotenv -c -e ../../.env -- tsx scripts/create-user.ts",
 		"create-user-direct": "dotenv -c -e ../../.env -- tsx scripts/create-user-direct.ts",
-		"seed:finance": "dotenv -c -e ../../.env -- tsx seed-finance.ts",
 		"type-check": "tsc --noEmit"
 	},
 	"types": "./**/.tsx",

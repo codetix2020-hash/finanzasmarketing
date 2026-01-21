@@ -292,3 +292,6 @@ Una vez configurado:
 
 Una vez tengas todo configurado, el sistema cambiará automáticamente de modo MOCK a modo REAL.
 
+
+
+

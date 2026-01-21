@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 
 interface SystemStatus {
-  financeAgent: { active: boolean; tasks: number };
   marketingAgents: {
     content: { active: boolean; tasks: number };
     email: { active: boolean; campaigns: number };
@@ -22,12 +21,6 @@ interface SystemStatus {
 }
 
 interface AggregateMetrics {
-  finance: {
-    totalMRR: number;
-    totalCustomers: number;
-    avgChurn: number;
-    healthScore: number;
-  };
   marketing: {
     totalLeads: number;
     activeCampaigns: number;
@@ -55,21 +48,6 @@ export default function GodModeDashboard() {
     setLoading(true);
     
     try {
-      // Cargar métricas de FinanzaDIOS
-      let financeMetrics = null;
-      try {
-        const financeResponse = await fetch('/api/rpc/finance.getOverview', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (financeResponse.ok) {
-          const financeData = await financeResponse.json();
-          financeMetrics = financeData;
-        }
-      } catch (err) {
-        console.warn('Error loading finance metrics:', err);
-      }
-
       // Cargar métricas de MarketingOS
       let marketingMetrics = null;
       try {
@@ -88,7 +66,6 @@ export default function GodModeDashboard() {
 
       // Estado del sistema (simulado por ahora)
       setSystemStatus({
-        financeAgent: { active: true, tasks: 5 },
         marketingAgents: {
           content: { active: true, tasks: 12 },
           email: { active: true, campaigns: 3 },
@@ -107,12 +84,6 @@ export default function GodModeDashboard() {
 
       // Métricas agregadas
       setMetrics({
-        finance: {
-          totalMRR: financeMetrics?.totalMRR || 145230,
-          totalCustomers: financeMetrics?.organizations?.length || 1247,
-          avgChurn: 3.2,
-          healthScore: 85,
-        },
         marketing: {
           totalLeads: marketingMetrics?.overview?.totalLeads || 3456,
           activeCampaigns: marketingMetrics?.overview?.activeCampaigns || 12,
@@ -124,7 +95,6 @@ export default function GodModeDashboard() {
 
       // Logs simulados
       setLogs([
-        { time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), agent: 'Finance Agent', action: 'Analyzed Q4 metrics', status: 'success' },
         { time: new Date(Date.now() - 4 * 60000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), agent: 'Strategy Agent', action: 'Optimized budget allocation', status: 'success' },
         { time: new Date(Date.now() - 17 * 60000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), agent: 'Email Agent', action: 'Sent campaign to 450 leads', status: 'success' },
         { time: new Date(Date.now() - 22 * 60000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }), agent: 'Social Agent', action: 'Published 3 posts', status: 'success' },
@@ -158,7 +128,7 @@ export default function GodModeDashboard() {
           GOD MODE
         </h1>
         <p style={{ fontSize: '1rem', color: '#9ca3af' }}>
-          Control total de FinanzaDIOS + MarketingOS
+          Control total de MarketingOS
         </p>
       </div>
 
@@ -167,18 +137,6 @@ export default function GodModeDashboard() {
         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>🤖 Estado del Sistema</h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-          {/* Finance Agent */}
-          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Finance Agent</div>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: systemStatus?.financeAgent.active ? '#10b981' : '#ef4444' }}></div>
-            </div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              {systemStatus?.financeAgent.tasks || 0}
-            </div>
-            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Tareas activas</div>
-          </div>
-
           {/* Marketing Agents */}
           <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', borderRadius: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -221,21 +179,6 @@ export default function GodModeDashboard() {
         <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>📊 Métricas Agregadas</h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div style={{ padding: '1.5rem', background: '#1a1a1a', borderRadius: '16px', border: '1px solid #333' }}>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Total MRR</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>€{metrics?.finance.totalMRR.toLocaleString()}</div>
-          </div>
-
-          <div style={{ padding: '1.5rem', background: '#1a1a1a', borderRadius: '16px', border: '1px solid #333' }}>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Customers</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{metrics?.finance.totalCustomers.toLocaleString()}</div>
-          </div>
-
-          <div style={{ padding: '1.5rem', background: '#1a1a1a', borderRadius: '16px', border: '1px solid #333' }}>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Health Score</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>{metrics?.finance.healthScore}/100</div>
-          </div>
-
           <div style={{ padding: '1.5rem', background: '#1a1a1a', borderRadius: '16px', border: '1px solid #333' }}>
             <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Total Leads</div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{metrics?.marketing.totalLeads.toLocaleString()}</div>

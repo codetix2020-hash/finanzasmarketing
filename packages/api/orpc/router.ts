@@ -2,8 +2,6 @@ import type { RouterClient } from "@orpc/server";
 import { adminRouter } from "../modules/admin/router";
 import { aiRouter } from "../modules/ai/router";
 import { contactRouter } from "../modules/contact/router";
-import { financeRouter } from "../modules/finance/router";
-import { integrationRouter } from "../modules/integration/router";
 import { marketingRouter } from "../modules/marketing/router";
 import { autosaasRouter } from "../modules/autosaas/router";
 import { newsletterRouter } from "../modules/newsletter/router";
@@ -20,8 +18,6 @@ export const router = publicProcedure.router({
 	users: usersRouter,
 	payments: paymentsRouter,
 	ai: aiRouter,
-	finance: financeRouter,
-	integration: integrationRouter,
 	marketing: marketingRouter,
 	autosaas: autosaasRouter,
 });

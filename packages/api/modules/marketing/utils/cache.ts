@@ -92,3 +92,6 @@ class SimpleCache {
 // Exportar instancia singleton
 export const cache = new SimpleCache();
 
+
+
+

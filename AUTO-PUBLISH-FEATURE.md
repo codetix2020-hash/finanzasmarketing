@@ -366,3 +366,6 @@ Verificar en logs:
 **Status:** ✅ Implementado y funcional
 
 
+
+
+
