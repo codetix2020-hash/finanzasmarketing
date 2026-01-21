@@ -4,18 +4,26 @@ import { redirect } from "next/navigation";
 
 export default async function AppPage() {
 	try {
-		// Intentar obtener sesión (puede fallar en desarrollo si no hay DB configurada)
 		// Después del OAuth, puede tomar un momento para que la sesión esté disponible
+		// Intentar múltiples veces con retry
 		let session = null;
-		try {
-			session = await getSession();
-		} catch (sessionError) {
-			// Si falla obtener la sesión, puede ser un problema temporal después del OAuth
-			console.warn("Error obteniendo sesión en /app (puede ser temporal después de OAuth):", sessionError);
+		let retries = 3;
+		
+		while (!session && retries > 0) {
+			try {
+				session = await getSession();
+				if (session) break;
+			} catch (sessionError) {
+				// Si falla, esperar un poco y reintentar
+				if (retries > 1) {
+					await new Promise((resolve) => setTimeout(resolve, 500));
+				}
+			}
+			retries--;
 		}
 
 		if (!session) {
-			// Si no hay sesión, redirigir a login
+			// Si después de varios intentos no hay sesión, redirigir a login
 			redirect("/en/login");
 		}
 
@@ -42,8 +50,7 @@ export default async function AppPage() {
 		// Si no tiene slug, ir a onboarding
 		redirect("/app/onboarding");
 	} catch (error) {
-		// En desarrollo, si falla la autenticación (DB no configurada, etc.)
-		// Redirigir a login para que el usuario pueda autenticarse
+		// Si hay error, redirigir a login
 		console.error("Error en AppPage:", error);
 		redirect("/en/login");
 	}
