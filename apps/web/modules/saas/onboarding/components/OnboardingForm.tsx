@@ -1,12 +1,11 @@
 "use client";
-import { authClient } from "@repo/auth/client";
 import { useRouter } from "@shared/hooks/router";
-import { clearCache } from "@shared/lib/cache";
 import { Progress } from "@ui/components/progress";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { withQuery } from "ufo";
 import { OnboardingStep1 } from "./OnboardingStep1";
+import { OnboardingStep2 } from "./OnboardingStep2";
 
 export function OnboardingForm() {
 	const t = useTranslations();
@@ -19,7 +18,6 @@ export function OnboardingForm() {
 		? Number.parseInt(stepSearchParam, 10)
 		: 1;
 
-	// biome-ignore lint/correctness/noUnusedVariables: Will be used with more steps
 	const setStep = (step: number) => {
 		router.replace(
 			withQuery(window.location.search ?? "", {
@@ -28,18 +26,23 @@ export function OnboardingForm() {
 		);
 	};
 
-	const onCompleted = async () => {
-		await authClient.updateUser({
-			onboardingComplete: true,
-		});
+	// Paso 1 solo avanza al paso 2
+	const onStep1Completed = () => {
+		setStep(2);
+	};
 
-		await clearCache();
-		router.replace(redirectTo ?? "/app");
+	// Paso 2 crea la organización y redirige (manejado en OnboardingStep2)
+	const onStep2Completed = () => {
+		// Esta función se llama desde OnboardingStep2 después de crear la organización
+		// La redirección se maneja en OnboardingStep2
 	};
 
 	const steps = [
 		{
-			component: <OnboardingStep1 onCompleted={() => onCompleted()} />,
+			component: <OnboardingStep1 onCompleted={onStep1Completed} />,
+		},
+		{
+			component: <OnboardingStep2 onCompleted={onStep2Completed} />,
 		},
 	];
 
