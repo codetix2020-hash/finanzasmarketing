@@ -18,10 +18,26 @@ export async function generateMetadata() {
 
 export default async function OnboardingPage() {
 	try {
-		const session = await getSession();
+		// Después del OAuth, puede tomar un momento para que la sesión esté disponible
+		// Intentar múltiples veces con retry (igual que /app)
+		let session = null;
+		let retries = 3;
+		
+		while (!session && retries > 0) {
+			try {
+				session = await getSession();
+				if (session) break;
+			} catch (sessionError) {
+				// Si falla, esperar un poco y reintentar
+				if (retries > 1) {
+					await new Promise((resolve) => setTimeout(resolve, 500));
+				}
+			}
+			retries--;
+		}
 
 		if (!session) {
-			// Si no hay sesión, redirigir a login (pero con locale)
+			// Si después de varios intentos no hay sesión, redirigir a login
 			redirect("/en/login");
 		}
 
@@ -30,8 +46,7 @@ export default async function OnboardingPage() {
 			redirect("/app");
 		}
 	} catch (error) {
-		// Si hay error obteniendo la sesión (puede pasar justo después del OAuth)
-		// Esperar un momento y redirigir a /app para que intente de nuevo
+		// Si hay error, redirigir a /app para que intente de nuevo
 		console.error("Error obteniendo sesión en onboarding:", error);
 		redirect("/app");
 	}
