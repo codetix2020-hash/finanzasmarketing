@@ -682,3 +682,4 @@ Usuario → Marketing Dashboard
 **Última actualización:** Enero 2026
 **Versión:** 1.0.0 (MarketingOS completo, FinanceOS eliminado)
 
+
