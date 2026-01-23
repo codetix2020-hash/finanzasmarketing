@@ -683,3 +683,4 @@ Usuario → Marketing Dashboard
 **Versión:** 1.0.0 (MarketingOS completo, FinanceOS eliminado)
 
 
+

@@ -1,10 +1,153 @@
 # MARKETINGOS - INFORME COMPLETO DE ESTADO
 
-**Última actualización:** 30 de Diciembre de 2025 - 03:45 AM  
+**Última actualización:** 30 de Diciembre de 2025 - [HORA ACTUAL]  
 **Versión:** 2.0  
 **Valor del sistema:** €130K  
 **Completitud:** 98%  
 **Estado:** Production-ready (solo falta OAuth para 100%)
+
+---
+
+## 🚨 ESTADO ACTUAL DEL SISTEMA - DIAGNÓSTICO CRÍTICO
+
+### 1. ESTADO ACTUAL DEL BUG DE LOGIN ❌
+
+**Problema identificado:** Loop infinito de redirección
+
+**Flujo del bug:**
+1. Usuario hace login → Redirige a `/app`
+2. `/app/page.tsx` verifica si hay organizaciones
+3. Si NO hay organizaciones → Redirige a `/app/onboarding`
+4. `/app/onboarding/page.tsx` verifica si `onboardingComplete === true`
+5. Si `onboardingComplete === true` → Redirige a `/app`
+6. **LOOP INFINITO** 🔄
+
+**Ubicación de archivos:**
+- ✅ `/app/onboarding/page.tsx` **CORREGIDO** - Ahora está en: `apps/web/app/(saas)/app/onboarding/page.tsx` (antes estaba en ubicación incorrecta)
+- ✅ `/app/page.tsx` **EXISTE** en: `apps/web/app/(saas)/app/page.tsx`
+
+**Causa raíz:**
+- El usuario puede tener `onboardingComplete = true` pero NO tener organizaciones
+- La lógica de `/app/page.tsx` redirige a onboarding si no hay organizaciones
+- La lógica de `/app/onboarding/page.tsx` redirige a `/app` si `onboardingComplete = true`
+- **Conflicto:** No hay validación que considere ambos estados simultáneamente
+
+**Código problemático:**
+
+```19:63:apps/web/app/(saas)/app/page.tsx
+export default async function AppPage() {
+	// ... código ...
+	if (!organizations || organizations.length === 0) {
+		console.log("No organizations, redirecting to onboarding");
+		// No tiene organizaciones, ir a onboarding
+		redirect("/app/onboarding");
+	}
+	// ...
+}
+```
+
+```62:71:apps/web/app/(saas)/onboarding/page.tsx
+	if (!config.users.enableOnboarding) {
+		console.log("About to redirect to: /app (onboarding disabled)");
+		redirect("/app");
+	}
+
+	if (session.user.onboardingComplete) {
+		console.log("About to redirect to: /app (onboarding already complete)");
+		redirect("/app");
+	}
+```
+
+**Solución requerida:**
+- Modificar `/app/page.tsx` para que NO redirija a onboarding si `onboardingComplete = true`
+- O modificar `/app/onboarding/page.tsx` para que NO redirija a `/app` si no hay organizaciones
+- **Recomendación:** Crear una organización automáticamente durante el onboarding si no existe
+
+---
+
+### 2. VERIFICACIÓN DE RUTAS ✅
+
+**Rutas existentes en `apps/web/app/(saas)`:**
+- ✅ `/app/page.tsx` - Página principal de la app
+- ✅ `/app/onboarding/page.tsx` - Página de onboarding
+- ✅ `/app/(account)/page.tsx` - Página de cuenta
+- ✅ `/app/(organizations)/[organizationSlug]/marketing/dashboard/page.tsx` - Dashboard de marketing
+- ✅ `/app/(organizations)/[organizationSlug]/page.tsx` - Página de organización
+- ✅ `/app/(account)/admin/` - Panel de administración
+- ✅ `/app/(account)/settings/` - Configuración de usuario
+- ✅ `/app/(organizations)/[organizationSlug]/settings/` - Configuración de organización
+- ✅ `/choose-plan/page.tsx` - Selección de plan
+- ✅ `/new-organization/page.tsx` - Crear nueva organización
+- ✅ `/organization-invitation/[invitationId]/page.tsx` - Invitaciones
+
+**Rutas de marketing:**
+- ✅ `/app/(marketing)/[locale]/(home)/page.tsx` - Landing page
+- ✅ `/app/(marketing)/[locale]/marketing/page.tsx` - Dashboard público de marketing
+
+**Conclusión:** Todas las rutas críticas existen. El problema es lógico, no de rutas faltantes.
+
+---
+
+### 3. QUÉ FALTA PARA COMERCIALIZAR
+
+#### ✅/❌ CHECKLIST DE COMERCIALIZACIÓN
+
+| Componente | Estado | Detalles |
+|------------|--------|----------|
+| **Login/Signup** | ❌ **BLOQUEANTE** | Existe pero tiene bug de loop infinito. **DEBE ARREGLARSE PRIMERO** |
+| **Onboarding** | ❌ **BLOQUEANTE** | Existe pero tiene bug de loop infinito. **DEBE ARREGLARSE PRIMERO** |
+| **Dashboard** | ✅ Funcional | Dashboard de marketing existe y funciona |
+| **Landing Page** | ✅ Funcional | Landing page existe en `app/(marketing)/[locale]/(home)/page.tsx` |
+| **Integraciones (Instagram, etc.)** | ⏳ Parcial | Infraestructura lista, falta OAuth (bloqueado por documentos legales) |
+| **Pagos/Stripe** | ✅ Infraestructura lista | Stripe configurado, falta testing end-to-end |
+
+**Resumen:**
+- ❌ **2 componentes bloqueantes:** Login/Signup y Onboarding (mismo bug)
+- ✅ **4 componentes funcionales:** Dashboard, Landing page, Integraciones (infra), Pagos (infra)
+- ⏳ **1 componente pendiente:** OAuth (bloqueado externamente)
+
+---
+
+### 4. SIGUIENTE PASO CRÍTICO 🔴
+
+**PRIORIDAD MÁXIMA:** Arreglar el bug de loop de login/onboarding
+
+**Acción requerida:**
+1. **Modificar `/app/page.tsx`:**
+   - Verificar `onboardingComplete` ANTES de redirigir a onboarding
+   - Si `onboardingComplete = true` pero no hay organizaciones → Crear organización automáticamente o redirigir a `/new-organization`
+
+2. **Modificar `/app/onboarding/page.tsx`:**
+   - Verificar si hay organizaciones ANTES de redirigir a `/app`
+   - Si `onboardingComplete = true` pero no hay organizaciones → Permitir completar onboarding o redirigir a `/new-organization`
+
+3. **Solución recomendada:**
+   - Durante el onboarding, si el usuario completa el proceso pero no tiene organización, crear una automáticamente
+   - O redirigir a `/new-organization` si no existe
+
+**Tiempo estimado:** 30-60 minutos  
+**Impacto:** CRÍTICO - Bloquea todo el flujo de usuario  
+**Sin esto:** El sistema NO es comercializable
+
+---
+
+### 5. ESTADO DE INTEGRACIONES
+
+**OAuth Pendiente (bloqueado externamente):**
+- ⏳ Instagram Business OAuth - Requiere documentos legales de empresa
+- ⏳ TikTok for Business OAuth - Requiere documentos legales de empresa
+- ⏳ Google Ads OAuth - Requiere Developer Token (24h approval)
+- ⏳ Facebook Ads OAuth - Requiere Business Manager setup
+
+**Infraestructura lista:**
+- ✅ Servicios de integración implementados
+- ✅ Modo MOCK funcionando
+- ✅ Endpoints API listos
+- ✅ Documentación completa (`GOOGLE-ADS-SETUP.md`, `FACEBOOK-ADS-SETUP.md`)
+
+**Bloqueante:** Documentos legales de empresa (no es un problema técnico)
+
+---
 
 ---
 
@@ -948,12 +1091,17 @@ Ejecuta el **ciclo completo de marketing** en 6 fases integradas:
 
 ## 🎯 ROADMAP Y PRÓXIMOS PASOS
 
-### **HOY (2-3 horas restantes)**
-- ✅ **COMPLETADO:** Implementación de 11 servicios nuevos
-- ✅ **COMPLETADO:** Endpoints API
-- ✅ **COMPLETADO:** Integración completa con Orchestrator
-- ⏳ **Pendiente:** Deploy verificación
-- ⏳ **Pendiente:** Testing end-to-end
+### **AHORA MISMO (PRIORIDAD CRÍTICA) 🔴**
+- ❌ **BLOQUEANTE:** Arreglar bug de loop login → /app → /app/onboarding → login
+  - **Tiempo:** 30-60 minutos
+  - **Impacto:** CRÍTICO - Sin esto el sistema NO es comercializable
+  - **Acción:** Modificar lógica de redirección en `/app/page.tsx` y `/app/onboarding/page.tsx`
+  - **Solución:** Crear organización automáticamente durante onboarding o redirigir a `/new-organization`
+
+### **HOY (Después de arreglar el bug)**
+- ⏳ **Pendiente:** Testing end-to-end del flujo completo
+- ⏳ **Pendiente:** Verificar que el onboarding crea organización correctamente
+- ⏳ **Pendiente:** Testing de login/signup completo
 
 ### **MAÑANA (Día 1)**
 **Bloqueante:** Documentos de empresa
@@ -1000,6 +1148,41 @@ Ejecuta el **ciclo completo de marketing** en 6 fases integradas:
 ---
 
 ## 📝 HISTORIAL DE CAMBIOS
+
+### **2025-12-30 [HORA ACTUAL] - FIX CRÍTICO: Onboarding movido a ubicación correcta** ✅
+**Estado:** Problema de ruta resuelto  
+**Impacto:** Ruta de onboarding ahora coincide con redirección
+
+**Problema identificado:**
+- ❌ Archivo de onboarding estaba en ubicación incorrecta: `apps/web/app/(saas)/onboarding/page.tsx` (ruta `/onboarding`)
+- ❌ `/app/page.tsx` redirigía a `/app/onboarding` pero el archivo no existía en esa ruta
+- ❌ Causaba 404 o loop infinito
+
+**Solución aplicada:**
+- ✅ Archivo movido a: `apps/web/app/(saas)/app/onboarding/page.tsx` (ruta `/app/onboarding`)
+- ✅ Carpeta antigua eliminada
+- ✅ Estructura corregida: `apps/web/app/(saas)/app/onboarding/page.tsx`
+
+**Próximo paso:** Verificar que el loop de login/onboarding se haya resuelto. Si persiste, aplicar solución de lógica.
+
+---
+
+### **2025-12-30 [HORA ACTUAL] - DIAGNÓSTICO CRÍTICO: Bug de Login Identificado** 🔴
+**Estado:** Bug crítico bloqueante identificado  
+**Impacto:** Sistema NO comercializable hasta que se arregle
+
+**Problema identificado:**
+- ❌ Loop infinito: login → /app → /app/onboarding → login
+- ❌ Usuario con `onboardingComplete = true` pero sin organizaciones causa loop
+- ❌ Lógica conflictiva entre `/app/page.tsx` y `/app/onboarding/page.tsx`
+
+**Solución requerida:**
+- Modificar lógica de redirección para considerar ambos estados simultáneamente
+- Crear organización automáticamente durante onboarding o redirigir a `/new-organization`
+
+**Próximo paso:** Verificar si el fix de ruta resolvió el problema. Si persiste, aplicar solución de lógica (30-60 min)
+
+---
 
 ### **2025-12-30 03:45 AM - FASE 4 COMPLETADA: Sistema Definitivo** ✅
 **Valor agregado:** +€40K (€90K → €130K)  
@@ -1188,6 +1371,7 @@ Este documento se mantiene en:
 *Ahorro garantizado: €222K/año por cliente.*  
 *Precio: €497-997/mes.*  
 *ROI: 20x en primer año.*
+
 
 
 
