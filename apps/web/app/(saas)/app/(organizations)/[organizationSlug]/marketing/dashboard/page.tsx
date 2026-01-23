@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/c
 import { Button } from '@ui/components/button';
 import { Plus, TrendingUp, FileText, Share2, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
-import { useActiveOrganization } from '@saas/organizations/hooks/use-active-organization';
+import { useParams } from 'next/navigation';
 
 export default function MarketingDashboardPage() {
-  const { activeOrganization } = useActiveOrganization();
+  const params = useParams();
+  const orgSlug = params.organizationSlug as string;
 
   const stats = [
     {
@@ -41,7 +42,7 @@ export default function MarketingDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Marketing Dashboard</h1>
@@ -69,56 +70,37 @@ export default function MarketingDashboardPage() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Acciones rápidas para empezar</CardDescription>
+          <CardTitle>Acciones Rápidas</CardTitle>
+          <CardDescription>Empieza a automatizar tu marketing</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button asChild variant="primary">
-              <Link href={`/app/${activeOrganization?.slug}/marketing/content`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Generate Content
-              </Link>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Generar Contenido
             </Button>
-            <Button asChild variant="outline">
-              <Link href={`/app/${activeOrganization?.slug}/settings/integrations`}>
+            <Button variant="outline" asChild>
+              <Link href={`/app/${orgSlug}/settings/integrations`}>
                 <Share2 className="mr-2 h-4 w-4" />
-                Connect Account
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={`/app/${activeOrganization?.slug}/marketing/campaigns`}>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View Campaigns
+                Conectar Redes
               </Link>
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Posts */}
+      {/* Welcome message */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Posts</CardTitle>
-          <CardDescription>Últimos posts generados y publicados</CardDescription>
+          <CardTitle>🎉 ¡Bienvenido a MarketingOS!</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No hay posts aún</p>
-            <p className="text-sm mt-2">
-              <Button asChild variant="link" className="p-0 h-auto">
-                <Link href={`/app/${activeOrganization?.slug}/marketing/content`}>
-                  Genera tu primer contenido
-                </Link>
-              </Button>
-            </p>
-          </div>
+          <p className="text-muted-foreground">
+            Tu sistema de marketing automatizado está listo. Conecta tus redes sociales 
+            para empezar a generar y publicar contenido automáticamente.
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-
-
