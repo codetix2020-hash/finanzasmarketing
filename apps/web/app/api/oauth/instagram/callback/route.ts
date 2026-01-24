@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { socialAccountsService } from '@repo/api/modules/marketing/services/social-accounts-service';
 import { getOrganizationById } from '@repo/database';
 
-const INSTAGRAM_APP_ID = process.env.INSTAGRAM_APP_ID!;
-const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET!;
+const clientId = process.env.INSTAGRAM_APP_ID!;
+const clientSecret = process.env.INSTAGRAM_APP_SECRET!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/instagram/callback';
 
 export async function GET(request: NextRequest) {
@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id: INSTAGRAM_APP_ID,
-          client_secret: INSTAGRAM_APP_SECRET,
+          client_id: clientId,
+          client_secret: clientSecret,
           grant_type: 'authorization_code',
           redirect_uri: REDIRECT_URI,
           code,
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const longLivedResponse = await fetch(
       `https://graph.instagram.com/access_token?` +
       `grant_type=ig_exchange_token&` +
-      `client_secret=${INSTAGRAM_APP_SECRET}&` +
+      `client_secret=${clientSecret}&` +
       `access_token=${tokenData.access_token}`
     );
 
