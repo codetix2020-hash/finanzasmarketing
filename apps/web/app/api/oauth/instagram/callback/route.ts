@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { socialAccountsService } from "@repo/api/modules/marketing/services/social-accounts-service";
 import { getOrganizationById } from "@repo/database";
 
-const clientId = process.env.INSTAGRAM_APP_ID;
-const clientSecret = process.env.INSTAGRAM_APP_SECRET;
+const clientId = process.env.FACEBOOK_APP_ID;
+const clientSecret = process.env.FACEBOOK_APP_SECRET;
 const REDIRECT_URI =
 	process.env.NEXT_PUBLIC_APP_URL + "/api/oauth/instagram/callback";
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 	if (!clientId || !clientSecret) {
 		return NextResponse.json(
-			{ error: "Instagram OAuth env vars not configured (INSTAGRAM_APP_ID/INSTAGRAM_APP_SECRET)" },
+			{ error: "Instagram (Business) OAuth env vars not configured (FACEBOOK_APP_ID/FACEBOOK_APP_SECRET)" },
 			{ status: 500 },
 		);
 	}
