@@ -7,11 +7,8 @@ const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/tiktok/callback';
 
 function getBaseUrl(requestUrl: string) {
-  const envBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (envBaseUrl) {
-    return envBaseUrl.replace(/\/$/, '');
-  }
-  return new URL(requestUrl).origin;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(requestUrl).origin;
+  return baseUrl.replace(/\/$/, '');
 }
 
 export async function GET(request: NextRequest) {
