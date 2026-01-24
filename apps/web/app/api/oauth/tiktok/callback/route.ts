@@ -6,6 +6,14 @@ const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY!;
 const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/tiktok/callback';
 
+function getBaseUrl(requestUrl: string) {
+  const envBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (envBaseUrl) {
+    return envBaseUrl.replace(/\/$/, '');
+  }
+  return new URL(requestUrl).origin;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   
@@ -16,7 +24,7 @@ export async function GET(request: NextRequest) {
   // Helper para construir URL de redirección correcta
   const buildRedirectUrl = async (organizationId: string, params: string) => {
     const org = await getOrganizationById(organizationId);
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = getBaseUrl(request.url);
     if (org?.slug) {
       return `${baseUrl}/app/${org.slug}/settings/integrations?${params}`;
     }
@@ -35,12 +43,12 @@ export async function GET(request: NextRequest) {
         // Fallback
       }
     }
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = getBaseUrl(request.url);
     return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=tiktok_auth_failed`);
   }
 
   if (!code || !state) {
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = getBaseUrl(request.url);
     return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=missing_params`);
   }
 
@@ -103,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener slug de la organización para redirección correcta
     const org = await getOrganizationById(organizationId);
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = getBaseUrl(request.url);
     const redirectUrl = org?.slug 
       ? `${baseUrl}/app/${org.slug}/settings/integrations?success=tiktok_connected`
       : `${baseUrl}/app/settings/integrations?success=tiktok_connected`;
@@ -118,7 +126,7 @@ export async function GET(request: NextRequest) {
       if (state) {
         const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
         const org = await getOrganizationById(organizationId);
-        const baseUrl = new URL(request.url).origin;
+        const baseUrl = getBaseUrl(request.url);
         const redirectUrl = org?.slug
           ? `${baseUrl}/app/${org.slug}/settings/integrations?error=connection_failed`
           : `${baseUrl}/app/settings/integrations?error=connection_failed`;
@@ -128,7 +136,7 @@ export async function GET(request: NextRequest) {
       // Fallback
     }
     
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = getBaseUrl(request.url);
     return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=connection_failed`);
   }
 }

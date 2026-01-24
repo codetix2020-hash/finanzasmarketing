@@ -10,6 +10,10 @@ const REDIRECT_URI =
 const GRAPH_BASE = "https://graph.facebook.com/v18.0";
 
 function getBaseUrl(requestUrl: string) {
+	const envBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
+	if (envBaseUrl) {
+		return envBaseUrl.replace(/\/$/, "");
+	}
 	return new URL(requestUrl).origin;
 }
 
