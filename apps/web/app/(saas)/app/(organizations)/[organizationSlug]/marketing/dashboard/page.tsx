@@ -75,9 +75,11 @@ export default function MarketingDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Generar Contenido
+            <Button asChild>
+              <Link href={`/app/${orgSlug}/marketing/content`}>
+                <Plus className="mr-2 h-4 w-4" />
+                Generar Contenido
+              </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href={`/app/${orgSlug}/settings/integrations`}>
