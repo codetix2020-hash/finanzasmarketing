@@ -18,11 +18,14 @@ export async function GET(request: NextRequest) {
   // Crear state con organizationId (encriptado en base64)
   const state = Buffer.from(JSON.stringify({ organizationId })).toString('base64');
 
-  // URL de autorización de Instagram
-  const authUrl = new URL('https://api.instagram.com/oauth/authorize');
+  // Instagram Business API usa Facebook OAuth (Meta)
+  const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
-  authUrl.searchParams.set('scope', 'user_profile,user_media');
+  authUrl.searchParams.set(
+    'scope',
+    'instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list,pages_read_engagement',
+  );
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('state', state);
 
