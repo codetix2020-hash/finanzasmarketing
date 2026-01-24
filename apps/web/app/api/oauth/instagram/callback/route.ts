@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { socialAccountsService } from '@repo/api/modules/marketing/services/social-accounts-service';
+import { getOrganizationById } from '@repo/database';
 
-const INSTAGRAM_APP_ID = process.env.FACEBOOK_APP_ID!;
-const INSTAGRAM_APP_SECRET = process.env.FACEBOOK_APP_SECRET!;
+const INSTAGRAM_APP_ID = process.env.INSTAGRAM_APP_ID!;
+const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/instagram/callback';
 
 export async function GET(request: NextRequest) {
@@ -12,17 +13,36 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state'); // Contiene organizationId
   const error = searchParams.get('error');
 
+  // Helper para construir URL de redirección correcta
+  const buildRedirectUrl = async (organizationId: string, params: string) => {
+    const org = await getOrganizationById(organizationId);
+    const baseUrl = new URL(request.url).origin;
+    if (org?.slug) {
+      return `${baseUrl}/app/${org.slug}/settings/integrations?${params}`;
+    }
+    // Fallback si no hay slug
+    return `${baseUrl}/app/settings/integrations?${params}`;
+  };
+
   if (error) {
     console.error('Instagram OAuth error:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/settings/integrations?error=instagram_auth_failed', request.url)
-    );
+    const state = searchParams.get('state');
+    if (state) {
+      try {
+        const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
+        const redirectUrl = await buildRedirectUrl(organizationId, 'error=instagram_auth_failed');
+        return NextResponse.redirect(redirectUrl);
+      } catch {
+        // Fallback si no se puede decodificar state
+      }
+    }
+    const baseUrl = new URL(request.url).origin;
+    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=instagram_auth_failed`);
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(
-      new URL('/dashboard/settings/integrations?error=missing_params', request.url)
-    );
+    const baseUrl = new URL(request.url).origin;
+    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=missing_params`);
   }
 
   try {
@@ -83,14 +103,35 @@ export async function GET(request: NextRequest) {
 
     console.log(`Instagram connected: @${userData.username} for org ${organizationId}`);
 
-    return NextResponse.redirect(
-      new URL('/dashboard/settings/integrations?success=instagram_connected', request.url)
-    );
+    // Obtener slug de la organización para redirección correcta
+    const org = await getOrganizationById(organizationId);
+    const baseUrl = new URL(request.url).origin;
+    const redirectUrl = org?.slug 
+      ? `${baseUrl}/app/${org.slug}/settings/integrations?success=instagram_connected`
+      : `${baseUrl}/app/settings/integrations?success=instagram_connected`;
+
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Instagram OAuth callback error:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/settings/integrations?error=connection_failed', request.url)
-    );
+    
+    // Intentar obtener organizationId del state para redirección correcta
+    try {
+      const state = searchParams.get('state');
+      if (state) {
+        const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
+        const org = await getOrganizationById(organizationId);
+        const baseUrl = new URL(request.url).origin;
+        const redirectUrl = org?.slug
+          ? `${baseUrl}/app/${org.slug}/settings/integrations?error=connection_failed`
+          : `${baseUrl}/app/settings/integrations?error=connection_failed`;
+        return NextResponse.redirect(redirectUrl);
+      }
+    } catch {
+      // Fallback
+    }
+    
+    const baseUrl = new URL(request.url).origin;
+    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=connection_failed`);
   }
 }
 

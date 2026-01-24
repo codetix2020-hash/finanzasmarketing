@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const INSTAGRAM_APP_ID = process.env.FACEBOOK_APP_ID!;
+const INSTAGRAM_APP_ID = process.env.INSTAGRAM_APP_ID!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/instagram/callback';
 
 export async function GET(request: NextRequest) {
@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
 
   if (!organizationId) {
     return NextResponse.json({ error: 'Missing organizationId' }, { status: 400 });
+  }
+
+  if (!INSTAGRAM_APP_ID) {
+    return NextResponse.json({ error: 'Instagram App ID not configured' }, { status: 500 });
   }
 
   // Crear state con organizationId (encriptado en base64)
