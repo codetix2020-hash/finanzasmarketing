@@ -153,10 +153,176 @@ model Organization {
   autoSaasOutbox        AutoSaasOutbox[]
   apiUsageLogs          ApiUsageLog[]
   marketingConfig       MarketingConfig?
+  businessProfile       BusinessProfile?
+  mediaLibrary          MediaLibrary[]
+  seoConfig             SeoConfig?
+  seoKeywords           SeoKeyword[]
   socialAccounts        SocialAccount[]
 
   @@unique([slug])
   @@map("organization")
+}
+
+// ============================================
+// PERFIL DE EMPRESA - Info completa del negocio
+// ============================================
+model BusinessProfile {
+  id                String   @id @default(cuid())
+  organizationId    String   @unique
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Info básica
+  businessName      String
+  tagline           String?   // Frase corta que define el negocio
+  industry          String    // restaurante, peluqueria, ecommerce, gimnasio, etc.
+  description       String    @db.Text
+  foundedYear       Int?
+  location          String?
+  phone             String?
+  email             String?
+  websiteUrl        String?
+  
+  // Redes sociales actuales (para analizar)
+  instagramUrl      String?
+  facebookUrl       String?
+  tiktokUrl         String?
+  linkedinUrl       String?
+  
+  // Público objetivo
+  targetAudience    String    @db.Text  // descripción detallada del cliente ideal
+  ageRangeMin       Int?
+  ageRangeMax       Int?
+  targetGender      String?   // all, male, female
+  targetLocations   String[]  // ciudades/regiones donde están sus clientes
+  customerPainPoints String?  @db.Text  // problemas que resuelves
+  
+  // Tono y personalidad de marca
+  brandPersonality  String[]  // profesional, cercano, divertido, elegante, rebelde, etc.
+  toneOfVoice       String    @db.Text  // descripción de cómo habla la marca
+  useEmojis         Boolean   @default(true)
+  emojiStyle        String    @default("moderate") // none, minimal, moderate, heavy
+  wordsToUse        String[]  // palabras que SÍ usar
+  wordsToAvoid      String[]  // palabras que NUNCA usar
+  hashtagsToUse     String[]  // hashtags de marca
+  
+  // Productos y servicios
+  mainProducts      Json?     // array de {name, description, price, imageUrl}
+  services          Json?     // array de {name, description, price}
+  priceRange        String?   // bajo, medio, alto, premium
+  uniqueSellingPoint String?  @db.Text  // qué te hace diferente
+  
+  // Competencia
+  competitors       Json?     // array de {name, instagramUrl, notes}
+  
+  // Objetivos
+  marketingGoals    String[]  // más ventas, más seguidores, más engagement, brand awareness
+  monthlyBudget     Float?    // presupuesto mensual en marketing
+  
+  // Contenido preferido
+  contentPreferences Json?    // {preferredTypes: [], postingFrequency: "daily", bestTimes: []}
+  
+  // Estado
+  isComplete        Boolean   @default(false)
+  completedSteps    String[]  // ["basic", "audience", "tone", "products", "goals"]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("business_profile")
+}
+
+// ============================================
+// BANCO DE FOTOS - Media library del negocio
+// ============================================
+model MediaLibrary {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Info del archivo
+  fileName        String
+  fileUrl         String    // URL en storage (S3, Cloudflare, etc.)
+  fileType        String    // image/jpeg, image/png, video/mp4
+  fileSize        Int       // en bytes
+  width           Int?
+  height          Int?
+  
+  // Organización
+  category        String    // products, team, location, customers, behind-scenes, lifestyle, other
+  tags            String[]  // tags para buscar
+  altText         String?   // texto alternativo (SEO + accesibilidad)
+  description     String?
+  
+  // IA
+  aiTags          String[]  // tags generados por IA
+  aiDescription   String?   // descripción generada por IA
+  
+  // Uso
+  usageCount      Int       @default(0)  // cuántas veces se ha usado
+  lastUsedAt      DateTime?
+  isFavorite      Boolean   @default(false)
+  
+  // Metadata
+  uploadedBy      String?   // userId
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([organizationId, category])
+  @@index([organizationId, tags])
+  @@map("media_library")
+}
+
+// ============================================
+// SEO CONFIG - Configuración de SEO del sitio
+// ============================================
+model SeoConfig {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Sitio web
+  websiteUrl      String
+  sitemapUrl      String?
+  
+  // Estado del análisis
+  lastScanAt      DateTime?
+  seoScore        Int?      // 0-100
+  
+  // Configuración
+  targetKeywords  String[]  // keywords principales
+  competitors     String[]  // URLs de competidores para comparar
+  
+  // Resultados del scan
+  scanResults     Json?     // {issues: [], opportunities: [], scores: {}}
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("seo_config")
+}
+
+// ============================================
+// SEO KEYWORDS - Tracking de keywords
+// ============================================
+model SeoKeyword {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  keyword         String
+  currentPosition Int?      // posición en Google
+  previousPosition Int?
+  searchVolume    Int?      // búsquedas mensuales
+  difficulty      Int?      // 0-100
+  
+  // Historial
+  positionHistory Json?     // [{date, position}]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([organizationId, keyword])
+  @@map("seo_keyword")
 }
 
 model Member {
