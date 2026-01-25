@@ -4,10 +4,11 @@ import { useActiveOrganization } from "@saas/organizations/hooks/use-active-orga
 import { Button } from "@ui/components/button";
 import { Card } from "@ui/components/card";
 import { Textarea } from "@ui/components/textarea";
-import { Loader2, MessageSquare, Plus, Send, Trash2 } from "lucide-react";
+import { Loader2, MessageSquare, Plus, Send, Trash2, AlertCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ErrorMessage } from "@/components/ui/error-message";
 
 interface Message {
 	id: string;
@@ -41,6 +42,7 @@ export default function MarketingAssistantPage() {
 	const [input, setInput] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+	const [error, setError] = useState<{ message: string; retryAfter?: number } | null>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -80,6 +82,7 @@ export default function MarketingAssistantPage() {
 		setMessages((prev) => [...prev, userMessage]);
 		setInput("");
 		setIsLoading(true);
+		setError(null);
 
 		try {
 			const response = await fetch("/api/marketing/assistant/chat", {
@@ -93,8 +96,19 @@ export default function MarketingAssistantPage() {
 			});
 
 			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || "Error al enviar mensaje");
+				const errorData = await response.json();
+				
+				// Manejo especial para rate limit
+				if (response.status === 429 || errorData.error === 'rate_limit') {
+					setError({
+						message: errorData.message || 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+						retryAfter: errorData.retryAfter || 30
+					});
+					setMessages((prev) => prev.slice(0, -1)); // Remover mensaje de usuario
+					return;
+				}
+				
+				throw new Error(errorData.error || errorData.message || "Error al enviar mensaje");
 			}
 
 			// Leer stream
@@ -151,7 +165,9 @@ export default function MarketingAssistantPage() {
 			}
 		} catch (error) {
 			console.error("Error sending message:", error);
-			toast.error(error instanceof Error ? error.message : "Error al enviar mensaje");
+			const errorMessage = error instanceof Error ? error.message : "Error al enviar mensaje";
+			setError({ message: errorMessage });
+			toast.error(errorMessage);
 			setMessages((prev) => prev.slice(0, -1)); // Remover mensaje de usuario si falló
 		} finally {
 			setIsLoading(false);
@@ -182,6 +198,13 @@ export default function MarketingAssistantPage() {
 		},
 		[],
 	);
+
+	const handleRetry = useCallback(() => {
+		setError(null);
+		if (input.trim()) {
+			sendMessage();
+		}
+	}, [input, sendMessage]);
 
 	if (!loaded) {
 		return (
@@ -241,7 +264,14 @@ export default function MarketingAssistantPage() {
 
 				{/* Mensajes */}
 				<div className="flex-1 overflow-y-auto p-4 space-y-4">
-					{messages.length === 0 && (
+					{error && (
+						<ErrorMessage
+							title="No pudimos procesar tu mensaje"
+							message={error.retryAfter ? `${error.message} (Reintentar en ${error.retryAfter}s)` : error.message}
+							onRetry={handleRetry}
+						/>
+					)}
+					{messages.length === 0 && !error && (
 						<div className="space-y-4">
 							<div className="text-center py-8">
 								<MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -256,7 +286,89 @@ export default function MarketingAssistantPage() {
 								{SUGGESTED_PROMPTS.map((prompt, idx) => (
 									<button
 										key={idx}
-										onClick={() => handleSuggestedPrompt(prompt)}
+										onClick={async () => {
+											setInput(prompt);
+											// Pequeño delay para que el input se actualice
+											await new Promise(resolve => setTimeout(resolve, 100));
+											const userMessage: Message = {
+												id: Date.now().toString(),
+												role: "user",
+												content: prompt,
+												createdAt: new Date(),
+											};
+											setMessages((prev) => [...prev, userMessage]);
+											setInput("");
+											setIsLoading(true);
+											setError(null);
+											// Llamar al endpoint directamente
+											try {
+												const response = await fetch("/api/marketing/assistant/chat", {
+													method: "POST",
+													headers: { "Content-Type": "application/json" },
+													body: JSON.stringify({
+														message: prompt,
+														conversationId: currentConversationId,
+														organizationId: activeOrganization?.id,
+													}),
+												});
+												if (!response.ok) {
+													const errorData = await response.json();
+													if (response.status === 429 || errorData.error === 'rate_limit') {
+														setError({
+															message: errorData.message || 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+															retryAfter: errorData.retryAfter || 30
+														});
+														setMessages((prev) => prev.slice(0, -1));
+														return;
+													}
+													throw new Error(errorData.error || errorData.message || "Error al enviar mensaje");
+												}
+												const reader = response.body?.getReader();
+												const decoder = new TextDecoder();
+												let assistantMessage: Message = {
+													id: (Date.now() + 1).toString(),
+													role: "assistant",
+													content: "",
+													createdAt: new Date(),
+												};
+												setMessages((prev) => [...prev, assistantMessage]);
+												if (reader) {
+													while (true) {
+														const { done, value } = await reader.read();
+														if (done) break;
+														const chunk = decoder.decode(value);
+														const lines = chunk.split("\n");
+														for (const line of lines) {
+															if (line.startsWith("data: ")) {
+																const data = line.slice(6);
+																if (data === "[DONE]") break;
+																try {
+																	const parsed = JSON.parse(data);
+																	if (parsed.text) {
+																		setMessages((prev) => {
+																			const updated = [...prev];
+																			const lastMsg = updated[updated.length - 1];
+																			if (lastMsg?.role === "assistant") {
+																				lastMsg.content += parsed.text;
+																			}
+																			return updated;
+																		});
+																	}
+																} catch (e) {}
+															}
+														}
+													}
+												}
+											} catch (error) {
+												console.error("Error sending message:", error);
+												const errorMessage = error instanceof Error ? error.message : "Error al enviar mensaje";
+												setError({ message: errorMessage });
+												toast.error(errorMessage);
+												setMessages((prev) => prev.slice(0, -1));
+											} finally {
+												setIsLoading(false);
+											}
+										}}
 										className="p-3 text-left text-sm border rounded-lg hover:bg-muted transition-colors"
 									>
 										{prompt}
@@ -285,8 +397,9 @@ export default function MarketingAssistantPage() {
 
 					{isLoading && (
 						<div className="flex justify-start">
-							<div className="bg-muted rounded-lg p-3">
+							<div className="bg-muted rounded-lg p-3 flex items-center gap-2">
 								<Loader2 className="h-4 w-4 animate-spin" />
+								<span className="text-sm text-muted-foreground">Pensando...</span>
 							</div>
 						</div>
 					)}

@@ -119,13 +119,28 @@ export async function POST(request: NextRequest) {
 		// Crear cliente de Anthropic
 		const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-		// Crear stream
-		const stream = await client.messages.stream({
-			model: "claude-sonnet-4-20250514",
-			max_tokens: 2000,
-			system: systemPrompt,
-			messages: messages as any,
-		});
+		// Crear stream con manejo de rate limit
+		let stream;
+		try {
+			stream = await client.messages.stream({
+				model: "claude-sonnet-4-20250514",
+				max_tokens: 2000,
+				system: systemPrompt,
+				messages: messages as any,
+			});
+		} catch (error: any) {
+			if (error?.status === 429 || error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
+				return NextResponse.json(
+					{
+						error: 'rate_limit',
+						message: 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+						retryAfter: 30
+					},
+					{ status: 429 }
+				);
+			}
+			throw error;
+		}
 
 		// Crear ReadableStream para la respuesta
 		const encoder = new TextEncoder();

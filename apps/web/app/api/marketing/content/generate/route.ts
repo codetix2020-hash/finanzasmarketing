@@ -165,11 +165,27 @@ export async function POST(request: Request) {
 			hashtags: hashtags.length > 0 ? hashtags : undefined,
 		});
 
-		const response = await client.messages.create({
-			model: "claude-sonnet-4-20250514",
-			max_tokens: 2000,
-			messages: [{ role: "user", content: prompt }],
-		});
+		let response;
+		try {
+			response = await client.messages.create({
+				model: "claude-sonnet-4-20250514",
+				max_tokens: 2000,
+				messages: [{ role: "user", content: prompt }],
+			});
+		} catch (error: any) {
+			if (error?.status === 429 || error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
+				return NextResponse.json(
+					{
+						success: false,
+						error: 'rate_limit',
+						message: 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+						retryAfter: 30
+					},
+					{ status: 429 }
+				);
+			}
+			throw error;
+		}
 
 		const text = response.content[0]?.type === "text" ? response.content[0].text : "";
 		const jsonMatch = text.match(/\{[\s\S]*\}/);

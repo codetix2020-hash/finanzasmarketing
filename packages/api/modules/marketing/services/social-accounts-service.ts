@@ -71,6 +71,11 @@ export const socialAccountsService = {
     });
   },
 
+  // Alias para compatibilidad
+  async getAccounts(organizationId: string) {
+    return await this.listAccounts(organizationId);
+  },
+
   // Desconectar cuenta
   async disconnectAccount(id: string, organizationId: string) {
     return await prisma.socialAccount.update({

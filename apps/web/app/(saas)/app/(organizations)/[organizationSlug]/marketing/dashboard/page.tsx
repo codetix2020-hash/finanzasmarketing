@@ -16,6 +16,7 @@ import {
 	Heart,
 	MessageSquare,
 	Repeat,
+	Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -127,10 +128,85 @@ export default function MarketingDashboardPage() {
 		},
 	];
 
+	const hasData = stats.totalReach > 0 || stats.postsThisMonth > 0 || topPosts.length > 0;
+
 	if (!loaded) {
 		return (
 			<div className="flex items-center justify-center min-h-[400px]">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+			</div>
+		);
+	}
+
+	// Empty State
+	if (!loading && !hasData) {
+		return (
+			<div className="space-y-6">
+				<div className="flex items-start justify-between">
+					<div>
+						<h1 className="text-3xl font-bold tracking-tight">Marketing Dashboard</h1>
+						<p className="text-muted-foreground mt-2">
+							¡Es hora de empezar a crear contenido!
+						</p>
+					</div>
+				</div>
+
+				<Card className="border-dashed">
+					<CardContent className="flex flex-col items-center justify-center py-16 text-center">
+						<div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+							<Sparkles className="w-12 h-12 text-primary" />
+						</div>
+						<h2 className="text-2xl font-bold mb-2">¡Es hora de empezar!</h2>
+						<p className="text-muted-foreground mb-8 max-w-md">
+							Crea tu primer post, sube fotos de tu negocio o configura tu perfil para
+							empezar a generar contenido con IA.
+						</p>
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
+							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
+								<CardContent className="p-6 text-center">
+									<FileText className="w-8 h-8 mx-auto mb-3 text-primary" />
+									<h3 className="font-semibold mb-2">Crear tu primer post</h3>
+									<p className="text-sm text-muted-foreground mb-4">
+										Genera contenido personalizado con IA
+									</p>
+									<Button asChild size="sm" className="w-full">
+										<Link href={`/app/${orgSlug}/marketing/content/create`}>
+											Empezar
+										</Link>
+									</Button>
+								</CardContent>
+							</Card>
+							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
+								<CardContent className="p-6 text-center">
+									<Share2 className="w-8 h-8 mx-auto mb-3 text-primary" />
+									<h3 className="font-semibold mb-2">Subir fotos</h3>
+									<p className="text-sm text-muted-foreground mb-4">
+										Agrega imágenes a tu banco de medios
+									</p>
+									<Button asChild size="sm" variant="outline" className="w-full">
+										<Link href={`/app/${orgSlug}/marketing/media`}>
+											Subir
+										</Link>
+									</Button>
+								</CardContent>
+							</Card>
+							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
+								<CardContent className="p-6 text-center">
+									<Users className="w-8 h-8 mx-auto mb-3 text-primary" />
+									<h3 className="font-semibold mb-2">Configurar perfil</h3>
+									<p className="text-sm text-muted-foreground mb-4">
+										Completa tu perfil de empresa
+									</p>
+									<Button asChild size="sm" variant="outline" className="w-full">
+										<Link href={`/app/${orgSlug}/marketing/profile`}>
+											Configurar
+										</Link>
+									</Button>
+								</CardContent>
+							</Card>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}
@@ -140,9 +216,13 @@ export default function MarketingDashboardPage() {
 			{/* Header */}
 			<div className="flex items-start justify-between">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Marketing Dashboard</h1>
+					<h1 className="text-3xl font-bold tracking-tight">
+						Buenos días{activeOrganization?.name ? `, ${activeOrganization.name}` : ""}! 👋
+					</h1>
 					<p className="text-muted-foreground mt-2">
-						Gestiona tu contenido, campañas y métricas de marketing
+						{stats.postsThisMonth > 0
+							? `Esta semana: ${stats.postsThisMonth} posts, ${stats.totalFollowers.toLocaleString()} seguidores, ${stats.avgEngagementRate.toFixed(1)}% engagement`
+							: "Gestiona tu contenido, campañas y métricas de marketing"}
 					</p>
 				</div>
 				<Button asChild>

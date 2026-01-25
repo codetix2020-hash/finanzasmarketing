@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -318,55 +318,142 @@ export default function CreateContentPage() {
 					{step === 5 && (
 						<div className="space-y-4">
 							{isGenerating ? (
-								<div className="flex items-center justify-center py-8">
-									<Loader2 className="h-8 w-8 animate-spin" />
-									<span className="ml-2">Generando variaciones...</span>
+								<div className="flex flex-col items-center justify-center py-12 space-y-4">
+									<div className="relative">
+										<Sparkles className="h-12 w-12 animate-pulse text-primary" />
+										<Loader2 className="h-8 w-8 animate-spin text-primary absolute -top-2 -right-2" />
+									</div>
+									<div className="text-center space-y-2">
+										<p className="font-medium">Analizando tu negocio...</p>
+										<p className="text-sm text-muted-foreground animate-pulse">
+											Generando ideas personalizadas...
+										</p>
+									</div>
 								</div>
 							) : variations.length > 0 ? (
-								<div className="space-y-4">
-									{variations.map((variation, idx) => (
-										<Card
-											key={idx}
-											className={`cursor-pointer transition-all ${
-												selectedVariation === idx
-													? "border-primary border-2"
-													: ""
-											}`}
-											onClick={() => setSelectedVariation(idx)}
-										>
-											<CardHeader>
-												<CardTitle className="text-sm">Variación {idx + 1}</CardTitle>
-											</CardHeader>
-											<CardContent className="space-y-3">
-												<div className="bg-muted p-4 rounded-lg">
-													<p className="whitespace-pre-wrap text-sm">
-														{variation.text}
-													</p>
-													{variation.hashtags.length > 0 && (
-														<div className="mt-2 pt-2 border-t">
-															<p className="text-xs text-muted-foreground">
-																{variation.hashtags.join(" ")}
-															</p>
+								<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+									{variations.map((variation, idx) => {
+										const accountName = activeOrganization?.name?.toLowerCase().replace(/\s+/g, '') || "tunegocio";
+										const caption = variation.text;
+										const hashtagsText = variation.hashtags.join(" ");
+										
+										return (
+											<div
+												key={idx}
+												className={`space-y-4 transition-all ${
+													selectedVariation === idx
+														? "ring-2 ring-primary rounded-lg p-2"
+														: ""
+												}`}
+											>
+												{/* Instagram Mockup */}
+												{platform === "instagram" && (
+													<div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-2 max-w-[320px] mx-auto border border-gray-200 dark:border-gray-700">
+														{/* Header */}
+														<div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+															<div className="flex items-center gap-2">
+																<div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+																	{accountName.charAt(0).toUpperCase()}
+																</div>
+																<span className="font-semibold text-sm">@{accountName}</span>
+															</div>
+															<MoreHorizontal className="w-5 h-5 text-gray-500" />
 														</div>
-													)}
-												</div>
-												{selectedVariation === idx && (
-													<div className="flex gap-2 pt-2">
-														<Button size="sm" variant="outline">
-															Editar
-														</Button>
-														<Button size="sm">Publicar ahora</Button>
-														<Button size="sm" variant="secondary">
-															Programar
-														</Button>
-														<Button size="sm" variant="ghost">
-															Guardar como borrador
-														</Button>
+														
+														{/* Image */}
+														<div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+															{imageUrl ? (
+																<img
+																	src={imageUrl}
+																	alt="Post preview"
+																	className="w-full h-full object-cover rounded"
+																	onError={(e) => {
+																		(e.target as HTMLImageElement).style.display = 'none';
+																	}}
+																/>
+															) : (
+																<div className="text-center p-4">
+																	<Sparkles className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+																	<p className="text-xs text-gray-500">Imagen</p>
+																</div>
+															)}
+														</div>
+														
+														{/* Actions */}
+														<div className="flex items-center gap-4 p-3">
+															<Heart className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+															<MessageCircle className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+															<Send className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+															<div className="flex-1" />
+															<Bookmark className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+														</div>
+														
+														{/* Caption */}
+														<div className="px-3 pb-3">
+															<p className="text-sm">
+																<span className="font-semibold">@{accountName}</span>{" "}
+																{caption.length > 100 ? `${caption.substring(0, 100)}...` : caption}
+															</p>
+															{hashtagsText && (
+																<p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+																	{hashtagsText.length > 50 ? `${hashtagsText.substring(0, 50)}...` : hashtagsText}
+																</p>
+															)}
+														</div>
 													</div>
 												)}
-											</CardContent>
-										</Card>
-									))}
+												
+												{/* Text Preview (for non-Instagram or fallback) */}
+												<Card
+													className={`cursor-pointer transition-all ${
+														selectedVariation === idx
+															? "border-primary border-2"
+															: ""
+													}`}
+													onClick={() => setSelectedVariation(idx)}
+												>
+													<CardHeader>
+														<CardTitle className="text-sm">Variación {idx + 1}</CardTitle>
+													</CardHeader>
+													<CardContent className="space-y-3">
+														<div className="bg-muted p-4 rounded-lg">
+															<p className="whitespace-pre-wrap text-sm">
+																{variation.text}
+															</p>
+															{variation.hashtags.length > 0 && (
+																<div className="mt-2 pt-2 border-t">
+																	<div className="flex flex-wrap gap-1">
+																		{variation.hashtags.map((tag, tagIdx) => (
+																			<span
+																				key={tagIdx}
+																				className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
+																			>
+																				{tag}
+																			</span>
+																		))}
+																	</div>
+																</div>
+															)}
+														</div>
+														{selectedVariation === idx && (
+															<div className="flex gap-2 pt-2 flex-wrap">
+																<Button size="sm" variant="outline">
+																	Editar
+																</Button>
+																<Button size="sm">Publicar ahora</Button>
+																<Button size="sm" variant="secondary">
+																	Programar
+																</Button>
+																<Button size="sm" variant="ghost">
+																	Guardar como borrador
+																</Button>
+															</div>
+														)}
+													</CardContent>
+												</Card>
+											</div>
+										);
+									})}
 								</div>
 							) : (
 								<div className="text-center py-8 text-muted-foreground">
