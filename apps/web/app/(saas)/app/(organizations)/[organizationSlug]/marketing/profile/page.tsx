@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Building2, Users, MessageSquare, Package, CheckCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -140,6 +140,8 @@ export default function BusinessProfilePage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
 	const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+	const [isEditing, setIsEditing] = useState(false);
+	const [profile, setProfile] = useState<any>(null);
 
 	const [formData, setFormData] = useState<FormData>({
 		businessName: "",
@@ -186,57 +188,59 @@ export default function BusinessProfilePage() {
 				if (res.ok) {
 					const data = await res.json();
 					if (data.profile) {
-						const profile = data.profile;
+						const profileData = data.profile;
+						setProfile(profileData);
 						setFormData({
-							businessName: profile.businessName || "",
-							tagline: profile.tagline || "",
-							industry: profile.industry || "",
-							description: profile.description || "",
-							foundedYear: profile.foundedYear?.toString() || "",
-							location: profile.location || "",
-							phone: profile.phone || "",
-							email: profile.email || "",
-							websiteUrl: profile.websiteUrl || "",
-							instagramUrl: profile.instagramUrl || "",
-							facebookUrl: profile.facebookUrl || "",
-							tiktokUrl: profile.tiktokUrl || "",
-							linkedinUrl: profile.linkedinUrl || "",
-							targetAudience: profile.targetAudience || "",
-							ageRangeMin: profile.ageRangeMin?.toString() || "",
-							ageRangeMax: profile.ageRangeMax?.toString() || "",
-							targetGender: profile.targetGender || "all",
-							targetLocations: Array.isArray(profile.targetLocations)
-								? profile.targetLocations.join(", ")
+							businessName: profileData.businessName || "",
+							tagline: profileData.tagline || "",
+							industry: profileData.industry || "",
+							description: profileData.description || "",
+							foundedYear: profileData.foundedYear?.toString() || "",
+							location: profileData.location || "",
+							phone: profileData.phone || "",
+							email: profileData.email || "",
+							websiteUrl: profileData.websiteUrl || "",
+							instagramUrl: profileData.instagramUrl || "",
+							facebookUrl: profileData.facebookUrl || "",
+							tiktokUrl: profileData.tiktokUrl || "",
+							linkedinUrl: profileData.linkedinUrl || "",
+							targetAudience: profileData.targetAudience || "",
+							ageRangeMin: profileData.ageRangeMin?.toString() || "",
+							ageRangeMax: profileData.ageRangeMax?.toString() || "",
+							targetGender: profileData.targetGender || "all",
+							targetLocations: Array.isArray(profileData.targetLocations)
+								? profileData.targetLocations.join(", ")
 								: "",
-							customerPainPoints: profile.customerPainPoints || "",
-							brandPersonality: Array.isArray(profile.brandPersonality)
-								? profile.brandPersonality
+							customerPainPoints: profileData.customerPainPoints || "",
+							brandPersonality: Array.isArray(profileData.brandPersonality)
+								? profileData.brandPersonality
 								: [],
-							toneOfVoice: profile.toneOfVoice || "",
-							useEmojis: profile.useEmojis ?? true,
-							emojiStyle: profile.emojiStyle || "moderate",
-							wordsToUse: Array.isArray(profile.wordsToUse)
-								? profile.wordsToUse.join(", ")
+							toneOfVoice: profileData.toneOfVoice || "",
+							useEmojis: profileData.useEmojis ?? true,
+							emojiStyle: profileData.emojiStyle || "moderate",
+							wordsToUse: Array.isArray(profileData.wordsToUse)
+								? profileData.wordsToUse.join(", ")
 								: "",
-							wordsToAvoid: Array.isArray(profile.wordsToAvoid)
-								? profile.wordsToAvoid.join(", ")
+							wordsToAvoid: Array.isArray(profileData.wordsToAvoid)
+								? profileData.wordsToAvoid.join(", ")
 								: "",
-							hashtagsToUse: Array.isArray(profile.hashtagsToUse)
-								? profile.hashtagsToUse.join(", ")
+							hashtagsToUse: Array.isArray(profileData.hashtagsToUse)
+								? profileData.hashtagsToUse.join(", ")
 								: "",
-							mainProducts: profile.mainProducts
-								? JSON.stringify(profile.mainProducts, null, 2)
+							mainProducts: profileData.mainProducts
+								? JSON.stringify(profileData.mainProducts, null, 2)
 								: "",
-							services: profile.services ? JSON.stringify(profile.services, null, 2) : "",
-							priceRange: profile.priceRange || "",
-							uniqueSellingPoint: profile.uniqueSellingPoint || "",
-							marketingGoals: Array.isArray(profile.marketingGoals)
-								? profile.marketingGoals
+							services: profileData.services ? JSON.stringify(profileData.services, null, 2) : "",
+							priceRange: profileData.priceRange || "",
+							uniqueSellingPoint: profileData.uniqueSellingPoint || "",
+							marketingGoals: Array.isArray(profileData.marketingGoals)
+								? profileData.marketingGoals
 								: [],
-							monthlyBudget: profile.monthlyBudget?.toString() || "",
+							monthlyBudget: profileData.monthlyBudget?.toString() || "",
 							postingFrequency: "daily",
 						});
-						setCompletedSteps(profile.completedSteps || []);
+						setCompletedSteps(profileData.completedSteps || []);
+						setIsEditing(!profileData.isComplete);
 					}
 				}
 			} catch (error) {
@@ -348,6 +352,15 @@ export default function BusinessProfilePage() {
 			toast.success(isComplete ? "Perfil completado" : "Perfil guardado");
 			if (isComplete) {
 				setCompletedSteps(STEPS.map((s) => s.id));
+				setIsEditing(false);
+			}
+			// Recargar perfil
+			const res2 = await fetch(`/api/marketing/profile?organizationId=${activeOrganization.id}`);
+			if (res2.ok) {
+				const data2 = await res2.json();
+				if (data2.profile) {
+					setProfile(data2.profile);
+				}
 			}
 		} catch (error) {
 			console.error(error);
@@ -396,6 +409,172 @@ export default function BusinessProfilePage() {
 		return (
 			<div className="flex items-center justify-center p-12">
 				<Loader2 className="h-8 w-8 animate-spin" />
+			</div>
+		);
+	}
+
+	// Si el perfil está completo y no estamos editando, mostrar vista
+	if (profile?.isComplete && !isEditing) {
+		return (
+			<div className="space-y-6 p-6">
+				{/* Header */}
+				<div className="flex justify-between items-center">
+					<div>
+						<h1 className="text-2xl font-bold">{profile.businessName}</h1>
+						<p className="text-muted-foreground">{profile.industry}</p>
+					</div>
+					<Button onClick={() => setIsEditing(true)}>
+						<Pencil className="w-4 h-4 mr-2" />
+						Editar perfil
+					</Button>
+				</div>
+
+				{/* Cards con la info */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{/* Card: Información Básica */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<Building2 className="w-5 h-5" />
+								Información Básica
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{profile.description && (
+								<div>
+									<span className="text-muted-foreground">Descripción: </span>
+									{profile.description}
+								</div>
+							)}
+							{profile.location && (
+								<div>
+									<span className="text-muted-foreground">Ubicación: </span>
+									{profile.location}
+								</div>
+							)}
+							{profile.websiteUrl && (
+								<div>
+									<span className="text-muted-foreground">Web: </span>
+									<a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+										{profile.websiteUrl}
+									</a>
+								</div>
+							)}
+							{profile.foundedYear && (
+								<div>
+									<span className="text-muted-foreground">Fundado en: </span>
+									{profile.foundedYear}
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					{/* Card: Tu Público */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<Users className="w-5 h-5" />
+								Tu Público
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{profile.targetAudience && (
+								<div>
+									<span className="text-muted-foreground">Cliente ideal: </span>
+									{profile.targetAudience}
+								</div>
+							)}
+							{(profile.ageRangeMin || profile.ageRangeMax) && (
+								<div>
+									<span className="text-muted-foreground">Edad: </span>
+									{profile.ageRangeMin || "?"} - {profile.ageRangeMax || "?"} años
+								</div>
+							)}
+							{Array.isArray(profile.targetLocations) && profile.targetLocations.length > 0 && (
+								<div>
+									<span className="text-muted-foreground">Ubicaciones: </span>
+									{profile.targetLocations.join(", ")}
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					{/* Card: Voz de Marca */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<MessageSquare className="w-5 h-5" />
+								Voz de Marca
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{Array.isArray(profile.brandPersonality) && profile.brandPersonality.length > 0 && (
+								<div>
+									<span className="text-muted-foreground">Personalidad: </span>
+									{profile.brandPersonality.join(", ")}
+								</div>
+							)}
+							{profile.toneOfVoice && (
+								<div>
+									<span className="text-muted-foreground">Tono: </span>
+									{profile.toneOfVoice}
+								</div>
+							)}
+							<div>
+								<span className="text-muted-foreground">Emojis: </span>
+								{profile.useEmojis ? "Sí" : "No"} ({profile.emojiStyle || "moderate"})
+							</div>
+							{Array.isArray(profile.hashtagsToUse) && profile.hashtagsToUse.length > 0 && (
+								<div>
+									<span className="text-muted-foreground">Hashtags: </span>
+									{profile.hashtagsToUse.join(" ")}
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					{/* Card: Productos */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center gap-2">
+								<Package className="w-5 h-5" />
+								Productos y Servicios
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{profile.mainProducts && Array.isArray(profile.mainProducts) && profile.mainProducts.length > 0 ? (
+								<div className="space-y-2">
+									{profile.mainProducts.map((p: any, i: number) => (
+										<div key={i} className="py-2 border-b last:border-0">
+											<div className="font-medium">{p.name}</div>
+											{p.description && (
+												<div className="text-sm text-muted-foreground">{p.description}</div>
+											)}
+											{p.price && (
+												<div className="text-sm font-medium text-green-600">{p.price}€</div>
+											)}
+										</div>
+									))}
+								</div>
+							) : (
+								<p className="text-muted-foreground text-sm">No hay productos registrados</p>
+							)}
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Indicador de completitud */}
+				<Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+					<CardContent className="flex items-center gap-3 py-4">
+						<CheckCircle className="w-6 h-6 text-green-500" />
+						<div>
+							<div className="font-medium text-green-800 dark:text-green-200">Perfil completo</div>
+							<div className="text-sm text-green-600 dark:text-green-400">
+								La IA usará esta información para generar contenido personalizado
+							</div>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}

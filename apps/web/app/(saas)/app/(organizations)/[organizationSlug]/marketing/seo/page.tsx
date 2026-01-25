@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/c
 import { Button } from "@ui/components/button";
 import { Badge } from "@ui/components/badge";
 import { Progress } from "@ui/components/progress";
+import { Input } from "@ui/components/input";
+import { Label } from "@ui/components/label";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -16,6 +18,8 @@ import {
 	Plus,
 	BarChart3,
 	Loader2,
+	Globe,
+	Search,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -61,12 +65,28 @@ export default function SeoDashboardPage() {
 	const [loading, setLoading] = useState(true);
 	const [analyzing, setAnalyzing] = useState(false);
 	const [data, setData] = useState<SeoData | null>(null);
+	const [seoConfig, setSeoConfig] = useState<any>(null);
+	const [websiteUrl, setWebsiteUrl] = useState("");
 
 	useEffect(() => {
 		if (loaded && activeOrganization?.id) {
+			fetchSeoConfig();
 			fetchSeoData();
 		}
 	}, [loaded, activeOrganization?.id]);
+
+	const fetchSeoConfig = async () => {
+		if (!activeOrganization?.id) return;
+		try {
+			const response = await fetch(`/api/marketing/seo/config?organizationId=${activeOrganization.id}`);
+			if (response.ok) {
+				const result = await response.json();
+				setSeoConfig(result.config);
+			}
+		} catch (error) {
+			console.error("Error fetching SEO config:", error);
+		}
+	};
 
 	const fetchSeoData = async () => {
 		if (!activeOrganization?.id) return;
@@ -79,6 +99,45 @@ export default function SeoDashboardPage() {
 		} catch (error) {
 			console.error("Error fetching SEO data:", error);
 			toast.error("Error al cargar datos de SEO");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleSetup = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!activeOrganization?.id || !websiteUrl.trim()) return;
+
+		try {
+			setLoading(true);
+			const response = await fetch("/api/marketing/seo/config", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					organizationId: activeOrganization.id,
+					websiteUrl: websiteUrl.trim(),
+				}),
+			});
+
+			if (!response.ok) throw new Error("Failed to save config");
+			
+			const result = await response.json();
+			setSeoConfig(result.config);
+			toast.success("Configuración guardada. Analizando sitio...");
+			
+			// Disparar análisis
+			const analyzeResponse = await fetch("/api/marketing/seo/analyze", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ organizationId: activeOrganization.id }),
+			});
+
+			if (analyzeResponse.ok) {
+				await fetchSeoData();
+			}
+		} catch (error) {
+			console.error("Error setting up SEO:", error);
+			toast.error("Error al configurar SEO");
 		} finally {
 			setLoading(false);
 		}
@@ -134,6 +193,59 @@ export default function SeoDashboardPage() {
 				<PageHeader title="SEO Dashboard" subtitle="Analiza y mejora el SEO de tu sitio web" />
 				<div className="flex items-center justify-center p-12">
 					<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+				</div>
+			</>
+		);
+	}
+
+	// Si no hay config, mostrar setup
+	if (!loading && !seoConfig?.websiteUrl) {
+		return (
+			<>
+				<PageHeader title="SEO Dashboard" subtitle="Analiza y mejora el SEO de tu sitio web" />
+				<div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+					<div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6">
+						<Globe className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+					</div>
+					<h1 className="text-2xl font-bold mb-2">Configura tu SEO</h1>
+					<p className="text-muted-foreground max-w-md mb-6">
+						Conecta tu sitio web para analizar su SEO, trackear keywords y recibir recomendaciones de mejora.
+					</p>
+					
+					<Card className="w-full max-w-md">
+						<CardContent className="pt-6">
+							<form onSubmit={handleSetup} className="space-y-4">
+								<div>
+									<Label htmlFor="websiteUrl">URL de tu sitio web</Label>
+									<Input 
+										id="websiteUrl"
+										type="url"
+										placeholder="https://tusitio.com"
+										value={websiteUrl}
+										onChange={(e) => setWebsiteUrl(e.target.value)}
+										disabled={loading}
+									/>
+								</div>
+								<Button type="submit" className="w-full" disabled={!websiteUrl || loading}>
+									{loading ? (
+										<>
+											<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+											Analizando...
+										</>
+									) : (
+										<>
+											<Search className="w-4 h-4 mr-2" />
+											Analizar mi sitio
+										</>
+									)}
+								</Button>
+							</form>
+						</CardContent>
+					</Card>
+
+					<p className="text-sm text-muted-foreground mt-4">
+						Analizaremos la velocidad, accesibilidad, y optimización SEO de tu web
+					</p>
 				</div>
 			</>
 		);
