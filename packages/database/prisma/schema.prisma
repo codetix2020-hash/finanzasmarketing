@@ -158,6 +158,10 @@ model Organization {
   seoConfig             SeoConfig?
   seoKeywords           SeoKeyword[]
   socialAccounts        SocialAccount[]
+  socialComments        SocialComment[]
+  socialMessages        SocialMessage[]
+  aiConversations       AiConversation[]
+  marketingPosts        MarketingPost[]
 
   @@unique([slug])
   @@map("organization")
@@ -818,4 +822,178 @@ model SocialAccount {
   @@index([platform])
   @@index([isActive])
   @@map("social_account")
+}
+
+// ============================================
+// AI CONVERSATIONS - Chat con asistente de marketing
+// ============================================
+model AiConversation {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId          String
+  
+  title           String?   // auto-generado del primer mensaje
+  
+  messages        AiMessage[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([organizationId, userId])
+  @@map("ai_conversation")
+}
+
+model AiMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role            String    // "user" | "assistant"
+  content         String    @db.Text
+  
+  // Si el mensaje generó contenido
+  generatedContent Json?    // {type: "post", platform: "instagram", content: "...", imageUrl: "..."}
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([conversationId])
+  @@map("ai_message")
+}
+
+// ============================================
+// MARKETING POSTS - Posts de redes sociales
+// ============================================
+model MarketingPost {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Contenido
+  content         String    @db.Text
+  contentHtml     String?   @db.Text  // versión con formato
+  
+  // Media
+  mediaUrls       String[]  // URLs de imágenes/videos
+  mediaLibraryIds String[]  // Referencias al banco de fotos
+  
+  // Plataforma y tipo
+  platform        String    // instagram, facebook, tiktok, linkedin, twitter
+  postType        String    // feed, story, reel, carousel
+  
+  // Metadata
+  hashtags        String[]
+  mentions        String[]
+  link            String?
+  callToAction    String?
+  
+  // Estado y programación
+  status          String    @default("draft") // draft, scheduled, publishing, published, failed
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  
+  // Resultado de publicación
+  externalId      String?   // ID del post en la plataforma
+  externalUrl     String?   // URL del post publicado
+  publishError    String?
+  
+  // Analytics
+  impressions     Int       @default(0)
+  reach           Int       @default(0)
+  likes           Int       @default(0)
+  comments        Int       @default(0)
+  shares          Int       @default(0)
+  saves           Int       @default(0)
+  clicks          Int       @default(0)
+  
+  // IA
+  aiGenerated     Boolean   @default(false)
+  aiPrompt        String?   @db.Text  // prompt usado para generar
+  
+  createdBy       String?   // userId
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([organizationId, status])
+  @@index([organizationId, platform])
+  @@index([organizationId, scheduledAt])
+  @@map("marketing_post")
+}
+
+// ============================================
+// SOCIAL COMMENTS - Comentarios de redes sociales
+// ============================================
+model SocialComment {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Origen
+  platform        String    // instagram, facebook, tiktok
+  externalId      String    // ID en la plataforma
+  postExternalId  String?   // ID del post al que pertenece
+  
+  // Contenido
+  authorName      String
+  authorUsername  String?
+  authorAvatar    String?
+  content         String    @db.Text
+  
+  // Análisis
+  sentiment       String?   // positive, neutral, negative
+  category        String?   // question, complaint, praise, spam
+  needsReply      Boolean   @default(true)
+  
+  // Respuesta
+  replied         Boolean   @default(false)
+  replyContent    String?   @db.Text
+  repliedAt       DateTime?
+  repliedBy       String?   // userId o "ai"
+  
+  // Estado
+  isHidden        Boolean   @default(false)
+  isSpam          Boolean   @default(false)
+  
+  commentedAt     DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([platform, externalId])
+  @@index([organizationId, platform])
+  @@index([organizationId, needsReply])
+  @@map("social_comment")
+}
+
+// ============================================
+// SOCIAL MESSAGES - Mensajes directos de redes sociales
+// ============================================
+model SocialMessage {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  platform        String
+  externalId      String
+  threadId        String?
+  
+  // Participantes
+  senderName      String
+  senderUsername  String?
+  senderAvatar    String?
+  isFromBusiness  Boolean   @default(false)
+  
+  // Contenido
+  content         String    @db.Text
+  mediaUrls       String[]
+  
+  // Estado
+  isRead          Boolean   @default(false)
+  needsReply      Boolean   @default(true)
+  
+  sentAt          DateTime
+  createdAt       DateTime  @default(now())
+  
+  @@unique([platform, externalId])
+  @@index([organizationId, threadId])
+  @@map("social_message")
 }

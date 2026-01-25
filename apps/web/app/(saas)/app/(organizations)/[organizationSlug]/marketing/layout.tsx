@@ -73,7 +73,7 @@ export default async function MarketingLayout({
 				},
 				{
 					title: "Calendario",
-					href: `${marketingBasePath}/calendar`,
+					href: `${marketingBasePath}/content/calendar`,
 					icon: <Calendar className="size-4 opacity-50" />,
 				},
 				{

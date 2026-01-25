@@ -1,11 +1,9 @@
 "use client";
 
-import { useSocialAccounts } from "@/lib/hooks/use-social-accounts";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { Button } from "@ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
 import { Input } from "@ui/components/input";
-import { Label } from "@ui/components/label";
 import {
 	Select,
 	SelectContent,
@@ -13,164 +11,116 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@ui/components/select";
-import { Textarea } from "@ui/components/textarea";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/components/tabs";
+import { Badge } from "@ui/components/badge";
+import { Calendar, Edit, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
-interface GeneratedContent {
-	text: string;
+interface MarketingPost {
+	id: string;
+	content: string;
+	platform: string;
+	postType: string;
+	status: string;
+	scheduledAt?: string;
+	publishedAt?: string;
+	mediaUrls: string[];
 	hashtags: string[];
+	impressions: number;
+	likes: number;
+	comments: number;
+	shares: number;
 }
 
-type PlatformId = "instagram" | "facebook" | "tiktok";
+const PLATFORM_ICONS: Record<string, string> = {
+	instagram: "📸",
+	facebook: "📘",
+	tiktok: "🎵",
+	linkedin: "💼",
+	twitter: "🐦",
+};
 
-const PLATFORM_OPTIONS: Array<{ id: PlatformId; label: string }> = [
-	{ id: "instagram", label: "Instagram" },
-	{ id: "facebook", label: "Facebook" },
-	{ id: "tiktok", label: "TikTok" },
-];
-
-const CONTENT_TYPE_OPTIONS: Array<{ id: string; label: string }> = [
-	{ id: "educativo", label: "Educativo" },
-	{ id: "promocional", label: "Promocional" },
-	{ id: "testimonio", label: "Testimonio" },
-	{ id: "problema_solucion", label: "Problema → Solución" },
-	{ id: "oferta", label: "Oferta" },
-	{ id: "tips", label: "Tips" },
-];
-
-function formatPreviewText(content: GeneratedContent | null) {
-	if (!content) return "";
-	const hashtags = content.hashtags?.length ? `\n\n${content.hashtags.join(" ")}` : "";
-	return `${content.text}${hashtags}`.trim();
-}
+const STATUS_COLORS: Record<string, string> = {
+	draft: "bg-gray-500",
+	scheduled: "bg-blue-500",
+	publishing: "bg-yellow-500",
+	published: "bg-green-500",
+	failed: "bg-red-500",
+};
 
 export default function MarketingContentPage() {
 	const params = useParams();
 	const organizationSlug = params.organizationSlug as string;
 
 	const { activeOrganization, loaded } = useActiveOrganization();
-	const { accounts, isLoading: isLoadingAccounts } = useSocialAccounts();
 
-	const [platform, setPlatform] = useState<PlatformId>("instagram");
-	const [contentType, setContentType] = useState<string>("educativo");
-	const [topic, setTopic] = useState<string>("");
-	const [imageUrl, setImageUrl] = useState<string>("");
+	const [posts, setPosts] = useState<MarketingPost[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [activeTab, setActiveTab] = useState("all");
+	const [searchQuery, setSearchQuery] = useState("");
+	const [platformFilter, setPlatformFilter] = useState<string>("all");
 
-	const [generated, setGenerated] = useState<GeneratedContent | null>(null);
-	const [isGenerating, setIsGenerating] = useState(false);
-	const [isPublishing, setIsPublishing] = useState(false);
+	useEffect(() => {
+		if (!loaded || !activeOrganization?.id) return;
 
-	const connectedAccount = useMemo(() => {
-		return accounts.find((acc) => acc.platform === platform && acc.isActive) || null;
-	}, [accounts, platform]);
-
-	const isPublishSupported = platform === "instagram" || platform === "facebook";
-	const isConnected = !!connectedAccount;
-
-	const previewText = useMemo(() => formatPreviewText(generated), [generated]);
-
-	async function onGenerate() {
-		if (!activeOrganization?.id) {
-			toast.error("No se encontró la organización activa");
-			return;
+		async function loadPosts() {
+			setIsLoading(true);
+			try {
+				const statusFilter = activeTab === "all" ? undefined : activeTab;
+				const res = await fetch(
+					`/api/marketing/posts?organizationId=${activeOrganization.id}${
+						statusFilter ? `&status=${statusFilter}` : ""
+					}${platformFilter !== "all" ? `&platform=${platformFilter}` : ""}`,
+				);
+				const data = await res.json();
+				if (res.ok && data.posts) {
+					setPosts(data.posts);
+				}
+			} catch (error) {
+				console.error("Error loading posts:", error);
+				toast.error("Error al cargar posts");
+			} finally {
+				setIsLoading(false);
+			}
 		}
 
-		if (!topic.trim()) {
-			toast.error("Escribe un tema o producto");
-			return;
-		}
+		loadPosts();
+	}, [loaded, activeOrganization?.id, activeTab, platformFilter]);
 
-		setIsGenerating(true);
-		setGenerated(null);
+	const filteredPosts = useMemo(() => {
+		if (!searchQuery.trim()) return posts;
+
+		const query = searchQuery.toLowerCase();
+		return posts.filter(
+			(post) =>
+				post.content.toLowerCase().includes(query) ||
+				post.platform.toLowerCase().includes(query) ||
+				post.hashtags.some((h) => h.toLowerCase().includes(query)),
+		);
+	}, [posts, searchQuery]);
+
+	const handleDelete = async (postId: string) => {
+		if (!confirm("¿Estás seguro de eliminar este post?")) return;
 
 		try {
-			const res = await fetch("/api/marketing/content/generate", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					organizationId: activeOrganization.id,
-					platform,
-					contentType,
-					topic,
-				}),
+			const res = await fetch(`/api/marketing/posts/${postId}`, {
+				method: "DELETE",
 			});
 
-			const data = await res.json();
-			if (!res.ok || !data?.success) {
-				throw new Error(data?.error || "No se pudo generar contenido");
+			if (!res.ok) {
+				throw new Error("Error al eliminar");
 			}
 
-			setGenerated({
-				text: data.content?.text || "",
-				hashtags: Array.isArray(data.content?.hashtags) ? data.content.hashtags : [],
-			});
-		} catch (e) {
-			console.error(e);
-			toast.error(e instanceof Error ? e.message : "Error generando contenido");
-		} finally {
-			setIsGenerating(false);
+			setPosts((prev) => prev.filter((p) => p.id !== postId));
+			toast.success("Post eliminado");
+		} catch (error) {
+			console.error(error);
+			toast.error("Error al eliminar post");
 		}
-	}
-
-	async function onPublish() {
-		if (!activeOrganization?.id) {
-			toast.error("No se encontró la organización activa");
-			return;
-		}
-
-		if (!generated?.text?.trim()) {
-			toast.error("Primero genera contenido");
-			return;
-		}
-
-		if (!isConnected) {
-			toast.error("No hay una cuenta conectada para esa plataforma");
-			return;
-		}
-
-		if (!isPublishSupported) {
-			toast.error("Publicación directa no soportada para TikTok (requiere vídeo)");
-			return;
-		}
-
-		if (platform === "instagram" && !imageUrl.trim()) {
-			toast.error("Para publicar en Instagram necesitas una URL pública de imagen");
-			return;
-		}
-
-		setIsPublishing(true);
-		try {
-			const res = await fetch("/api/marketing/content/publish", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					organizationId: activeOrganization.id,
-					platform,
-					contentType,
-					topic,
-					text: generated.text,
-					hashtags: generated.hashtags,
-					imageUrl: imageUrl.trim() || undefined,
-				}),
-			});
-
-			const data = await res.json();
-			if (!res.ok || !data?.success) {
-				throw new Error(data?.error || "No se pudo publicar");
-			}
-
-			toast.success("Publicado correctamente");
-		} catch (e) {
-			console.error(e);
-			toast.error(e instanceof Error ? e.message : "Error publicando");
-		} finally {
-			setIsPublishing(false);
-		}
-	}
+	};
 
 	if (!loaded) {
 		return (
@@ -184,161 +134,175 @@ export default function MarketingContentPage() {
 		<div className="space-y-6">
 			<div className="flex items-start justify-between gap-4">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Generar Contenido</h1>
+					<h1 className="text-3xl font-bold tracking-tight">Contenido</h1>
 					<p className="text-muted-foreground mt-2">
-						Crea un post con IA y publícalo usando tu cuenta conectada.
+						Gestiona todos tus posts, borradores y programaciones
 					</p>
 				</div>
-				<Button variant="outline" asChild>
-					<Link href={`/app/${organizationSlug}/marketing/dashboard`}>Volver al dashboard</Link>
+				<Button asChild>
+					<Link href={`/app/${organizationSlug}/marketing/content/create`}>
+						<Plus className="mr-2 h-4 w-4" />
+						Crear contenido
+					</Link>
 				</Button>
 			</div>
 
+			{/* Filtros */}
 			<Card>
-				<CardHeader>
-					<CardTitle>Formulario</CardTitle>
-					<CardDescription>Elige plataforma, tipo y tema/producto.</CardDescription>
-				</CardHeader>
-				<CardContent className="grid gap-5 md:grid-cols-2">
-					<div className="space-y-2">
-						<Label>Plataforma</Label>
-						<Select value={platform} onValueChange={(v) => setPlatform(v as PlatformId)}>
-							<SelectTrigger>
-								<SelectValue placeholder="Selecciona una plataforma" />
-							</SelectTrigger>
-							<SelectContent>
-								{PLATFORM_OPTIONS.map((p) => (
-									<SelectItem key={p.id} value={p.id}>
-										{p.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<p className="text-xs text-muted-foreground">
-							{platform === "tiktok"
-								? "TikTok requiere vídeo para publicar. Por ahora puedes generar texto y copiarlo."
-								: "Para publicar, necesitas tener la cuenta conectada en Integrations."}
-						</p>
+				<CardContent className="pt-6">
+					<div className="flex flex-col md:flex-row gap-4">
+						<div className="flex-1">
+							<div className="relative">
+								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+								<Input
+									placeholder="Buscar por texto, plataforma o hashtag..."
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className="pl-10"
+								/>
+							</div>
+						</div>
+						<div className="w-full md:w-[200px]">
+							<Select value={platformFilter} onValueChange={setPlatformFilter}>
+								<SelectTrigger>
+									<SelectValue placeholder="Todas las plataformas" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">Todas las plataformas</SelectItem>
+									<SelectItem value="instagram">Instagram</SelectItem>
+									<SelectItem value="facebook">Facebook</SelectItem>
+									<SelectItem value="tiktok">TikTok</SelectItem>
+									<SelectItem value="linkedin">LinkedIn</SelectItem>
+									<SelectItem value="twitter">Twitter</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
+				</CardContent>
+			</Card>
 
-					<div className="space-y-2">
-						<Label>Tipo de contenido</Label>
-						<Select value={contentType} onValueChange={setContentType}>
-							<SelectTrigger>
-								<SelectValue placeholder="Selecciona un tipo" />
-							</SelectTrigger>
-							<SelectContent>
-								{CONTENT_TYPE_OPTIONS.map((t) => (
-									<SelectItem key={t.id} value={t.id}>
-										{t.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+			{/* Tabs y lista */}
+			<Tabs value={activeTab} onValueChange={setActiveTab}>
+				<TabsList>
+					<TabsTrigger value="all">Todos</TabsTrigger>
+					<TabsTrigger value="draft">Borradores</TabsTrigger>
+					<TabsTrigger value="scheduled">Programados</TabsTrigger>
+					<TabsTrigger value="published">Publicados</TabsTrigger>
+				</TabsList>
 
-					<div className="space-y-2 md:col-span-2">
-						<Label>Tema / Producto</Label>
-						<Input
-							value={topic}
-							onChange={(e) => setTopic(e.target.value)}
-							placeholder="Ej: Reservas online para barberías con gamificación"
-						/>
-					</div>
+				<TabsContent value={activeTab} className="mt-4">
+					{isLoading ? (
+						<div className="flex items-center justify-center py-8">
+							<Loader2 className="h-6 w-6 animate-spin" />
+						</div>
+					) : filteredPosts.length === 0 ? (
+						<Card>
+							<CardContent className="py-12 text-center">
+								<p className="text-muted-foreground">
+									No hay posts {activeTab !== "all" ? `en ${activeTab}` : ""}
+								</p>
+								<Button asChild className="mt-4">
+									<Link href={`/app/${organizationSlug}/marketing/content/create`}>
+										<Plus className="mr-2 h-4 w-4" />
+										Crear primer post
+									</Link>
+								</Button>
+							</CardContent>
+						</Card>
+					) : (
+						<div className="space-y-4">
+							{filteredPosts.map((post) => (
+								<Card key={post.id}>
+									<CardContent className="pt-6">
+										<div className="flex gap-4">
+											{/* Thumbnail */}
+											{post.mediaUrls && post.mediaUrls.length > 0 && (
+												<div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+													<img
+														src={post.mediaUrls[0]}
+														alt="Post thumbnail"
+														className="w-full h-full object-cover"
+													/>
+												</div>
+											)}
 
-					{platform === "instagram" && (
-						<div className="space-y-2 md:col-span-2">
-							<Label>URL de imagen (requerida para publicar en Instagram)</Label>
-							<Input
-								value={imageUrl}
-								onChange={(e) => setImageUrl(e.target.value)}
-								placeholder="https://.../imagen.jpg"
-							/>
+											{/* Contenido */}
+											<div className="flex-1 min-w-0">
+												<div className="flex items-start justify-between gap-4 mb-2">
+													<div className="flex items-center gap-2 flex-wrap">
+														<span className="text-2xl">
+															{PLATFORM_ICONS[post.platform] || "📱"}
+														</span>
+														<Badge
+															className={STATUS_COLORS[post.status] || "bg-gray-500"}
+														>
+															{post.status}
+														</Badge>
+														<span className="text-sm text-muted-foreground">
+															{post.platform} • {post.postType}
+														</span>
+													</div>
+													<div className="flex gap-2">
+														<Button variant="ghost" size="icon">
+															<Edit className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleDelete(post.id)}
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</div>
+
+												<p className="text-sm line-clamp-2 mb-2">
+													{post.content}
+												</p>
+
+												{post.hashtags.length > 0 && (
+													<div className="flex flex-wrap gap-1 mb-2">
+														{post.hashtags.slice(0, 5).map((tag, idx) => (
+															<span
+																key={idx}
+																className="text-xs text-muted-foreground"
+															>
+																{tag}
+															</span>
+														))}
+													</div>
+												)}
+
+												<div className="flex items-center gap-4 text-xs text-muted-foreground">
+													{post.scheduledAt && (
+														<div className="flex items-center gap-1">
+															<Calendar className="h-3 w-3" />
+															Programado: {new Date(post.scheduledAt).toLocaleString()}
+														</div>
+													)}
+													{post.publishedAt && (
+														<div>
+															Publicado: {new Date(post.publishedAt).toLocaleString()}
+														</div>
+													)}
+													{post.status === "published" && (
+														<div className="flex gap-4">
+															<span>👁️ {post.impressions}</span>
+															<span>❤️ {post.likes}</span>
+															<span>💬 {post.comments}</span>
+															<span>🔁 {post.shares}</span>
+														</div>
+													)}
+												</div>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+							))}
 						</div>
 					)}
-
-					<div className="flex flex-wrap items-center gap-3 md:col-span-2">
-						<Button onClick={onGenerate} disabled={isGenerating}>
-							{isGenerating ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Generando...
-								</>
-							) : (
-								"Generar"
-							)}
-						</Button>
-
-						<Button
-							variant="secondary"
-							onClick={() => {
-								if (!previewText) return;
-								navigator.clipboard.writeText(previewText);
-								toast.success("Copiado al portapapeles");
-							}}
-							disabled={!previewText}
-						>
-							Copiar
-						</Button>
-
-						<Button
-							variant="outline"
-							asChild
-							disabled={isLoadingAccounts}
-						>
-							<Link href={`/app/${organizationSlug}/settings/integrations`}>
-								{isConnected ? "Ver conexión" : "Conectar cuenta"}
-							</Link>
-						</Button>
-
-						<Button
-							onClick={onPublish}
-							disabled={
-								isPublishing ||
-								!generated?.text ||
-								!isConnected ||
-								!isPublishSupported
-							}
-						>
-							{isPublishing ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Publicando...
-								</>
-							) : (
-								"Publicar"
-							)}
-						</Button>
-
-						{isConnected ? (
-							<span className="text-sm text-muted-foreground">
-								Conectado: <span className="font-medium">{connectedAccount?.accountName}</span>
-							</span>
-						) : (
-							<span className="text-sm text-muted-foreground">
-								Sin cuenta conectada para <span className="font-medium">{platform}</span>
-							</span>
-						)}
-					</div>
-				</CardContent>
-			</Card>
-
-			<Card>
-				<CardHeader>
-					<CardTitle>Preview</CardTitle>
-					<CardDescription>Revisa el texto antes de publicar.</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Textarea
-						value={previewText}
-						readOnly
-						placeholder="Aquí aparecerá el contenido generado..."
-						className="min-h-[220px]"
-					/>
-				</CardContent>
-			</Card>
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 }
-
-
