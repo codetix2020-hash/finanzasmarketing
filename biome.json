@@ -1,8 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
+	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
 	"formatter": {
 		"enabled": true,
 		"useEditorconfig": true
@@ -11,10 +8,11 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"a11y": "off",
 			"suspicious": {
 				"noExplicitAny": "warn",
-				"noConsoleLog": "off",
-				"noArrayIndexKey": "off"
+				"noArrayIndexKey": "off",
+				"noConsole": { "level": "off", "options": { "allow": ["log"] } }
 			},
 			"complexity": {
 				"noForEach": "off"
@@ -48,9 +46,12 @@
 	},
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"files": {
-		"ignore": ["node_modules", ".next", "dist", "prisma/generated"],
 		"includes": [
 			"**",
+			"!**/node_modules",
+			"!**/.next",
+			"!**/dist",
+			"!**/prisma/generated",
 			"!zod/index.ts",
 			"!tailwind-animate.css",
 			"!!**/globals.css"

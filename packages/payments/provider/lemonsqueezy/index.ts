@@ -163,8 +163,8 @@ export const webhookHandler: WebhookHandler = async (req: Request) => {
 		switch (eventName) {
 			case "subscription_created": {
 				await createPurchase({
-					organizationId: customData.organization_id,
-					userId: customData.user_id,
+					organizationId: customData.organization_id ?? null,
+					userId: customData.user_id ?? null,
 					subscriptionId: id,
 					customerId: String(data.attributes.customer_id),
 					productId: String(data.attributes.variant_id),
@@ -209,11 +209,13 @@ export const webhookHandler: WebhookHandler = async (req: Request) => {
 			}
 			case "order_created": {
 				await createPurchase({
-					organizationId: customData.organization_id,
-					userId: customData.user_id,
+					organizationId: customData.organization_id ?? null,
+					userId: customData.user_id ?? null,
 					customerId: String(data.attributes.customer_id),
 					productId: String(data.attributes.product_id),
 					type: "ONE_TIME",
+					status: "paid",
+					subscriptionId: null,
 				});
 
 				await setCustomerIdToEntity(

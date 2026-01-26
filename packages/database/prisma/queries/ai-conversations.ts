@@ -1,4 +1,5 @@
 import { db } from "../client";
+import { Prisma } from "../generated/client";
 
 export async function getAiConversation(conversationId: string) {
 	return db.aiConversation.findUnique({
@@ -57,7 +58,13 @@ export async function createAiMessage(data: {
 	generatedContent?: unknown;
 }) {
 	return db.aiMessage.create({
-		data,
+		data: {
+			...data,
+			generatedContent:
+				typeof data.generatedContent === "undefined"
+					? undefined
+					: (data.generatedContent as Prisma.InputJsonValue),
+		},
 	});
 }
 

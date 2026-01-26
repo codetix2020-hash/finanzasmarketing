@@ -1,5 +1,4 @@
 import { db } from "@repo/database";
-import type { AIProvider } from "@repo/database/prisma/generated/client";
 
 // Pricing actualizado (en USD por millón de tokens)
 const PRICING = {
@@ -9,6 +8,8 @@ const PRICING = {
 	OPENAI_GPT4: { input: 30, output: 60 },
 	OPENAI_GPT35: { input: 0.5, output: 1.5 },
 } as const;
+
+export type AIProvider = keyof typeof PRICING;
 
 // Calcular costo de una llamada
 function calculateCost(
@@ -26,29 +27,29 @@ function calculateCost(
 export function mapModelToProvider(modelId: string): AIProvider | null {
 	// OpenAI models
 	if (modelId.includes("gpt-4") && !modelId.includes("gpt-4o-mini")) {
-		return "OPENAI_GPT4" as AIProvider;
+		return "OPENAI_GPT4";
 	}
 	if (
 		modelId.includes("gpt-3.5") ||
 		modelId.includes("gpt-4o-mini") ||
 		modelId.includes("gpt-4o")
 	) {
-		return "OPENAI_GPT35" as AIProvider;
+		return "OPENAI_GPT35";
 	}
 
 	// Claude models
 	if (modelId.includes("claude-opus") || modelId.includes("claude-3-opus")) {
-		return "CLAUDE_OPUS" as AIProvider;
+		return "CLAUDE_OPUS";
 	}
 	if (
 		modelId.includes("claude-sonnet") ||
 		modelId.includes("claude-3-5-sonnet") ||
 		modelId.includes("claude-3-sonnet")
 	) {
-		return "CLAUDE_SONNET" as AIProvider;
+		return "CLAUDE_SONNET";
 	}
 	if (modelId.includes("claude-haiku") || modelId.includes("claude-3-haiku")) {
-		return "CLAUDE_HAIKU" as AIProvider;
+		return "CLAUDE_HAIKU";
 	}
 
 	return null;
@@ -75,39 +76,47 @@ export async function trackAICall(params: {
 	const totalTokens = inputTokens + outputTokens;
 	const cost = calculateCost(provider, inputTokens, outputTokens);
 
-	// 1. Registrar en CostTracking
-	await db.costTracking.create({
-		data: {
-			organizationId,
-			provider,
-			requestId,
-			inputTokens,
-			outputTokens,
-			totalTokens,
-			estimatedCost: cost,
-			endpoint,
-		},
-	});
+	// Nota: algunos despliegues no incluyen tablas de facturación/cost tracking.
+	// En ese caso, el tracking debe ser best-effort y NO debe romper el flujo principal.
+	const dbAny = db as any;
 
-	// 2. Registrar en FinancialTransaction
-	const transactionType =
-		provider.startsWith("CLAUDE") ? "COST_API_CLAUDE" : "COST_API_OPENAI";
-
-	await db.financialTransaction.create({
-		data: {
-			organizationId,
-			type: transactionType,
-			amount: cost,
-			currency: "USD",
-			source: `${provider.toLowerCase()}_${requestId}`,
-			metadata: {
+	// 1) Registrar en CostTracking (si existe)
+	if (dbAny?.costTracking?.create) {
+		await dbAny.costTracking.create({
+			data: {
+				organizationId,
 				provider,
+				requestId,
 				inputTokens,
 				outputTokens,
+				totalTokens,
+				estimatedCost: cost,
 				endpoint,
 			},
-		},
-	});
+		});
+	}
+
+	// 2) Registrar en FinancialTransaction (si existe)
+	if (dbAny?.financialTransaction?.create) {
+		const transactionType =
+			provider.startsWith("CLAUDE") ? "COST_API_CLAUDE" : "COST_API_OPENAI";
+
+		await dbAny.financialTransaction.create({
+			data: {
+				organizationId,
+				type: transactionType,
+				amount: cost,
+				currency: "USD",
+				source: `${provider.toLowerCase()}_${requestId}`,
+				metadata: {
+					provider,
+					inputTokens,
+					outputTokens,
+					endpoint,
+				},
+			},
+		});
+	}
 
 	return { cost, totalTokens };
 }

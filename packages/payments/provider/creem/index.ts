@@ -169,6 +169,8 @@ export const webhookHandler: WebhookHandler = async (req) => {
 					customerId: customer as string,
 					type: "ONE_TIME",
 					productId: product.id,
+					status: "paid",
+					subscriptionId: null,
 				});
 
 				break;
@@ -193,6 +195,7 @@ export const webhookHandler: WebhookHandler = async (req) => {
 					productId: product.id,
 					organizationId: metadata?.organization_id || null,
 					userId: metadata?.user_id || null,
+					status: product.status ?? "active",
 				});
 
 				break;

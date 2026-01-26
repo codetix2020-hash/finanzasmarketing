@@ -1,4 +1,5 @@
 import { db } from "../client";
+import { Prisma } from "../generated/client";
 
 export async function getBusinessProfile(organizationId: string) {
 	return db.businessProfile.findUnique({
@@ -17,7 +18,7 @@ export async function createBusinessProfile(data: {
 	[key: string]: unknown;
 }) {
 	return db.businessProfile.create({
-		data,
+		data: data as unknown as Prisma.BusinessProfileUncheckedCreateInput,
 	});
 }
 
@@ -65,6 +66,7 @@ export async function updateBusinessProfile(
 	return db.businessProfile.upsert({
 		where: { organizationId },
 		create: {
+			...(data as unknown as Prisma.BusinessProfileUncheckedCreateInput),
 			organizationId,
 			businessName: data.businessName ?? "",
 			industry: data.industry ?? "",
@@ -72,9 +74,8 @@ export async function updateBusinessProfile(
 			targetAudience: data.targetAudience ?? "",
 			brandPersonality: data.brandPersonality ?? [],
 			toneOfVoice: data.toneOfVoice ?? "",
-			...data,
 		},
-		update: data,
+		update: data as unknown as Prisma.BusinessProfileUncheckedUpdateInput,
 	});
 }
 

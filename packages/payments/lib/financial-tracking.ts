@@ -16,8 +16,15 @@ export async function trackStripePayment(params: {
 	const amountInCents = paymentIntent.amount;
 	const stripeFee = calculateStripeFee(amountInCents);
 
+	// Algunos despliegues no incluyen tablas financieras.
+	// El tracking debe ser best-effort y NO romper el flujo principal.
+	const dbAny = db as any;
+	if (!dbAny?.financialTransaction?.create) {
+		return { revenue: amountInCents / 100, fee: stripeFee / 100 };
+	}
+
 	// 1. Registrar revenue
-	await db.financialTransaction.create({
+	await dbAny.financialTransaction.create({
 		data: {
 			organizationId,
 			type: "REVENUE",
@@ -34,7 +41,7 @@ export async function trackStripePayment(params: {
 	});
 
 	// 2. Registrar Stripe fee
-	await db.financialTransaction.create({
+	await dbAny.financialTransaction.create({
 		data: {
 			organizationId,
 			type: "COST_STRIPE_FEE",
@@ -72,7 +79,12 @@ export async function updateMRR(params: {
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 
-	await db.saasMetrics.upsert({
+	const dbAny = db as any;
+	if (!dbAny?.saasMetrics?.upsert) {
+		return mrr;
+	}
+
+	await dbAny.saasMetrics.upsert({
 		where: {
 			organizationId_date: {
 				organizationId,

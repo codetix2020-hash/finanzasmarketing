@@ -85,7 +85,7 @@ export const createCheckoutLink: CreateCheckoutLink = async (options) => {
 			: undefined,
 	});
 
-	return response.checkout_url;
+	return response.checkout_url ?? null;
 };
 
 export const createCustomerPortalLink: CreateCustomerPortalLink = async ({
@@ -208,6 +208,8 @@ export const webhookHandler: WebhookHandler = async (req) => {
 								customer?.customer_id || customer?.email,
 							type: "ONE_TIME",
 							productId: product_id,
+							status: "paid",
+							subscriptionId: null,
 						});
 
 						await setCustomerIdToEntity(
