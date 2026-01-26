@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Building2, Users, MessageSquare, Package, CheckCircle } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Building2, Users, MessageSquare, Package, CheckCircle, MapPin, Mail, Phone, Globe, Instagram, Facebook, Hash, Clock, Target, Megaphone, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -374,6 +374,11 @@ export default function BusinessProfilePage() {
 				setIsEditing(false);
 			}
 
+			// Si estamos en modo edición y el perfil ya estaba completo, volver a vista de resumen
+			if (isEditing && profile?.isComplete) {
+				setIsEditing(false);
+			}
+
 			// Recargar perfil
 			const reloadUrl = `/api/marketing/profile?${activeOrganization?.id ? `organizationId=${activeOrganization.id}` : `organizationSlug=${orgSlug}`}`;
 			const res2 = await fetch(reloadUrl);
@@ -439,176 +444,218 @@ export default function BusinessProfilePage() {
 		);
 	}
 
-	// Si el perfil está completo y no estamos editando, mostrar vista
+	// Si el perfil está completo y no estamos editando, mostrar vista de resumen
 	if (profile?.isComplete && !isEditing) {
 		return (
-			<div className="space-y-6 p-6">
+			<div className="max-w-4xl mx-auto py-6 px-4">
 				{/* Header */}
-				<div className="flex justify-between items-center">
+				<div className="flex items-center justify-between mb-8">
 					<div>
-						<h1 className="text-2xl font-bold">{profile.businessName}</h1>
-						<p className="text-muted-foreground">{profile.industry}</p>
+						<h1 className="text-2xl font-bold flex items-center gap-3">
+							<div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+								<CheckCircle className="w-6 h-6 text-green-600" />
+							</div>
+							Perfil de Empresa
+						</h1>
+						<p className="text-gray-500 mt-1">Tu configuración está completa y tu marketing funciona automáticamente</p>
 					</div>
-					<Button onClick={() => setIsEditing(true)}>
+					<Button onClick={() => setIsEditing(true)} variant="outline">
 						<Pencil className="w-4 h-4 mr-2" />
 						Editar perfil
 					</Button>
 				</div>
 
-				{/* Cards con la info */}
+				{/* Grid de cards con información */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{/* Card: Información Básica */}
+					{/* Card 1: Información Básica */}
 					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Building2 className="w-5 h-5" />
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Building2 className="w-5 h-5 text-blue-500" />
 								Información Básica
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-2">
-							{profile.description && (
-								<div>
-									<span className="text-muted-foreground">Descripción: </span>
-									{profile.description}
-								</div>
-							)}
-							{profile.location && (
-								<div>
-									<span className="text-muted-foreground">Ubicación: </span>
-									{profile.location}
-								</div>
-							)}
-							{profile.websiteUrl && (
-								<div>
-									<span className="text-muted-foreground">Web: </span>
-									<a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-										{profile.websiteUrl}
-									</a>
-								</div>
-							)}
-							{profile.foundedYear && (
-								<div>
-									<span className="text-muted-foreground">Fundado en: </span>
-									{profile.foundedYear}
-								</div>
-							)}
+						<CardContent className="space-y-3">
+							<ProfileField label="Nombre" value={profile.businessName} />
+							<ProfileField label="Tagline" value={profile.tagline} />
+							<ProfileField label="Industria" value={profile.industry} />
+							<ProfileField label="Descripción" value={profile.description} multiline />
+							<ProfileField label="Ubicación" value={profile.location} icon={MapPin} />
+							<ProfileField label="Fundada en" value={profile.foundedYear?.toString()} />
 						</CardContent>
 					</Card>
 
-					{/* Card: Tu Público */}
+					{/* Card 2: Contacto */}
 					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Users className="w-5 h-5" />
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Globe className="w-5 h-5 text-green-500" />
+								Contacto y Redes
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-3">
+							<ProfileField label="Email" value={profile.email} icon={Mail} />
+							<ProfileField label="Teléfono" value={profile.phone} icon={Phone} />
+							<ProfileField label="Sitio web" value={profile.websiteUrl} icon={Globe} link />
+							<ProfileField label="Instagram" value={profile.instagramUrl} icon={Instagram} link />
+							<ProfileField label="Facebook" value={profile.facebookUrl} icon={Facebook} link />
+							<ProfileField label="TikTok" value={profile.tiktokUrl} link />
+							<ProfileField label="LinkedIn" value={profile.linkedinUrl} link />
+						</CardContent>
+					</Card>
+
+					{/* Card 3: Tu Público */}
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Users className="w-5 h-5 text-purple-500" />
 								Tu Público
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-2">
-							{profile.targetAudience && (
-								<div>
-									<span className="text-muted-foreground">Cliente ideal: </span>
-									{profile.targetAudience}
-								</div>
-							)}
-							{(profile.ageRangeMin || profile.ageRangeMax) && (
-								<div>
-									<span className="text-muted-foreground">Edad: </span>
-									{profile.ageRangeMin || "?"} - {profile.ageRangeMax || "?"} años
-								</div>
-							)}
-							{Array.isArray(profile.targetLocations) && profile.targetLocations.length > 0 && (
-								<div>
-									<span className="text-muted-foreground">Ubicaciones: </span>
-									{profile.targetLocations.join(", ")}
-								</div>
-							)}
+						<CardContent className="space-y-3">
+							<ProfileField label="Cliente ideal" value={profile.targetAudience} multiline />
+							<ProfileField 
+								label="Edad" 
+								value={profile.ageRangeMin && profile.ageRangeMax ? `${profile.ageRangeMin} - ${profile.ageRangeMax} años` : null} 
+							/>
+							<ProfileField label="Género" value={profile.targetGender === "all" ? "Todos" : profile.targetGender === "male" ? "Masculino" : profile.targetGender === "female" ? "Femenino" : profile.targetGender} />
+							<ProfileField 
+								label="Ubicaciones" 
+								value={Array.isArray(profile.targetLocations) ? profile.targetLocations.join(", ") : profile.targetLocations} 
+							/>
+							<ProfileField label="Problemas que resuelves" value={profile.customerPainPoints} multiline />
 						</CardContent>
 					</Card>
 
-					{/* Card: Voz de Marca */}
+					{/* Card 4: Voz de Marca */}
 					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<MessageSquare className="w-5 h-5" />
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Megaphone className="w-5 h-5 text-pink-500" />
 								Voz de Marca
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-2">
+						<CardContent className="space-y-3">
 							{Array.isArray(profile.brandPersonality) && profile.brandPersonality.length > 0 && (
 								<div>
-									<span className="text-muted-foreground">Personalidad: </span>
-									{profile.brandPersonality.join(", ")}
+									<span className="text-sm text-gray-500">Personalidad</span>
+									<div className="flex flex-wrap gap-2 mt-1">
+										{profile.brandPersonality.map((personality: string, i: number) => (
+											<span key={i} className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
+												{personality.charAt(0).toUpperCase() + personality.slice(1)}
+											</span>
+										))}
+									</div>
 								</div>
 							)}
-							{profile.toneOfVoice && (
-								<div>
-									<span className="text-muted-foreground">Tono: </span>
-									{profile.toneOfVoice}
-								</div>
-							)}
-							<div>
-								<span className="text-muted-foreground">Emojis: </span>
-								{profile.useEmojis ? "Sí" : "No"} ({profile.emojiStyle || "moderate"})
-							</div>
+							<ProfileField label="Tono de voz" value={profile.toneOfVoice} multiline />
+							<ProfileField label="Usa emojis" value={profile.useEmojis ? `Sí (${profile.emojiStyle || "moderate"})` : "No"} />
 							{Array.isArray(profile.hashtagsToUse) && profile.hashtagsToUse.length > 0 && (
 								<div>
-									<span className="text-muted-foreground">Hashtags: </span>
-									{profile.hashtagsToUse.join(" ")}
+									<span className="text-sm text-gray-500">Hashtags de marca</span>
+									<div className="flex flex-wrap gap-2 mt-1">
+										{profile.hashtagsToUse.map((tag: string, i: number) => (
+											<span key={i} className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
+												#{tag}
+											</span>
+										))}
+									</div>
 								</div>
 							)}
 						</CardContent>
 					</Card>
 
-					{/* Card: Productos */}
+					{/* Card 5: Productos/Servicios */}
 					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Package className="w-5 h-5" />
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Package className="w-5 h-5 text-orange-500" />
 								Productos y Servicios
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
 							{profile.mainProducts && Array.isArray(profile.mainProducts) && profile.mainProducts.length > 0 ? (
-								<div className="space-y-2">
-									{profile.mainProducts.map((p: any, i: number) => (
-										<div key={i} className="py-2 border-b last:border-0">
-											<div className="font-medium">{p.name}</div>
-											{p.description && (
-												<div className="text-sm text-muted-foreground">{p.description}</div>
+								<div className="space-y-3">
+									{profile.mainProducts.map((product: any, i: number) => (
+										<div key={i} className="p-3 bg-gray-50 rounded-lg">
+											<div className="font-medium">{product.name}</div>
+											{product.description && (
+												<div className="text-sm text-gray-500 mt-1">{product.description}</div>
 											)}
-											{p.price && (
-												<div className="text-sm font-medium text-green-600">{p.price}€</div>
+											{product.price && (
+												<div className="text-sm font-medium text-green-600 mt-1">{product.price}€</div>
 											)}
 										</div>
 									))}
 								</div>
 							) : (
-								<p className="text-muted-foreground text-sm">No hay productos registrados</p>
+								<p className="text-gray-400 text-sm">No hay productos configurados</p>
 							)}
+						</CardContent>
+					</Card>
+
+					{/* Card 6: Objetivos */}
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Target className="w-5 h-5 text-red-500" />
+								Objetivos de Marketing
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-3">
+							{Array.isArray(profile.marketingGoals) && profile.marketingGoals.length > 0 && (
+								<div>
+									<span className="text-sm text-gray-500">Objetivos</span>
+									<div className="flex flex-wrap gap-2 mt-1">
+										{profile.marketingGoals.map((goal: string, i: number) => (
+											<span key={i} className="text-sm bg-green-50 text-green-600 px-2 py-1 rounded-full">
+												{goal.charAt(0).toUpperCase() + goal.slice(1)}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
+							<ProfileField 
+								label="Frecuencia de posts" 
+								value={profile.contentPreferences?.postingFrequency ? POSTING_FREQUENCIES.find(f => f.value === profile.contentPreferences.postingFrequency)?.label : null} 
+								icon={Clock} 
+							/>
 						</CardContent>
 					</Card>
 				</div>
 
-				{/* Indicador de completitud */}
-				<Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-					<CardContent className="flex items-center gap-3 py-4">
-						<CheckCircle className="w-6 h-6 text-green-500" />
+				{/* CTA para ir al Dashboard */}
+				<div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+					<div className="flex items-center justify-between">
 						<div>
-							<div className="font-medium text-green-800 dark:text-green-200">Perfil completo</div>
-							<div className="text-sm text-green-600 dark:text-green-400">
-								La IA usará esta información para generar contenido personalizado
-							</div>
+							<h3 className="font-semibold text-lg">¡Todo listo!</h3>
+							<p className="text-gray-600">Tu marketing automático está funcionando con esta configuración.</p>
 						</div>
-					</CardContent>
-				</Card>
+						<Button onClick={() => router.push(`/app/${orgSlug}/marketing/dashboard`)}>
+							Ir al Dashboard
+						</Button>
+					</div>
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="space-y-6 p-6">
-			{/* Progress Bar */}
-			<Card>
+		<div className="max-w-3xl mx-auto py-6 px-4">
+			{/* Header del wizard */}
+			{isEditing && (
+				<div className="mb-6 flex items-center justify-between">
+					<h1 className="text-xl font-bold">Editar perfil de empresa</h1>
+					<Button variant="ghost" onClick={() => setIsEditing(false)}>
+						<X className="w-4 h-4 mr-2" />
+						Cancelar
+					</Button>
+				</div>
+			)}
+			
+			<div className="space-y-6">
+				{/* Progress Bar */}
+				<Card>
 				<CardContent className="pt-6">
 					<div className="flex items-center justify-between">
 						{STEPS.map((step, index) => (
@@ -1185,6 +1232,42 @@ export default function BusinessProfilePage() {
 						</Button>
 					)}
 				</div>
+			</div>
+			</div>
+		</div>
+	);
+}
+
+// Componente helper para mostrar campos del perfil
+function ProfileField({ 
+	label, 
+	value, 
+	icon: Icon, 
+	multiline = false,
+	link = false 
+}: { 
+	label: string; 
+	value: any; 
+	icon?: any;
+	multiline?: boolean;
+	link?: boolean;
+}) {
+	if (!value) return null;
+	
+	return (
+		<div>
+			<span className="text-sm text-gray-500">{label}</span>
+			<div className={`flex items-start gap-2 ${multiline ? 'mt-1' : ''}`}>
+				{Icon && <Icon className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />}
+				{link ? (
+					<a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+						{value}
+					</a>
+				) : (
+					<span className={`font-medium ${multiline ? 'text-sm leading-relaxed' : ''}`}>
+						{value}
+					</span>
+				)}
 			</div>
 		</div>
 	);
