@@ -1,19 +1,37 @@
-import { getBusinessProfile, updateBusinessProfile } from "@repo/database";
+import { getBusinessProfile, updateBusinessProfile, getOrganizationBySlug } from "@repo/database";
 import { getActiveOrganization } from "@saas/auth/lib/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
 	try {
 		const searchParams = request.nextUrl.searchParams;
+		const organizationSlug = searchParams.get("organizationSlug");
 		const organizationId = searchParams.get("organizationId");
 
-		if (!organizationId) {
-			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		let orgId = organizationId;
+
+		// Si se proporciona organizationSlug, obtener el organizationId
+		if (organizationSlug && !orgId) {
+			const org = await getOrganizationBySlug(organizationSlug);
+			if (!org) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+			orgId = org.id;
 		}
 
-		const profile = await getBusinessProfile(organizationId);
+		if (!orgId) {
+			return NextResponse.json(
+				{ error: "Missing organizationId or organizationSlug" },
+				{ status: 400 },
+			);
+		}
 
-		return NextResponse.json({ profile });
+		const profile = await getBusinessProfile(orgId);
+
+		return NextResponse.json({ 
+			profile,
+			isComplete: profile?.isComplete || false 
+		});
 	} catch (error) {
 		console.error("Error fetching business profile:", error);
 		return NextResponse.json(

@@ -1,351 +1,515 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
-import { Button } from "@ui/components/button";
-import { Badge } from "@ui/components/badge";
-import {
-	Plus,
-	TrendingUp,
-	FileText,
-	Share2,
-	BarChart3,
-	Users,
-	Calendar,
-	Loader2,
-	Eye,
-	Heart,
-	MessageSquare,
-	Repeat,
-	Sparkles,
-} from "lucide-react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { 
+  Sparkles, TrendingUp, Users, Heart, FileText, Clock, 
+  CheckCircle, Circle, ArrowRight, Instagram, Facebook,
+  Zap, Calendar, MessageCircle, BarChart3, Target,
+  Bot, RefreshCw, ChevronRight, Play, Pause, Eye,
+  DollarSign, Timer, Award, Rocket
+} from "lucide-react";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 
-interface DashboardStats {
-	totalReach: number;
-	avgEngagementRate: number;
-	totalFollowers: number;
-	postsThisMonth: number;
+export default function MarketingDashboard() {
+  const params = useParams();
+  const orgSlug = params.organizationSlug as string;
+  const { activeOrganization, loaded } = useActiveOrganization();
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [isAutomationActive, setIsAutomationActive] = useState(true);
+
+  useEffect(() => {
+    if (loaded && activeOrganization?.id) {
+      fetchDashboardData();
+    }
+  }, [loaded, activeOrganization?.id, orgSlug]);
+
+  const fetchDashboardData = async () => {
+    if (!activeOrganization?.id) return;
+    
+    try {
+      const [statsRes, profileRes, accountsRes] = await Promise.all([
+        fetch(`/api/marketing/dashboard/stats?organizationSlug=${orgSlug}&organizationId=${activeOrganization.id}`),
+        fetch(`/api/marketing/profile?organizationSlug=${orgSlug}&organizationId=${activeOrganization.id}`),
+        fetch(`/api/integrations/social-accounts?organizationSlug=${orgSlug}&organizationId=${activeOrganization.id}`),
+      ]);
+      
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+      }
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        setProfile(profileData);
+      }
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calcular progreso de setup
+  const setupSteps = [
+    { id: 'account', label: 'Cuenta creada', done: true },
+    { id: 'social', label: 'Red social conectada', done: accounts.length > 0 },
+    { id: 'profile', label: 'Perfil de empresa', done: profile?.isComplete },
+    { id: 'photos', label: 'Fotos subidas', done: (stats?.mediaCount || 0) > 0 },
+  ];
+  const completedSteps = setupSteps.filter(s => s.done).length;
+  const setupProgress = Math.round((completedSteps / setupSteps.length) * 100);
+  const isFullySetup = setupProgress === 100;
+
+  // Calcular valor generado (estimaciones)
+  const hoursPerPost = 2; // horas que toma crear un post manualmente
+  const hourlyRate = 50; // €/hora de un social media manager
+  const postsThisMonth = stats?.publishedCount || 0;
+  const hoursSaved = postsThisMonth * hoursPerPost;
+  const moneySaved = hoursSaved * hourlyRate;
+  const roi = moneySaved > 0 ? (moneySaved / 500).toFixed(1) : 0; // asumiendo €500/mes
+
+  // Obtener hora actual para saludo
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const userName = activeOrganization?.name || 'Usuario';
+
+  if (!loaded || isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  return (
+    <div className="space-y-6 pb-8">
+      {/* HEADER CON SALUDO Y ESTADO */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        
+        <div className="relative z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">
+                {greeting}, {userName} 👋
+              </h1>
+              <div className="flex items-center gap-2 text-white/90">
+                {isAutomationActive ? (
+                  <>
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span>Tu marketing está funcionando automáticamente</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full" />
+                    <span>Sistema pausado - Completa la configuración</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsAutomationActive(!isAutomationActive)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                isAutomationActive 
+                  ? 'bg-white/20 hover:bg-white/30' 
+                  : 'bg-yellow-500 hover:bg-yellow-400 text-yellow-900'
+              }`}
+            >
+              {isAutomationActive ? (
+                <>
+                  <Pause className="w-4 h-4" />
+                  Pausar
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Activar
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Próxima acción */}
+          {isAutomationActive && (
+            <div className="mt-4 flex items-center gap-2 text-sm bg-white/10 rounded-lg px-4 py-2 w-fit">
+              <Clock className="w-4 h-4" />
+              <span>Próxima publicación: <strong>Mañana 10:00</strong> en Instagram</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BARRA DE PROGRESO DE SETUP (si no está completo) */}
+      {!isFullySetup && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-amber-600" />
+              <span className="font-semibold text-amber-900">Completa tu configuración</span>
+            </div>
+            <span className="text-2xl font-bold text-amber-600">{setupProgress}%</span>
+          </div>
+          
+          <div className="w-full bg-amber-200 rounded-full h-2 mb-4">
+            <div 
+              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${setupProgress}%` }}
+            />
+          </div>
+
+          <div className="flex items-center gap-6">
+            {setupSteps.map((step, i) => (
+              <div key={step.id} className="flex items-center gap-2">
+                {step.done ? (
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                ) : (
+                  <Circle className="w-5 h-5 text-amber-300" />
+                )}
+                <span className={`text-sm ${step.done ? 'text-green-700' : 'text-amber-600'}`}>
+                  {step.label}
+                </span>
+                {i < setupSteps.length - 1 && (
+                  <ChevronRight className="w-4 h-4 text-amber-300 ml-2" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* CTA para completar el siguiente paso */}
+          <div className="mt-4">
+            {!setupSteps[1].done && (
+              <Link href={`/app/${orgSlug}/settings/integrations`}>
+                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  Conectar Instagram
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            )}
+            {setupSteps[1].done && !setupSteps[2].done && (
+              <Link href={`/app/${orgSlug}/marketing/profile`}>
+                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  Completar perfil de empresa
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            )}
+            {setupSteps[2].done && !setupSteps[3].done && (
+              <Link href={`/app/${orgSlug}/marketing/media`}>
+                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  Subir fotos de tu negocio
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* VALOR GENERADO */}
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-green-900">Valor generado este mes</h3>
+            <p className="text-sm text-green-600">Lo que estarías pagando a una agencia</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-4 text-center">
+            <Timer className="w-6 h-6 text-green-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-green-700">{hoursSaved}h</div>
+            <div className="text-xs text-green-600">Horas ahorradas</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center">
+            <DollarSign className="w-6 h-6 text-green-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-green-700">€{moneySaved.toLocaleString()}</div>
+            <div className="text-xs text-green-600">Equivalente en agencia</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center">
+            <Award className="w-6 h-6 text-green-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-green-700">{roi}x</div>
+            <div className="text-xs text-green-600">ROI de tu inversión</div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KPICard 
+          icon={Eye}
+          label="Alcance Total"
+          value={stats?.totalReach?.toLocaleString() || '0'}
+          change="+12%"
+          positive
+          color="blue"
+        />
+        <KPICard 
+          icon={Heart}
+          label="Engagement"
+          value={`${stats?.engagementRate || '0'}%`}
+          change="+0.5%"
+          positive
+          color="pink"
+        />
+        <KPICard 
+          icon={Users}
+          label="Seguidores"
+          value={stats?.totalFollowers?.toLocaleString() || '0'}
+          change="+23"
+          positive
+          color="purple"
+        />
+        <KPICard 
+          icon={FileText}
+          label="Posts este mes"
+          value={stats?.publishedCount || '0'}
+          change={`de ${stats?.scheduledCount || 0} programados`}
+          color="green"
+        />
+      </div>
+
+      {/* DOS COLUMNAS: Próximas acciones + Actividad */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* PRÓXIMAS ACCIONES DEL SISTEMA */}
+        <div className="bg-white border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bot className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold">Próximas acciones automáticas</h3>
+            </div>
+            <Link href={`/app/${orgSlug}/marketing/automation`}>
+              <span className="text-sm text-purple-500 hover:underline">Ver todo</span>
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            <ActionItem 
+              time="10:00"
+              action="Publicar post sobre productos"
+              platform="instagram"
+            />
+            <ActionItem 
+              time="13:00"
+              action="Responder 3 comentarios pendientes"
+              platform="instagram"
+            />
+            <ActionItem 
+              time="18:00"
+              action="Analizar métricas del día"
+              platform="system"
+            />
+            <ActionItem 
+              time="21:00"
+              action="Programar contenido para mañana"
+              platform="system"
+            />
+          </div>
+
+          {!isFullySetup && (
+            <div className="mt-4 p-3 bg-amber-50 rounded-lg text-sm text-amber-700">
+              ⚠️ Completa tu configuración para activar las acciones automáticas
+            </div>
+          )}
+        </div>
+
+        {/* ACTIVIDAD RECIENTE */}
+        <div className="bg-white border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-blue-500" />
+              <h3 className="font-semibold">Actividad reciente</h3>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {stats?.recentActivity && stats.recentActivity.length > 0 ? (
+              stats.recentActivity.map((activity: any, i: number) => (
+                <ActivityItem key={i} {...activity} />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <RefreshCw className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Aún no hay actividad</p>
+                <p className="text-sm">Crea tu primer post para empezar</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* CUENTAS CONECTADAS */}
+      <div className="bg-white border rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold">Cuentas conectadas</h3>
+          <Link href={`/app/${orgSlug}/settings/integrations`}>
+            <span className="text-sm text-blue-500 hover:underline">Gestionar</span>
+          </Link>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          {accounts.length > 0 ? (
+            accounts.map((account: any) => (
+              <div 
+                key={account.id}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full"
+              >
+                <span className="w-2 h-2 bg-green-500 rounded-full" />
+                {account.platform === 'instagram' && <Instagram className="w-4 h-4 text-pink-500" />}
+                {account.platform === 'facebook' && <Facebook className="w-4 h-4 text-blue-500" />}
+                <span className="text-sm font-medium">@{account.accountName || account.username || 'Unknown'}</span>
+              </div>
+            ))
+          ) : (
+            <Link href={`/app/${orgSlug}/settings/integrations`}>
+              <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-full text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors">
+                <span className="text-lg">+</span>
+                <span className="text-sm">Conectar red social</span>
+              </button>
+            </Link>
+          )}
+          
+          {accounts.length > 0 && accounts.length < 3 && (
+            <Link href={`/app/${orgSlug}/settings/integrations`}>
+              <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-full text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors">
+                <span className="text-lg">+</span>
+                <span className="text-sm">Añadir otra</span>
+              </button>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* QUICK ACTIONS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <QuickAction 
+          href={`/app/${orgSlug}/marketing/content/create`}
+          icon={Sparkles}
+          label="Crear post con IA"
+          color="purple"
+        />
+        <QuickAction 
+          href={`/app/${orgSlug}/marketing/assistant`}
+          icon={Bot}
+          label="Hablar con el asistente"
+          color="blue"
+        />
+        <QuickAction 
+          href={`/app/${orgSlug}/marketing/content/calendar`}
+          icon={Calendar}
+          label="Ver calendario"
+          color="green"
+        />
+        <QuickAction 
+          href={`/app/${orgSlug}/marketing/seo`}
+          icon={Target}
+          label="Analizar SEO"
+          color="orange"
+        />
+      </div>
+    </div>
+  );
 }
 
-interface TopPost {
-	id: string;
-	content: string;
-	platform: string;
-	engagement: number;
-	reach: number;
-	likes: number;
-	comments: number;
-	shares: number;
+// Componentes auxiliares
+function KPICard({ icon: Icon, label, value, change, positive, color }: any) {
+  const colors: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-600',
+    pink: 'bg-pink-50 text-pink-600',
+    purple: 'bg-purple-50 text-purple-600',
+    green: 'bg-green-50 text-green-600',
+  };
+
+  return (
+    <div className="bg-white border rounded-xl p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colors[color]}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        {change && (
+          <span className={`text-xs font-medium ${positive ? 'text-green-500' : 'text-gray-400'}`}>
+            {change}
+          </span>
+        )}
+      </div>
+      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-sm text-gray-500">{label}</div>
+    </div>
+  );
 }
 
-interface ScheduledPost {
-	id: string;
-	content: string;
-	platform: string;
-	scheduledAt: string;
+function ActionItem({ time, action, platform }: any) {
+  return (
+    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+      <div className="text-sm font-mono text-gray-400 w-12">{time}</div>
+      <div className="w-px h-8 bg-gray-200" />
+      <div className="flex-1">
+        <div className="text-sm font-medium">{action}</div>
+        <div className="text-xs text-gray-400 capitalize">{platform}</div>
+      </div>
+      {platform === 'instagram' && <Instagram className="w-4 h-4 text-pink-500" />}
+      {platform === 'system' && <Bot className="w-4 h-4 text-purple-500" />}
+    </div>
+  );
 }
 
-const PLATFORM_ICONS: Record<string, string> = {
-	instagram: "📸",
-	facebook: "📘",
-	tiktok: "🎵",
-	linkedin: "💼",
-	twitter: "🐦",
-};
+function ActivityItem({ type, message, time, platform }: any) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+        type === 'post' ? 'bg-green-100' : 
+        type === 'comment' ? 'bg-blue-100' : 'bg-gray-100'
+      }`}>
+        {type === 'post' && <FileText className="w-4 h-4 text-green-600" />}
+        {type === 'comment' && <MessageCircle className="w-4 h-4 text-blue-600" />}
+        {type === 'seo' && <BarChart3 className="w-4 h-4 text-gray-600" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm">{message}</p>
+        <p className="text-xs text-gray-400">{time}</p>
+      </div>
+    </div>
+  );
+}
 
-export default function MarketingDashboardPage() {
-	const params = useParams();
-	const orgSlug = params.organizationSlug as string;
-	const { activeOrganization, loaded } = useActiveOrganization();
-	const [loading, setLoading] = useState(true);
-	const [stats, setStats] = useState<DashboardStats>({
-		totalReach: 0,
-		avgEngagementRate: 0,
-		totalFollowers: 0,
-		postsThisMonth: 0,
-	});
-	const [topPosts, setTopPosts] = useState<TopPost[]>([]);
-	const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+function QuickAction({ href, icon: Icon, label, color }: any) {
+  const colors: Record<string, string> = {
+    purple: 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
+    blue: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
+    green: 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600',
+    orange: 'from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600',
+  };
 
-	useEffect(() => {
-		if (loaded && activeOrganization?.id) {
-			fetchDashboardData();
-		}
-	}, [loaded, activeOrganization?.id]);
+  return (
+    <Link href={href}>
+      <div className={`bg-gradient-to-r ${colors[color]} rounded-xl p-4 text-white cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg`}>
+        <Icon className="w-6 h-6 mb-2" />
+        <div className="text-sm font-medium">{label}</div>
+      </div>
+    </Link>
+  );
+}
 
-	const fetchDashboardData = async () => {
-		if (!activeOrganization?.id) return;
-		try {
-			setLoading(true);
-			const res = await fetch(
-				`/api/marketing/dashboard-data?organizationId=${activeOrganization.id}`,
-			);
-			if (!res.ok) throw new Error("Failed to fetch");
-			const data = await res.json();
-			setStats(data.stats || stats);
-			setTopPosts(data.topPosts || []);
-			setScheduledPosts(data.scheduledPosts || []);
-		} catch (error) {
-			console.error("Error fetching dashboard data:", error);
-			toast.error("Error al cargar datos del dashboard");
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const kpiCards = [
-		{
-			title: "Alcance Total",
-			value: stats.totalReach.toLocaleString(),
-			description: "Todas las redes",
-			icon: Eye,
-			color: "text-blue-600",
-		},
-		{
-			title: "Engagement Rate",
-			value: `${stats.avgEngagementRate.toFixed(1)}%`,
-			description: "Tasa promedio",
-			icon: TrendingUp,
-			color: "text-purple-600",
-		},
-		{
-			title: "Seguidores Totales",
-			value: stats.totalFollowers.toLocaleString(),
-			description: "Todas las plataformas",
-			icon: Users,
-			color: "text-green-600",
-		},
-		{
-			title: "Posts Este Mes",
-			value: stats.postsThisMonth.toString(),
-			description: "Publicados",
-			icon: FileText,
-			color: "text-orange-600",
-		},
-	];
-
-	const hasData = stats.totalReach > 0 || stats.postsThisMonth > 0 || topPosts.length > 0;
-
-	if (!loaded) {
-		return (
-			<div className="flex items-center justify-center min-h-[400px]">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
-	}
-
-	// Empty State
-	if (!loading && !hasData) {
-		return (
-			<div className="space-y-6">
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Marketing Dashboard</h1>
-						<p className="text-muted-foreground mt-2">
-							¡Es hora de empezar a crear contenido!
-						</p>
-					</div>
-				</div>
-
-				<Card className="border-dashed">
-					<CardContent className="flex flex-col items-center justify-center py-16 text-center">
-						<div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-							<Sparkles className="w-12 h-12 text-primary" />
-						</div>
-						<h2 className="text-2xl font-bold mb-2">¡Es hora de empezar!</h2>
-						<p className="text-muted-foreground mb-8 max-w-md">
-							Crea tu primer post, sube fotos de tu negocio o configura tu perfil para
-							empezar a generar contenido con IA.
-						</p>
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
-							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
-								<CardContent className="p-6 text-center">
-									<FileText className="w-8 h-8 mx-auto mb-3 text-primary" />
-									<h3 className="font-semibold mb-2">Crear tu primer post</h3>
-									<p className="text-sm text-muted-foreground mb-4">
-										Genera contenido personalizado con IA
-									</p>
-									<Button asChild size="sm" className="w-full">
-										<Link href={`/app/${orgSlug}/marketing/content/create`}>
-											Empezar
-										</Link>
-									</Button>
-								</CardContent>
-							</Card>
-							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
-								<CardContent className="p-6 text-center">
-									<Share2 className="w-8 h-8 mx-auto mb-3 text-primary" />
-									<h3 className="font-semibold mb-2">Subir fotos</h3>
-									<p className="text-sm text-muted-foreground mb-4">
-										Agrega imágenes a tu banco de medios
-									</p>
-									<Button asChild size="sm" variant="outline" className="w-full">
-										<Link href={`/app/${orgSlug}/marketing/media`}>
-											Subir
-										</Link>
-									</Button>
-								</CardContent>
-							</Card>
-							<Card className="border-2 hover:border-primary transition-colors cursor-pointer">
-								<CardContent className="p-6 text-center">
-									<Users className="w-8 h-8 mx-auto mb-3 text-primary" />
-									<h3 className="font-semibold mb-2">Configurar perfil</h3>
-									<p className="text-sm text-muted-foreground mb-4">
-										Completa tu perfil de empresa
-									</p>
-									<Button asChild size="sm" variant="outline" className="w-full">
-										<Link href={`/app/${orgSlug}/marketing/profile`}>
-											Configurar
-										</Link>
-									</Button>
-								</CardContent>
-							</Card>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-		);
-	}
-
-	return (
-		<div className="space-y-6">
-			{/* Header */}
-			<div className="flex items-start justify-between">
-				<div>
-					<h1 className="text-3xl font-bold tracking-tight">
-						Buenos días{activeOrganization?.name ? `, ${activeOrganization.name}` : ""}! 👋
-					</h1>
-					<p className="text-muted-foreground mt-2">
-						{stats.postsThisMonth > 0
-							? `Esta semana: ${stats.postsThisMonth} posts, ${stats.totalFollowers.toLocaleString()} seguidores, ${stats.avgEngagementRate.toFixed(1)}% engagement`
-							: "Gestiona tu contenido, campañas y métricas de marketing"}
-					</p>
-				</div>
-				<Button asChild>
-					<Link href={`/app/${orgSlug}/marketing/content/create`}>
-						<Plus className="mr-2 h-4 w-4" />
-						Generar Contenido
-					</Link>
-				</Button>
-			</div>
-
-			{/* KPIs */}
-			{loading ? (
-				<div className="flex items-center justify-center py-12">
-					<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-				</div>
-			) : (
-				<>
-					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-						{kpiCards.map((stat) => (
-							<Card key={stat.title}>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-									<stat.icon className={`h-4 w-4 ${stat.color}`} />
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">{stat.value}</div>
-									<p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-								</CardContent>
-							</Card>
-						))}
-					</div>
-
-					{/* Top Posts */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Top Posts</CardTitle>
-							<CardDescription>Los posts con mejor engagement</CardDescription>
-						</CardHeader>
-						<CardContent>
-							{topPosts.length === 0 ? (
-								<p className="text-muted-foreground text-center py-8">
-									No hay posts publicados aún
-								</p>
-							) : (
-								<div className="space-y-4">
-									{topPosts.slice(0, 6).map((post) => (
-										<div key={post.id} className="flex gap-4 p-4 border rounded-lg">
-											<div className="flex-1">
-												<div className="flex items-center gap-2 mb-2">
-													<span className="text-2xl">
-														{PLATFORM_ICONS[post.platform] || "📱"}
-													</span>
-													<Badge variant="secondary">{post.platform}</Badge>
-												</div>
-												<p className="text-sm line-clamp-2 mb-2">{post.content}</p>
-												<div className="flex gap-4 text-xs text-muted-foreground">
-													<span className="flex items-center gap-1">
-														<Eye className="h-3 w-3" />
-														{post.reach.toLocaleString()}
-													</span>
-													<span className="flex items-center gap-1">
-														<Heart className="h-3 w-3" />
-														{post.likes}
-													</span>
-													<span className="flex items-center gap-1">
-														<MessageSquare className="h-3 w-3" />
-														{post.comments}
-													</span>
-													<span className="flex items-center gap-1">
-														<Repeat className="h-3 w-3" />
-														{post.shares}
-													</span>
-												</div>
-											</div>
-										</div>
-									))}
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					{/* Próximos Posts Programados */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Próximos Posts Programados</CardTitle>
-							<CardDescription>
-								{scheduledPosts.length > 0
-									? `Próximo: ${new Date(scheduledPosts[0].scheduledAt).toLocaleString()}`
-									: "No hay posts programados"}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							{scheduledPosts.length === 0 ? (
-								<p className="text-muted-foreground text-center py-8">
-									No hay posts programados
-								</p>
-							) : (
-								<div className="space-y-3">
-									{scheduledPosts.slice(0, 5).map((post) => (
-										<div
-											key={post.id}
-											className="flex items-center justify-between p-3 border rounded-lg"
-										>
-											<div className="flex items-center gap-3">
-												<span className="text-xl">
-													{PLATFORM_ICONS[post.platform] || "📱"}
-												</span>
-												<div>
-													<p className="text-sm font-medium line-clamp-1">{post.content}</p>
-													<p className="text-xs text-muted-foreground flex items-center gap-1">
-														<Calendar className="h-3 w-3" />
-														{new Date(post.scheduledAt).toLocaleString()}
-													</p>
-												</div>
-											</div>
-										</div>
-									))}
-								</div>
-							)}
-						</CardContent>
-					</Card>
-				</>
-			)}
-		</div>
-	);
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-40 bg-gray-200 rounded-2xl" />
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-200 rounded-xl" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <div className="h-64 bg-gray-200 rounded-xl" />
+        <div className="h-64 bg-gray-200 rounded-xl" />
+      </div>
+    </div>
+  );
 }
