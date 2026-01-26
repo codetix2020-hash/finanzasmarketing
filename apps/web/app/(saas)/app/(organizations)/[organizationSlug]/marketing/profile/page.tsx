@@ -1,1275 +1,499 @@
 "use client";
 
-import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
-import { Button } from "@ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
-import { Input } from "@ui/components/input";
-import { Label } from "@ui/components/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@ui/components/select";
-import { Textarea } from "@ui/components/textarea";
-import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Building2, Users, MessageSquare, Package, CheckCircle, MapPin, Mail, Phone, Globe, Instagram, Facebook, Hash, Clock, Target, Megaphone, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Building2, Users, Megaphone, Package, Target, Edit, CheckCircle, MapPin, Mail, Phone, Globe, ChevronRight, ChevronLeft, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 
-const STEPS = [
-	{ id: "basic", label: "Información Básica" },
-	{ id: "audience", label: "Tu Público" },
-	{ id: "tone", label: "Tu Voz de Marca" },
-	{ id: "products", label: "Productos y Servicios" },
-	{ id: "goals", label: "Objetivos" },
-];
+export default function ProfilePage() {
+  const params = useParams();
+  const router = useRouter();
+  const orgSlug = params.organizationSlug as string;
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<any>({});
 
-const INDUSTRIES = [
-	"restaurante",
-	"peluqueria",
-	"ecommerce",
-	"gimnasio",
-	"fitness",
-	"belleza",
-	"salud",
-	"educacion",
-	"tecnologia",
-	"consultoria",
-	"inmobiliaria",
-	"turismo",
-	"eventos",
-	"moda",
-	"otro",
-];
+  useEffect(() => {
+    loadProfile();
+  }, [orgSlug]);
 
-const BRAND_PERSONALITIES = [
-	"profesional",
-	"cercano",
-	"divertido",
-	"elegante",
-	"rebelde",
-	"inspirador",
-	"confiable",
-	"innovador",
-	"tradicional",
-	"moderno",
-];
+  const loadProfile = async () => {
+    try {
+      const res = await fetch(`/api/marketing/profile?organizationSlug=${orgSlug}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Loaded profile:', data); // DEBUG
+        if (data.profile) {
+          setProfile(data.profile);
+          setFormData(data.profile);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-const EMOJI_STYLES = [
-	{ value: "none", label: "Sin emojis" },
-	{ value: "minimal", label: "Mínimo (1-2 por post)" },
-	{ value: "moderate", label: "Moderado (3-5 por post)" },
-	{ value: "heavy", label: "Muchos (6+ por post)" },
-];
+  const handleSave = async (completed = false) => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/marketing/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationSlug: orgSlug,
+          ...formData,
+          isComplete: completed,
+        }),
+      });
 
-const PRICE_RANGES = [
-	{ value: "bajo", label: "Bajo" },
-	{ value: "medio", label: "Medio" },
-	{ value: "alto", label: "Alto" },
-	{ value: "premium", label: "Premium" },
-];
+      if (!response.ok) throw new Error('Error al guardar');
+      
+      const result = await response.json();
+      
+      if (completed) {
+        toast.success('¡Perfil completado! Tu marketing automático está listo.');
+        setProfile({ ...formData, isComplete: true });
+        setIsEditing(false);
+        router.push(`/app/${orgSlug}/marketing/dashboard`);
+      } else {
+        toast.success('Perfil guardado');
+      }
+    } catch (error) {
+      toast.error('No se pudo guardar el perfil');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-const MARKETING_GOALS = [
-	"más ventas",
-	"más seguidores",
-	"más engagement",
-	"brand awareness",
-	"generar leads",
-	"educar audiencia",
-];
+  const updateField = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
 
-const POSTING_FREQUENCIES = [
-	{ value: "daily", label: "Diario" },
-	{ value: "3x-week", label: "3 veces por semana" },
-	{ value: "weekly", label: "Semanal" },
-	{ value: "2x-week", label: "2 veces por semana" },
-];
+  // LOADING
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
-type FormData = {
-	// Step 1: Basic
-	businessName: string;
-	tagline: string;
-	industry: string;
-	description: string;
-	foundedYear: string;
-	location: string;
-	phone: string;
-	email: string;
-	websiteUrl: string;
-	instagramUrl: string;
-	facebookUrl: string;
-	tiktokUrl: string;
-	linkedinUrl: string;
+  // VISTA DE RESUMEN (si perfil completo y no editando)
+  if (profile?.isComplete === true && !isEditing) {
+    return (
+      <div className="max-w-4xl mx-auto py-6 px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              Perfil de Empresa
+            </h1>
+            <p className="text-gray-500 mt-1">Tu configuración está completa</p>
+          </div>
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <Edit className="w-4 h-4" />
+            Editar perfil
+          </button>
+        </div>
 
-	// Step 2: Audience
-	targetAudience: string;
-	ageRangeMin: string;
-	ageRangeMax: string;
-	targetGender: string;
-	targetLocations: string;
-	customerPainPoints: string;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card: Información Básica */}
+          <div className="bg-white border rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4">
+              <Building2 className="w-5 h-5 text-blue-500" />
+              Información Básica
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div><span className="text-gray-500">Nombre:</span> <span className="font-medium">{profile.businessName}</span></div>
+              <div><span className="text-gray-500">Industria:</span> <span className="font-medium">{profile.industry}</span></div>
+              <div><span className="text-gray-500">Ubicación:</span> <span className="font-medium">{profile.location}</span></div>
+              <div><span className="text-gray-500">Web:</span> <span className="font-medium">{profile.websiteUrl || profile.website}</span></div>
+            </div>
+          </div>
 
-	// Step 3: Tone
-	brandPersonality: string[];
-	toneOfVoice: string;
-	useEmojis: boolean;
-	emojiStyle: string;
-	wordsToUse: string;
-	wordsToAvoid: string;
-	hashtagsToUse: string;
+          {/* Card: Tu Público */}
+          <div className="bg-white border rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-purple-500" />
+              Tu Público
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div><span className="text-gray-500">Cliente ideal:</span> <span className="font-medium">{profile.targetAudience || 'No definido'}</span></div>
+              <div><span className="text-gray-500">Edad:</span> <span className="font-medium">{profile.ageRangeMin || profile.ageMin} - {profile.ageRangeMax || profile.ageMax} años</span></div>
+              <div><span className="text-gray-500">Ubicaciones:</span> <span className="font-medium">{Array.isArray(profile.targetLocations) ? profile.targetLocations.join(", ") : profile.targetLocations}</span></div>
+            </div>
+          </div>
 
-	// Step 4: Products
-	mainProducts: string;
-	services: string;
-	priceRange: string;
-	uniqueSellingPoint: string;
+          {/* Card: Voz de Marca */}
+          <div className="bg-white border rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4">
+              <Megaphone className="w-5 h-5 text-pink-500" />
+              Voz de Marca
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div><span className="text-gray-500">Personalidad:</span> <span className="font-medium">{Array.isArray(profile.brandPersonality) ? profile.brandPersonality.join(", ") : profile.brandPersonality || 'No definida'}</span></div>
+              <div><span className="text-gray-500">Tono:</span> <span className="font-medium">{profile.toneOfVoice || 'No definido'}</span></div>
+              <div><span className="text-gray-500">Emojis:</span> <span className="font-medium">{profile.useEmojis ? 'Sí' : 'No'}</span></div>
+            </div>
+          </div>
 
-	// Step 5: Goals
-	marketingGoals: string[];
-	monthlyBudget: string;
-	postingFrequency: string;
-};
+          {/* Card: Objetivos */}
+          <div className="bg-white border rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4">
+              <Target className="w-5 h-5 text-red-500" />
+              Objetivos
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div><span className="text-gray-500">Frecuencia:</span> <span className="font-medium">{profile.contentPreferences?.postingFrequency || profile.postingFrequency || profile.postFrequency || 'No definida'}</span></div>
+              {profile.marketingGoals?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {profile.marketingGoals.map((goal: string, i: number) => (
+                    <span key={i} className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">{goal}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-export default function BusinessProfilePage() {
-	const params = useParams();
-	const router = useRouter();
-	const orgSlug = params.organizationSlug as string;
-	const { activeOrganization } = useActiveOrganization();
-	const [currentStep, setCurrentStep] = useState(0);
-	const [isLoading, setIsLoading] = useState(true);
-	const [isSaving, setIsSaving] = useState(false);
-	const [completedSteps, setCompletedSteps] = useState<string[]>([]);
-	const [isEditing, setIsEditing] = useState(false);
-	const [profile, setProfile] = useState<any>(null);
+        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">¡Todo listo!</h3>
+              <p className="text-gray-600 text-sm">Tu marketing automático está configurado.</p>
+            </div>
+            <button 
+              onClick={() => router.push(`/app/${orgSlug}/marketing/dashboard`)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Ir al Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-	const [formData, setFormData] = useState<FormData>({
-		businessName: "",
-		tagline: "",
-		industry: "",
-		description: "",
-		foundedYear: "",
-		location: "",
-		phone: "",
-		email: "",
-		websiteUrl: "",
-		instagramUrl: "",
-		facebookUrl: "",
-		tiktokUrl: "",
-		linkedinUrl: "",
-		targetAudience: "",
-		ageRangeMin: "",
-		ageRangeMax: "",
-		targetGender: "all",
-		targetLocations: "",
-		customerPainPoints: "",
-		brandPersonality: [],
-		toneOfVoice: "",
-		useEmojis: true,
-		emojiStyle: "moderate",
-		wordsToUse: "",
-		wordsToAvoid: "",
-		hashtagsToUse: "",
-		mainProducts: "",
-		services: "",
-		priceRange: "",
-		uniqueSellingPoint: "",
-		marketingGoals: [],
-		monthlyBudget: "",
-		postingFrequency: "daily",
-	});
+  // WIZARD (si no está completo o está editando)
+  const steps = [
+    { id: 1, name: 'Información Básica', icon: Building2 },
+    { id: 2, name: 'Tu Público', icon: Users },
+    { id: 3, name: 'Voz de Marca', icon: Megaphone },
+    { id: 4, name: 'Productos', icon: Package },
+    { id: 5, name: 'Objetivos', icon: Target },
+  ];
 
-	useEffect(() => {
-		async function loadProfile() {
-			if (!activeOrganization?.id && !orgSlug) return;
+  return (
+    <div className="max-w-3xl mx-auto py-6 px-4">
+      {/* Header */}
+      {isEditing && (
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-bold">Editar perfil</h1>
+          <button onClick={() => { setIsEditing(false); setFormData(profile); }} className="text-gray-500 hover:text-gray-700">
+            Cancelar
+          </button>
+        </div>
+      )}
 
-			try {
-				const url = `/api/marketing/profile?${activeOrganization?.id ? `organizationId=${activeOrganization.id}` : `organizationSlug=${orgSlug}`}`;
-				const res = await fetch(url);
-				if (res.ok) {
-					const data = await res.json();
-					if (data.profile) {
-						const profileData = data.profile;
-						setProfile(profileData);
-						setFormData({
-							businessName: profileData.businessName || "",
-							tagline: profileData.tagline || "",
-							industry: profileData.industry || "",
-							description: profileData.description || "",
-							foundedYear: profileData.foundedYear?.toString() || "",
-							location: profileData.location || "",
-							phone: profileData.phone || "",
-							email: profileData.email || "",
-							websiteUrl: profileData.websiteUrl || "",
-							instagramUrl: profileData.instagramUrl || "",
-							facebookUrl: profileData.facebookUrl || "",
-							tiktokUrl: profileData.tiktokUrl || "",
-							linkedinUrl: profileData.linkedinUrl || "",
-							targetAudience: profileData.targetAudience || "",
-							ageRangeMin: profileData.ageRangeMin?.toString() || "",
-							ageRangeMax: profileData.ageRangeMax?.toString() || "",
-							targetGender: profileData.targetGender || "all",
-							targetLocations: Array.isArray(profileData.targetLocations)
-								? profileData.targetLocations.join(", ")
-								: "",
-							customerPainPoints: profileData.customerPainPoints || "",
-							brandPersonality: Array.isArray(profileData.brandPersonality)
-								? profileData.brandPersonality
-								: [],
-							toneOfVoice: profileData.toneOfVoice || "",
-							useEmojis: profileData.useEmojis ?? true,
-							emojiStyle: profileData.emojiStyle || "moderate",
-							wordsToUse: Array.isArray(profileData.wordsToUse)
-								? profileData.wordsToUse.join(", ")
-								: "",
-							wordsToAvoid: Array.isArray(profileData.wordsToAvoid)
-								? profileData.wordsToAvoid.join(", ")
-								: "",
-							hashtagsToUse: Array.isArray(profileData.hashtagsToUse)
-								? profileData.hashtagsToUse.join(", ")
-								: "",
-							mainProducts: profileData.mainProducts
-								? JSON.stringify(profileData.mainProducts, null, 2)
-								: "",
-							services: profileData.services ? JSON.stringify(profileData.services, null, 2) : "",
-							priceRange: profileData.priceRange || "",
-							uniqueSellingPoint: profileData.uniqueSellingPoint || "",
-							marketingGoals: Array.isArray(profileData.marketingGoals)
-								? profileData.marketingGoals
-								: [],
-							monthlyBudget: profileData.monthlyBudget?.toString() || "",
-							postingFrequency: profileData.contentPreferences?.postingFrequency || "daily",
-						});
-						setCompletedSteps(profileData.completedSteps || []);
-						setIsEditing(!profileData.isComplete);
-					}
-				}
-			} catch (error) {
-				console.error("Error loading profile:", error);
-			} finally {
-				setIsLoading(false);
-			}
-		}
+      {/* Progress */}
+      <div className="flex items-center justify-between mb-8">
+        {steps.map((step, i) => (
+          <div key={step.id} className="flex items-center">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              currentStep > step.id ? 'bg-green-500 text-white' :
+              currentStep === step.id ? 'bg-blue-600 text-white' :
+              'bg-gray-200 text-gray-500'
+            }`}>
+              {currentStep > step.id ? <Check className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
+            </div>
+            {i < steps.length - 1 && (
+              <div className={`w-12 h-1 mx-2 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
 
-		loadProfile();
-	}, [activeOrganization?.id, orgSlug]);
+      {/* Form Card */}
+      <div className="bg-white border rounded-xl p-6">
+        <h2 className="text-xl font-semibold mb-1">{steps[currentStep - 1].name}</h2>
+        <p className="text-gray-500 text-sm mb-6">Paso {currentStep} de 5</p>
 
-	async function saveProfile(isComplete = false, silent = false) {
-		if (!activeOrganization?.id && !orgSlug) {
-			toast.error("No se encontró la organización activa");
-			return;
-		}
+        {/* Step 1 */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Nombre del negocio *</label>
+              <input
+                type="text"
+                value={formData.businessName || ''}
+                onChange={(e) => updateField('businessName', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="Tu empresa"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Industria *</label>
+              <select
+                value={formData.industry || ''}
+                onChange={(e) => updateField('industry', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="">Selecciona...</option>
+                <option value="Tecnología">Tecnología</option>
+                <option value="Restaurante">Restaurante</option>
+                <option value="Retail">Retail</option>
+                <option value="Servicios">Servicios</option>
+                <option value="Salud">Salud</option>
+                <option value="Educación">Educación</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Descripción *</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => updateField('description', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 h-24"
+                placeholder="Describe tu negocio..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Ubicación</label>
+                <input
+                  type="text"
+                  value={formData.location || ''}
+                  onChange={(e) => updateField('location', e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
+                  placeholder="Barcelona, España"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Sitio web</label>
+                <input
+                  type="url"
+                  value={formData.websiteUrl || formData.website || ''}
+                  onChange={(e) => updateField('websiteUrl', e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-		setIsSaving(true);
-		try {
-			const targetLocationsArray = formData.targetLocations
-				.split(",")
-				.map((s) => s.trim())
-				.filter(Boolean);
-			const wordsToUseArray = formData.wordsToUse
-				.split(",")
-				.map((s) => s.trim())
-				.filter(Boolean);
-			const wordsToAvoidArray = formData.wordsToAvoid
-				.split(",")
-				.map((s) => s.trim())
-				.filter(Boolean);
-			const hashtagsToUseArray = formData.hashtagsToUse
-				.split(",")
-				.map((s) => s.trim())
-				.filter(Boolean);
+        {/* Step 2 */}
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">¿Quién es tu cliente ideal? *</label>
+              <textarea
+                value={formData.targetAudience || ''}
+                onChange={(e) => updateField('targetAudience', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 h-24"
+                placeholder="Describe a tu cliente ideal..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Edad mínima</label>
+                <input
+                  type="number"
+                  value={formData.ageRangeMin || formData.ageMin || 18}
+                  onChange={(e) => updateField('ageRangeMin', parseInt(e.target.value))}
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Edad máxima</label>
+                <input
+                  type="number"
+                  value={formData.ageRangeMax || formData.ageMax || 65}
+                  onChange={(e) => updateField('ageRangeMax', parseInt(e.target.value))}
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Ubicaciones objetivo</label>
+              <input
+                type="text"
+                value={Array.isArray(formData.targetLocations) ? formData.targetLocations.join(", ") : formData.targetLocations || ''}
+                onChange={(e) => updateField('targetLocations', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="España, Latinoamérica..."
+              />
+            </div>
+          </div>
+        )}
 
-			let mainProducts = null;
-			let services = null;
-			try {
-				if (formData.mainProducts.trim()) {
-					mainProducts = JSON.parse(formData.mainProducts);
-				}
-			} catch {
-				if (!silent) {
-					toast.error("Formato JSON inválido en productos");
-				}
-				return;
-			}
-			try {
-				if (formData.services.trim()) {
-					services = JSON.parse(formData.services);
-				}
-			} catch {
-				if (!silent) {
-					toast.error("Formato JSON inválido en servicios");
-				}
-				return;
-			}
+        {/* Step 3 */}
+        {currentStep === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Personalidad de marca</label>
+              <select
+                value={Array.isArray(formData.brandPersonality) ? formData.brandPersonality[0] : formData.brandPersonality || ''}
+                onChange={(e) => updateField('brandPersonality', e.target.value ? [e.target.value] : [])}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="">Selecciona...</option>
+                <option value="Profesional">Profesional</option>
+                <option value="Amigable">Amigable</option>
+                <option value="Divertida">Divertida</option>
+                <option value="Seria">Seria</option>
+                <option value="Innovadora">Innovadora</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Tono de voz</label>
+              <select
+                value={formData.toneOfVoice || ''}
+                onChange={(e) => updateField('toneOfVoice', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="">Selecciona...</option>
+                <option value="Formal">Formal</option>
+                <option value="Casual">Casual</option>
+                <option value="Inspirador">Inspirador</option>
+                <option value="Educativo">Educativo</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="useEmojis"
+                checked={formData.useEmojis || false}
+                onChange={(e) => updateField('useEmojis', e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="useEmojis" className="text-sm">Usar emojis en publicaciones</label>
+            </div>
+          </div>
+        )}
 
-			const contentPreferences = {
-				postingFrequency: formData.postingFrequency,
-			};
+        {/* Step 4 */}
+        {currentStep === 4 && (
+          <div className="space-y-4">
+            <p className="text-gray-500 text-sm">Lista tus productos o servicios principales (opcional)</p>
+            <div>
+              <label className="block text-sm font-medium mb-1">Productos/Servicios</label>
+              <textarea
+                value={formData.productsText || ''}
+                onChange={(e) => updateField('productsText', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 h-32"
+                placeholder="- Desarrollo web: €2000&#10;- Apps móviles: €5000&#10;- Consultoría: €100/hora"
+              />
+            </div>
+          </div>
+        )}
 
-			const requestBody = {
-				...(activeOrganization?.id ? { organizationId: activeOrganization.id } : { organizationSlug: orgSlug }),
-				businessName: formData.businessName,
-				tagline: formData.tagline || null,
-				industry: formData.industry,
-				description: formData.description,
-				foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
-				location: formData.location || null,
-				phone: formData.phone || null,
-				email: formData.email || null,
-				websiteUrl: formData.websiteUrl || null,
-				instagramUrl: formData.instagramUrl || null,
-				facebookUrl: formData.facebookUrl || null,
-				tiktokUrl: formData.tiktokUrl || null,
-				linkedinUrl: formData.linkedinUrl || null,
-				targetAudience: formData.targetAudience,
-				ageRangeMin: formData.ageRangeMin ? parseInt(formData.ageRangeMin) : null,
-				ageRangeMax: formData.ageRangeMax ? parseInt(formData.ageRangeMax) : null,
-				targetGender: formData.targetGender || null,
-				targetLocations: targetLocationsArray,
-				customerPainPoints: formData.customerPainPoints || null,
-				brandPersonality: formData.brandPersonality,
-				toneOfVoice: formData.toneOfVoice,
-				useEmojis: formData.useEmojis,
-				emojiStyle: formData.emojiStyle,
-				wordsToUse: wordsToUseArray,
-				wordsToAvoid: wordsToAvoidArray,
-				hashtagsToUse: hashtagsToUseArray,
-				mainProducts,
-				services,
-				priceRange: formData.priceRange || null,
-				uniqueSellingPoint: formData.uniqueSellingPoint || null,
-				marketingGoals: formData.marketingGoals,
-				monthlyBudget: formData.monthlyBudget ? parseFloat(formData.monthlyBudget) : null,
-				contentPreferences,
-				...(isComplete !== undefined ? { isComplete } : {}),
-				completedSteps: completedSteps,
-			};
+        {/* Step 5 */}
+        {currentStep === 5 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">¿Cuáles son tus objetivos?</label>
+              <div className="space-y-2">
+                {['Aumentar seguidores', 'Generar leads', 'Vender más', 'Mejorar engagement', 'Branding'].map((goal) => (
+                  <label key={goal} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.marketingGoals?.includes(goal) || false}
+                      onChange={(e) => {
+                        const goals = formData.marketingGoals || [];
+                        if (e.target.checked) {
+                          updateField('marketingGoals', [...goals, goal]);
+                        } else {
+                          updateField('marketingGoals', goals.filter((g: string) => g !== goal));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm">{goal}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Frecuencia de publicaciones</label>
+              <select
+                value={formData.contentPreferences?.postingFrequency || formData.postingFrequency || ''}
+                onChange={(e) => updateField('postingFrequency', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="">Selecciona...</option>
+                <option value="daily">1 por día</option>
+                <option value="3x-week">3-4 por semana</option>
+                <option value="weekly">1 por semana</option>
+              </select>
+            </div>
+          </div>
+        )}
 
-			const res = await fetch("/api/marketing/profile", {
-				method: isComplete ? "POST" : "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(requestBody),
-			});
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-8 pt-6 border-t">
+          {currentStep > 1 ? (
+            <button
+              onClick={() => setCurrentStep(currentStep - 1)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Anterior
+            </button>
+          ) : (
+            <div />
+          )}
 
-			const data = await res.json();
-			if (!res.ok) {
-				throw new Error(data.error || "Error guardando perfil");
-			}
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleSave(false)}
+              disabled={isSaving}
+              className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            >
+              Guardar
+            </button>
 
-			if (!silent) {
-				if (isComplete) {
-					toast.success("¡Perfil completado! Tu marketing automático está listo.");
-					// REDIRIGIR AL DASHBOARD
-					setTimeout(() => {
-						router.push(`/app/${orgSlug}/marketing/dashboard`);
-					}, 1000);
-				} else {
-					toast.success("Perfil guardado");
-				}
-			}
-
-			if (isComplete) {
-				setCompletedSteps(STEPS.map((s) => s.id));
-				setIsEditing(false);
-			}
-
-			// Si estamos en modo edición y el perfil ya estaba completo, volver a vista de resumen
-			if (isEditing && profile?.isComplete) {
-				setIsEditing(false);
-			}
-
-			// Recargar perfil
-			const reloadUrl = `/api/marketing/profile?${activeOrganization?.id ? `organizationId=${activeOrganization.id}` : `organizationSlug=${orgSlug}`}`;
-			const res2 = await fetch(reloadUrl);
-			if (res2.ok) {
-				const data2 = await res2.json();
-				if (data2.profile) {
-					setProfile(data2.profile);
-				}
-			}
-		} catch (error) {
-			console.error(error);
-			if (!silent) {
-				toast.error(error instanceof Error ? error.message : "Error guardando perfil");
-			}
-		} finally {
-			setIsSaving(false);
-		}
-	}
-
-	async function nextStep() {
-		if (currentStep < STEPS.length - 1) {
-			// Guardar datos del paso actual (auto-save silencioso)
-			const stepId = STEPS[currentStep].id;
-			if (!completedSteps.includes(stepId)) {
-				setCompletedSteps([...completedSteps, stepId]);
-			}
-			// Auto-guardar sin mostrar toast
-			await saveProfile(false, true);
-			// Avanzar al siguiente paso
-			setCurrentStep(currentStep + 1);
-		}
-	}
-
-	function prevStep() {
-		if (currentStep > 0) {
-			setCurrentStep(currentStep - 1);
-		}
-	}
-
-	function toggleBrandPersonality(value: string) {
-		setFormData((prev) => ({
-			...prev,
-			brandPersonality: prev.brandPersonality.includes(value)
-				? prev.brandPersonality.filter((p) => p !== value)
-				: [...prev.brandPersonality, value],
-		}));
-	}
-
-	function toggleMarketingGoal(value: string) {
-		setFormData((prev) => ({
-			...prev,
-			marketingGoals: prev.marketingGoals.includes(value)
-				? prev.marketingGoals.filter((g) => g !== value)
-				: [...prev.marketingGoals, value],
-		}));
-	}
-
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center p-12">
-				<Loader2 className="h-8 w-8 animate-spin" />
-			</div>
-		);
-	}
-
-	// Si el perfil está completo y no estamos editando, mostrar vista de resumen
-	if (profile?.isComplete && !isEditing) {
-		return (
-			<div className="max-w-4xl mx-auto py-6 px-4">
-				{/* Header */}
-				<div className="flex items-center justify-between mb-8">
-					<div>
-						<h1 className="text-2xl font-bold flex items-center gap-3">
-							<div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-								<CheckCircle className="w-6 h-6 text-green-600" />
-							</div>
-							Perfil de Empresa
-						</h1>
-						<p className="text-gray-500 mt-1">Tu configuración está completa y tu marketing funciona automáticamente</p>
-					</div>
-					<Button onClick={() => setIsEditing(true)} variant="outline">
-						<Pencil className="w-4 h-4 mr-2" />
-						Editar perfil
-					</Button>
-				</div>
-
-				{/* Grid de cards con información */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{/* Card 1: Información Básica */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Building2 className="w-5 h-5 text-blue-500" />
-								Información Básica
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							<ProfileField label="Nombre" value={profile.businessName} />
-							<ProfileField label="Tagline" value={profile.tagline} />
-							<ProfileField label="Industria" value={profile.industry} />
-							<ProfileField label="Descripción" value={profile.description} multiline />
-							<ProfileField label="Ubicación" value={profile.location} icon={MapPin} />
-							<ProfileField label="Fundada en" value={profile.foundedYear?.toString()} />
-						</CardContent>
-					</Card>
-
-					{/* Card 2: Contacto */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Globe className="w-5 h-5 text-green-500" />
-								Contacto y Redes
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							<ProfileField label="Email" value={profile.email} icon={Mail} />
-							<ProfileField label="Teléfono" value={profile.phone} icon={Phone} />
-							<ProfileField label="Sitio web" value={profile.websiteUrl} icon={Globe} link />
-							<ProfileField label="Instagram" value={profile.instagramUrl} icon={Instagram} link />
-							<ProfileField label="Facebook" value={profile.facebookUrl} icon={Facebook} link />
-							<ProfileField label="TikTok" value={profile.tiktokUrl} link />
-							<ProfileField label="LinkedIn" value={profile.linkedinUrl} link />
-						</CardContent>
-					</Card>
-
-					{/* Card 3: Tu Público */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Users className="w-5 h-5 text-purple-500" />
-								Tu Público
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							<ProfileField label="Cliente ideal" value={profile.targetAudience} multiline />
-							<ProfileField 
-								label="Edad" 
-								value={profile.ageRangeMin && profile.ageRangeMax ? `${profile.ageRangeMin} - ${profile.ageRangeMax} años` : null} 
-							/>
-							<ProfileField label="Género" value={profile.targetGender === "all" ? "Todos" : profile.targetGender === "male" ? "Masculino" : profile.targetGender === "female" ? "Femenino" : profile.targetGender} />
-							<ProfileField 
-								label="Ubicaciones" 
-								value={Array.isArray(profile.targetLocations) ? profile.targetLocations.join(", ") : profile.targetLocations} 
-							/>
-							<ProfileField label="Problemas que resuelves" value={profile.customerPainPoints} multiline />
-						</CardContent>
-					</Card>
-
-					{/* Card 4: Voz de Marca */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Megaphone className="w-5 h-5 text-pink-500" />
-								Voz de Marca
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							{Array.isArray(profile.brandPersonality) && profile.brandPersonality.length > 0 && (
-								<div>
-									<span className="text-sm text-gray-500">Personalidad</span>
-									<div className="flex flex-wrap gap-2 mt-1">
-										{profile.brandPersonality.map((personality: string, i: number) => (
-											<span key={i} className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
-												{personality.charAt(0).toUpperCase() + personality.slice(1)}
-											</span>
-										))}
-									</div>
-								</div>
-							)}
-							<ProfileField label="Tono de voz" value={profile.toneOfVoice} multiline />
-							<ProfileField label="Usa emojis" value={profile.useEmojis ? `Sí (${profile.emojiStyle || "moderate"})` : "No"} />
-							{Array.isArray(profile.hashtagsToUse) && profile.hashtagsToUse.length > 0 && (
-								<div>
-									<span className="text-sm text-gray-500">Hashtags de marca</span>
-									<div className="flex flex-wrap gap-2 mt-1">
-										{profile.hashtagsToUse.map((tag: string, i: number) => (
-											<span key={i} className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
-												#{tag}
-											</span>
-										))}
-									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					{/* Card 5: Productos/Servicios */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Package className="w-5 h-5 text-orange-500" />
-								Productos y Servicios
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							{profile.mainProducts && Array.isArray(profile.mainProducts) && profile.mainProducts.length > 0 ? (
-								<div className="space-y-3">
-									{profile.mainProducts.map((product: any, i: number) => (
-										<div key={i} className="p-3 bg-gray-50 rounded-lg">
-											<div className="font-medium">{product.name}</div>
-											{product.description && (
-												<div className="text-sm text-gray-500 mt-1">{product.description}</div>
-											)}
-											{product.price && (
-												<div className="text-sm font-medium text-green-600 mt-1">{product.price}€</div>
-											)}
-										</div>
-									))}
-								</div>
-							) : (
-								<p className="text-gray-400 text-sm">No hay productos configurados</p>
-							)}
-						</CardContent>
-					</Card>
-
-					{/* Card 6: Objetivos */}
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-lg flex items-center gap-2">
-								<Target className="w-5 h-5 text-red-500" />
-								Objetivos de Marketing
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							{Array.isArray(profile.marketingGoals) && profile.marketingGoals.length > 0 && (
-								<div>
-									<span className="text-sm text-gray-500">Objetivos</span>
-									<div className="flex flex-wrap gap-2 mt-1">
-										{profile.marketingGoals.map((goal: string, i: number) => (
-											<span key={i} className="text-sm bg-green-50 text-green-600 px-2 py-1 rounded-full">
-												{goal.charAt(0).toUpperCase() + goal.slice(1)}
-											</span>
-										))}
-									</div>
-								</div>
-							)}
-							<ProfileField 
-								label="Frecuencia de posts" 
-								value={profile.contentPreferences?.postingFrequency ? POSTING_FREQUENCIES.find(f => f.value === profile.contentPreferences.postingFrequency)?.label : null} 
-								icon={Clock} 
-							/>
-						</CardContent>
-					</Card>
-				</div>
-
-				{/* CTA para ir al Dashboard */}
-				<div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-					<div className="flex items-center justify-between">
-						<div>
-							<h3 className="font-semibold text-lg">¡Todo listo!</h3>
-							<p className="text-gray-600">Tu marketing automático está funcionando con esta configuración.</p>
-						</div>
-						<Button onClick={() => router.push(`/app/${orgSlug}/marketing/dashboard`)}>
-							Ir al Dashboard
-						</Button>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
-	return (
-		<div className="max-w-3xl mx-auto py-6 px-4">
-			{/* Header del wizard */}
-			{isEditing && (
-				<div className="mb-6 flex items-center justify-between">
-					<h1 className="text-xl font-bold">Editar perfil de empresa</h1>
-					<Button variant="ghost" onClick={() => setIsEditing(false)}>
-						<X className="w-4 h-4 mr-2" />
-						Cancelar
-					</Button>
-				</div>
-			)}
-			
-			<div className="space-y-6">
-				{/* Progress Bar */}
-				<Card>
-				<CardContent className="pt-6">
-					<div className="flex items-center justify-between">
-						{STEPS.map((step, index) => (
-							<div key={step.id} className="flex items-center flex-1">
-								<div className="flex items-center">
-									<div
-										className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-											index <= currentStep
-												? "bg-primary border-primary text-primary-foreground"
-												: "border-muted text-muted-foreground"
-										} ${
-											completedSteps.includes(step.id)
-												? "bg-primary border-primary"
-												: ""
-										}`}
-									>
-										{completedSteps.includes(step.id) ? (
-											<Check className="h-5 w-5" />
-										) : (
-											index + 1
-										)}
-									</div>
-									<span
-										className={`ml-2 text-sm font-medium ${
-											index <= currentStep ? "text-foreground" : "text-muted-foreground"
-										}`}
-									>
-										{step.label}
-									</span>
-								</div>
-								{index < STEPS.length - 1 && (
-									<div
-										className={`flex-1 h-0.5 mx-4 ${
-											index < currentStep ? "bg-primary" : "bg-muted"
-										}`}
-									/>
-								)}
-							</div>
-						))}
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* Step Content */}
-			<Card>
-				<CardHeader>
-					<CardTitle>{STEPS[currentStep].label}</CardTitle>
-					<CardDescription>
-						Paso {currentStep + 1} de {STEPS.length}
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-6">
-					{currentStep === 0 && (
-						<div className="space-y-4">
-							<div>
-								<Label htmlFor="businessName">Nombre del negocio *</Label>
-								<Input
-									id="businessName"
-									value={formData.businessName}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, businessName: e.target.value }))
-									}
-									placeholder="Ej: Mi Restaurante"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="tagline">Tagline</Label>
-								<Input
-									id="tagline"
-									value={formData.tagline}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, tagline: e.target.value }))
-									}
-									placeholder="Frase corta que define tu negocio"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="industry">Industria *</Label>
-								<Select
-									value={formData.industry}
-									onValueChange={(value) =>
-										setFormData((prev) => ({ ...prev, industry: value }))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Selecciona una industria" />
-									</SelectTrigger>
-									<SelectContent>
-										{INDUSTRIES.map((ind) => (
-											<SelectItem key={ind} value={ind}>
-												{ind.charAt(0).toUpperCase() + ind.slice(1)}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div>
-								<Label htmlFor="description">Descripción *</Label>
-								<Textarea
-									id="description"
-									value={formData.description}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, description: e.target.value }))
-									}
-									placeholder="Describe tu negocio en detalle"
-									rows={4}
-								/>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="foundedYear">Año de fundación</Label>
-									<Input
-										id="foundedYear"
-										type="number"
-										value={formData.foundedYear}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, foundedYear: e.target.value }))
-										}
-										placeholder="2020"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="location">Ubicación</Label>
-									<Input
-										id="location"
-										value={formData.location}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, location: e.target.value }))
-										}
-										placeholder="Ciudad, País"
-									/>
-								</div>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="phone">Teléfono</Label>
-									<Input
-										id="phone"
-										value={formData.phone}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, phone: e.target.value }))
-										}
-										placeholder="+34 123 456 789"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="email">Email</Label>
-									<Input
-										id="email"
-										type="email"
-										value={formData.email}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, email: e.target.value }))
-										}
-										placeholder="contacto@empresa.com"
-									/>
-								</div>
-							</div>
-							<div>
-								<Label htmlFor="websiteUrl">Sitio web</Label>
-								<Input
-									id="websiteUrl"
-									type="url"
-									value={formData.websiteUrl}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))
-									}
-									placeholder="https://www.empresa.com"
-								/>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="instagramUrl">Instagram</Label>
-									<Input
-										id="instagramUrl"
-										type="url"
-										value={formData.instagramUrl}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, instagramUrl: e.target.value }))
-										}
-										placeholder="https://instagram.com/empresa"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="facebookUrl">Facebook</Label>
-									<Input
-										id="facebookUrl"
-										type="url"
-										value={formData.facebookUrl}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, facebookUrl: e.target.value }))
-										}
-										placeholder="https://facebook.com/empresa"
-									/>
-								</div>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<Label htmlFor="tiktokUrl">TikTok</Label>
-									<Input
-										id="tiktokUrl"
-										type="url"
-										value={formData.tiktokUrl}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, tiktokUrl: e.target.value }))
-										}
-										placeholder="https://tiktok.com/@empresa"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="linkedinUrl">LinkedIn</Label>
-									<Input
-										id="linkedinUrl"
-										type="url"
-										value={formData.linkedinUrl}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, linkedinUrl: e.target.value }))
-										}
-										placeholder="https://linkedin.com/company/empresa"
-									/>
-								</div>
-							</div>
-						</div>
-					)}
-
-					{currentStep === 1 && (
-						<div className="space-y-4">
-							<div>
-								<Label htmlFor="targetAudience">¿Quién es tu cliente ideal? *</Label>
-								<Textarea
-									id="targetAudience"
-									value={formData.targetAudience}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, targetAudience: e.target.value }))
-									}
-									placeholder="Describe en detalle a tu cliente ideal: edad, intereses, problemas, estilo de vida..."
-									rows={5}
-								/>
-							</div>
-							<div className="grid grid-cols-3 gap-4">
-								<div>
-									<Label htmlFor="ageRangeMin">Edad mínima</Label>
-									<Input
-										id="ageRangeMin"
-										type="number"
-										value={formData.ageRangeMin}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, ageRangeMin: e.target.value }))
-										}
-										placeholder="18"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="ageRangeMax">Edad máxima</Label>
-									<Input
-										id="ageRangeMax"
-										type="number"
-										value={formData.ageRangeMax}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, ageRangeMax: e.target.value }))
-										}
-										placeholder="45"
-									/>
-								</div>
-								<div>
-									<Label htmlFor="targetGender">Género objetivo</Label>
-									<Select
-										value={formData.targetGender}
-										onValueChange={(value) =>
-											setFormData((prev) => ({ ...prev, targetGender: value }))
-										}
-									>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">Todos</SelectItem>
-											<SelectItem value="male">Masculino</SelectItem>
-											<SelectItem value="female">Femenino</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-							</div>
-							<div>
-								<Label htmlFor="targetLocations">Ubicaciones objetivo</Label>
-								<Input
-									id="targetLocations"
-									value={formData.targetLocations}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, targetLocations: e.target.value }))
-									}
-									placeholder="Madrid, Barcelona, Valencia (separadas por comas)"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="customerPainPoints">¿Qué problemas les resuelves?</Label>
-								<Textarea
-									id="customerPainPoints"
-									value={formData.customerPainPoints}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, customerPainPoints: e.target.value }))
-									}
-									placeholder="Describe los problemas o necesidades que tu negocio resuelve para tus clientes"
-									rows={4}
-								/>
-							</div>
-						</div>
-					)}
-
-					{currentStep === 2 && (
-						<div className="space-y-4">
-							<div>
-								<Label>Personalidad de marca *</Label>
-								<div className="grid grid-cols-2 gap-2 mt-2">
-									{BRAND_PERSONALITIES.map((personality) => (
-										<Button
-											key={personality}
-											type="button"
-											variant={
-												formData.brandPersonality.includes(personality)
-													? "primary"
-													: "outline"
-											}
-											onClick={() => toggleBrandPersonality(personality)}
-										>
-											{formData.brandPersonality.includes(personality) && (
-												<Check className="h-4 w-4 mr-2" />
-											)}
-											{personality.charAt(0).toUpperCase() + personality.slice(1)}
-										</Button>
-									))}
-								</div>
-							</div>
-							<div>
-								<Label htmlFor="toneOfVoice">¿Cómo habla tu marca? *</Label>
-								<Textarea
-									id="toneOfVoice"
-									value={formData.toneOfVoice}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, toneOfVoice: e.target.value }))
-									}
-									placeholder="Describe el tono de voz de tu marca. Ej: 'Hablamos de forma cercana y amigable, usando un lenguaje sencillo y positivo'"
-									rows={4}
-								/>
-							</div>
-							<div>
-								<Label htmlFor="emojiStyle">Nivel de emojis</Label>
-								<Select
-									value={formData.emojiStyle}
-									onValueChange={(value) =>
-										setFormData((prev) => ({ ...prev, emojiStyle: value }))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										{EMOJI_STYLES.map((style) => (
-											<SelectItem key={style.value} value={style.value}>
-												{style.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div>
-								<Label htmlFor="wordsToUse">Palabras a usar</Label>
-								<Input
-									id="wordsToUse"
-									value={formData.wordsToUse}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, wordsToUse: e.target.value }))
-									}
-									placeholder="innovación, calidad, confianza (separadas por comas)"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="wordsToAvoid">Palabras a evitar</Label>
-								<Input
-									id="wordsToAvoid"
-									value={formData.wordsToAvoid}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, wordsToAvoid: e.target.value }))
-									}
-									placeholder="barato, descuento, oferta (separadas por comas)"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="hashtagsToUse">Hashtags de marca</Label>
-								<Input
-									id="hashtagsToUse"
-									value={formData.hashtagsToUse}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, hashtagsToUse: e.target.value }))
-									}
-									placeholder="#mimarca #miempresa (separados por comas)"
-								/>
-							</div>
-						</div>
-					)}
-
-					{currentStep === 3 && (
-						<div className="space-y-4">
-							<div>
-								<Label htmlFor="mainProducts">Productos principales (JSON)</Label>
-								<Textarea
-									id="mainProducts"
-									value={formData.mainProducts}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, mainProducts: e.target.value }))
-									}
-									placeholder={`[\n  {\n    "name": "Producto 1",\n    "description": "Descripción",\n    "price": 29.99\n  }\n]`}
-									rows={8}
-								/>
-								<p className="text-xs text-muted-foreground mt-1">
-									Formato JSON: array de objetos con name, description, price
-								</p>
-							</div>
-							<div>
-								<Label htmlFor="services">Servicios (JSON)</Label>
-								<Textarea
-									id="services"
-									value={formData.services}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, services: e.target.value }))
-									}
-									placeholder={`[\n  {\n    "name": "Servicio 1",\n    "description": "Descripción",\n    "price": 99.99\n  }\n]`}
-									rows={8}
-								/>
-								<p className="text-xs text-muted-foreground mt-1">
-									Formato JSON: array de objetos con name, description, price
-								</p>
-							</div>
-							<div>
-								<Label htmlFor="priceRange">Rango de precios</Label>
-								<Select
-									value={formData.priceRange}
-									onValueChange={(value) =>
-										setFormData((prev) => ({ ...prev, priceRange: value }))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Selecciona un rango" />
-									</SelectTrigger>
-									<SelectContent>
-										{PRICE_RANGES.map((range) => (
-											<SelectItem key={range.value} value={range.value}>
-												{range.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div>
-								<Label htmlFor="uniqueSellingPoint">¿Qué te hace diferente?</Label>
-								<Textarea
-									id="uniqueSellingPoint"
-									value={formData.uniqueSellingPoint}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, uniqueSellingPoint: e.target.value }))
-									}
-									placeholder="Describe qué hace único a tu negocio o productos"
-									rows={4}
-								/>
-							</div>
-						</div>
-					)}
-
-					{currentStep === 4 && (
-						<div className="space-y-4">
-							<div>
-								<Label>¿Qué quieres lograr? *</Label>
-								<div className="grid grid-cols-2 gap-2 mt-2">
-									{MARKETING_GOALS.map((goal) => (
-										<Button
-											key={goal}
-											type="button"
-											variant={
-												formData.marketingGoals.includes(goal) ? "primary" : "outline"
-											}
-											onClick={() => toggleMarketingGoal(goal)}
-										>
-											{formData.marketingGoals.includes(goal) && (
-												<Check className="h-4 w-4 mr-2" />
-											)}
-											{goal.charAt(0).toUpperCase() + goal.slice(1)}
-										</Button>
-									))}
-								</div>
-							</div>
-							<div>
-								<Label htmlFor="monthlyBudget">Presupuesto mensual (€)</Label>
-								<Input
-									id="monthlyBudget"
-									type="number"
-									step="0.01"
-									value={formData.monthlyBudget}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, monthlyBudget: e.target.value }))
-									}
-									placeholder="500"
-								/>
-							</div>
-							<div>
-								<Label htmlFor="postingFrequency">Frecuencia de posts deseada</Label>
-								<Select
-									value={formData.postingFrequency}
-									onValueChange={(value) =>
-										setFormData((prev) => ({ ...prev, postingFrequency: value }))
-									}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										{POSTING_FREQUENCIES.map((freq) => (
-											<SelectItem key={freq.value} value={freq.value}>
-												{freq.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			{/* Navigation */}
-			<div className="flex justify-between">
-				<Button variant="outline" onClick={prevStep} disabled={currentStep === 0}>
-					<ChevronLeft className="h-4 w-4 mr-2" />
-					Anterior
-				</Button>
-				<div className="flex gap-2">
-					<Button variant="outline" onClick={() => saveProfile(false)} disabled={isSaving}>
-						{isSaving ? (
-							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-						) : (
-							"Guardar"
-						)}
-					</Button>
-					{currentStep < STEPS.length - 1 ? (
-						<Button onClick={nextStep} disabled={isSaving}>
-							{isSaving ? (
-								<>
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Guardando...
-								</>
-							) : (
-								<>
-									Siguiente
-									<ChevronRight className="h-4 w-4 ml-2" />
-								</>
-							)}
-						</Button>
-					) : (
-						<Button
-							onClick={() => saveProfile(true)}
-							disabled={isSaving}
-							className="bg-green-600 hover:bg-green-700"
-						>
-							{isSaving ? (
-								<>
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Guardando...
-								</>
-							) : (
-								<>
-									<Check className="h-4 w-4 mr-2" />
-									Completar configuración
-								</>
-							)}
-						</Button>
-					)}
-				</div>
-			</div>
-			</div>
-		</div>
-	);
+            {currentStep < 5 ? (
+              <button
+                onClick={() => setCurrentStep(currentStep + 1)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Siguiente
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSave(true)}
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Completar
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-// Componente helper para mostrar campos del perfil
-function ProfileField({ 
-	label, 
-	value, 
-	icon: Icon, 
-	multiline = false,
-	link = false 
-}: { 
-	label: string; 
-	value: any; 
-	icon?: any;
-	multiline?: boolean;
-	link?: boolean;
-}) {
-	if (!value) return null;
-	
-	return (
-		<div>
-			<span className="text-sm text-gray-500">{label}</span>
-			<div className={`flex items-start gap-2 ${multiline ? 'mt-1' : ''}`}>
-				{Icon && <Icon className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />}
-				{link ? (
-					<a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
-						{value}
-					</a>
-				) : (
-					<span className={`font-medium ${multiline ? 'text-sm leading-relaxed' : ''}`}>
-						{value}
-					</span>
-				)}
-			</div>
-		</div>
-	);
-}
-

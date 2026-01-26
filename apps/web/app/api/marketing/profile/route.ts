@@ -1,4 +1,4 @@
-import { getBusinessProfile, updateBusinessProfile, getOrganizationBySlug } from "@repo/database";
+import { getBusinessProfile, updateBusinessProfile, getOrganizationBySlug, prisma } from "@repo/database";
 import { getActiveOrganization } from "@saas/auth/lib/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { organizationId, organizationSlug, ...profileData } = body;
+		const { organizationId, organizationSlug, isComplete, ...profileData } = body;
 
 		let orgId = organizationId;
 
@@ -64,25 +64,44 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Verificar si el perfil está completo (todos los campos obligatorios)
-		const isComplete = Boolean(
-			profileData.businessName &&
-			profileData.industry &&
-			profileData.description &&
-			profileData.targetAudience &&
-			profileData.brandPersonality &&
-			Array.isArray(profileData.brandPersonality) &&
-			profileData.brandPersonality.length > 0 &&
-			profileData.toneOfVoice &&
-			profileData.marketingGoals &&
-			Array.isArray(profileData.marketingGoals) &&
-			profileData.marketingGoals.length > 0
-		);
+		console.log('Saving profile with isComplete:', isComplete); // DEBUG
 
-		const profile = await updateBusinessProfile(orgId, {
-			...profileData,
-			isComplete,
+		// Si isComplete se pasa explícitamente, usarlo; si no, calcularlo
+		let finalIsComplete: boolean;
+		if (isComplete !== undefined) {
+			finalIsComplete = isComplete === true; // Asegurar que sea boolean
+		} else {
+			// Calcular si está completo basado en campos obligatorios
+			finalIsComplete = Boolean(
+				profileData.businessName &&
+				profileData.industry &&
+				profileData.description &&
+				profileData.targetAudience &&
+				profileData.brandPersonality &&
+				Array.isArray(profileData.brandPersonality) &&
+				profileData.brandPersonality.length > 0 &&
+				profileData.toneOfVoice &&
+				profileData.marketingGoals &&
+				Array.isArray(profileData.marketingGoals) &&
+				profileData.marketingGoals.length > 0
+			);
+		}
+
+		const profile = await prisma.businessProfile.upsert({
+			where: { organizationId: orgId },
+			update: {
+				...profileData,
+				isComplete: finalIsComplete,
+				updatedAt: new Date(),
+			},
+			create: {
+				organizationId: orgId,
+				...profileData,
+				isComplete: finalIsComplete,
+			},
 		});
+
+		console.log('Saved profile:', profile); // DEBUG
 
 		return NextResponse.json({ profile, success: true });
 	} catch (error: any) {
