@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { getBusinessProfile } from "@repo/database";
+import { getBusinessProfile, prisma } from "@repo/database";
 import { NextResponse } from "next/server";
+import Replicate from "replicate";
+import { put } from "@vercel/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -211,9 +213,87 @@ export async function POST(request: Request) {
 				}));
 
 			if (variations.length > 0) {
+				// Generar imágenes para cada variación
+				const variationsWithImages = await Promise.all(
+					variations.map(async (variation: any, index: number) => {
+						try {
+							// Crear prompt para imagen basado en el contenido
+							const imagePrompt = `Professional Instagram post image for ${businessProfile?.industry || 'technology'} company.
+Theme: ${variation.text?.slice(0, 100)}
+Style: Modern, professional, eye-catching, suitable for social media.
+NO text or words in the image.`;
+
+							let imageUrl = '';
+							
+							if (process.env.REPLICATE_API_TOKEN && organizationId) {
+								const replicate = new Replicate({
+									auth: process.env.REPLICATE_API_TOKEN,
+								});
+
+								const output = await replicate.run(
+									"black-forest-labs/flux-schnell",
+									{
+										input: {
+											prompt: imagePrompt,
+											aspect_ratio: "1:1",
+											output_format: "webp",
+											output_quality: 85,
+										}
+									}
+								);
+
+								const generatedUrl = Array.isArray(output) ? output[0] : output;
+								
+								// Guardar en Vercel Blob
+								const imageResponse = await fetch(generatedUrl as string);
+								const imageBlob = await imageResponse.blob();
+								
+								const blobResult = await put(
+									`marketing/${organizationId}/post-${Date.now()}-${index}.webp`,
+									imageBlob,
+									{ access: 'public', contentType: 'image/webp' }
+								);
+								
+								imageUrl = blobResult.url;
+
+								// Guardar en MediaLibrary
+								await prisma.mediaLibrary.create({
+									data: {
+										organizationId: organizationId,
+										fileUrl: imageUrl,
+										fileName: `post-${Date.now()}-${index}.webp`,
+										fileType: 'image/webp',
+										fileSize: 0,
+										category: 'other',
+										tags: [],
+										isAiGenerated: true,
+										aiPrompt: imagePrompt,
+									},
+								});
+							} else {
+								// Fallback a Unsplash
+								const terms = businessProfile?.industry || 'technology';
+								imageUrl = `https://source.unsplash.com/1080x1080/?${encodeURIComponent(terms)},${index}`;
+							}
+
+							return {
+								...variation,
+								imageUrl,
+							};
+						} catch (err) {
+							console.error('Error generating image for variation', index, err);
+							// Fallback
+							return {
+								...variation,
+								imageUrl: `https://source.unsplash.com/1080x1080/?business,${index}`,
+							};
+						}
+					})
+				);
+
 				return NextResponse.json({
 					success: true,
-					variations,
+					variations: variationsWithImages,
 				});
 			}
 		}
