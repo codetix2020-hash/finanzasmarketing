@@ -1,3 +1,4 @@
+import { put } from "@vercel/blob";
 import { db } from "@repo/database/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,28 +16,30 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "No files provided" }, { status: 400 });
 		}
 
-		// TODO: Implement actual file upload to storage (S3, Cloudflare, etc.)
-		// For now, we'll create placeholder records
+		// Verificar que BLOB_READ_WRITE_TOKEN esté configurado
+		if (!process.env.BLOB_READ_WRITE_TOKEN) {
+			return NextResponse.json(
+				{ error: "BLOB_READ_WRITE_TOKEN no configurado. Configura la variable de entorno en Railway." },
+				{ status: 500 },
+			);
+		}
+
 		const uploadedMedia = [];
 
 		for (const file of files) {
-			// In a real implementation, you would:
-			// 1. Upload file to storage (S3, Cloudflare R2, etc.)
-			// 2. Get the public URL
-			// 3. Get file dimensions (for images)
-			// 4. Save to database
+			// Subir archivo a Vercel Blob
+			const blob = await put(`${organizationId}/${Date.now()}-${file.name}`, file, {
+				access: "public",
+			});
 
-			const fileUrl = `https://placeholder.com/${file.name}`; // Placeholder
-			const fileType = file.type;
-			const fileSize = file.size;
-
+			// Guardar en DB
 			const media = await db.mediaLibrary.create({
 				data: {
 					organizationId,
 					fileName: file.name,
-					fileUrl,
-					fileType,
-					fileSize,
+					fileUrl: blob.url,
+					fileType: file.type,
+					fileSize: file.size,
 					category: "other",
 					tags: [],
 					aiTags: [],
@@ -49,7 +52,10 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({ media: uploadedMedia });
 	} catch (error) {
 		console.error("Error uploading media:", error);
-		return NextResponse.json({ error: "Error uploading media" }, { status: 500 });
+		return NextResponse.json(
+			{ error: error instanceof Error ? error.message : "Error uploading media" },
+			{ status: 500 },
+		);
 	}
 }
 
