@@ -54,6 +54,18 @@ export default async function MarketingLayout({
 					icon: <LayoutDashboard className="size-4 opacity-50" />,
 				},
 				{
+					title: "Automatización",
+					href: `${marketingBasePath}/automation`,
+					icon: (
+						<div className="relative">
+							<Bot className="size-4 opacity-50" />
+							<span className="absolute -top-1 -right-1 flex h-2 w-2">
+								<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+							</span>
+						</div>
+					),
+				},
+				{
 					title: "Asistente AI",
 					href: `${marketingBasePath}/assistant`,
 					icon: (
