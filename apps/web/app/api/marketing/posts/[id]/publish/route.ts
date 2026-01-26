@@ -124,10 +124,19 @@ export async function POST(
 		);
 
 		if (!account) {
-			return NextResponse.json(
-				{ error: `No hay cuenta conectada para ${post.platform}` },
-				{ status: 400 },
-			);
+			// Si no hay cuenta conectada, marcar como publicado manualmente
+			const updated = await updateMarketingPost(id, {
+				status: "published",
+				publishedAt: new Date(),
+				publishError: "No hay cuenta conectada. Copia el contenido y publícalo manualmente.",
+			});
+
+			return NextResponse.json({
+				success: false,
+				message: "No hay cuenta de Instagram conectada. El post se guardó pero debes publicarlo manualmente.",
+				post: updated,
+				needsManualPublish: true,
+			});
 		}
 
 		// Actualizar estado a "publishing"
@@ -175,9 +184,17 @@ export async function POST(
 				externalUrl: result.url,
 			});
 
+			const updatedPost = await updateMarketingPost(id, {
+				status: "published",
+				publishedAt: new Date(),
+				externalId: result.postId,
+				externalUrl: result.url,
+			});
+
 			return NextResponse.json({
 				success: true,
-				postId: result.postId,
+				message: "Post publicado correctamente",
+				post: updatedPost,
 			});
 		} catch (error) {
 			// Actualizar estado a "failed"
@@ -186,7 +203,10 @@ export async function POST(
 				publishError: error instanceof Error ? error.message : "Error desconocido",
 			});
 
-			throw error;
+			return NextResponse.json({
+				success: false,
+				error: error instanceof Error ? error.message : "Error desconocido",
+			}, { status: 500 });
 		}
 	} catch (error) {
 		console.error("Error publishing post:", error);
