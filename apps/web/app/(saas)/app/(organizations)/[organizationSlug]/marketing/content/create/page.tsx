@@ -103,7 +103,13 @@ export default function CreateContentPage() {
 
 			const data = await res.json();
 			if (!res.ok || !data?.success) {
-				throw new Error(data?.error || "No se pudo generar contenido");
+				// Manejo especial para rate limit
+				if (res.status === 429 || data?.error === 'rate_limit') {
+					const message = data?.message || 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.';
+					toast.error(message);
+					return;
+				}
+				throw new Error(data?.error || data?.message || "No se pudo generar contenido");
 			}
 
 			// El endpoint debería retornar 3 variaciones

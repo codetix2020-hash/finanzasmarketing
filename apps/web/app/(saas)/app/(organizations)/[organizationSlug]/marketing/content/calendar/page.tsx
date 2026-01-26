@@ -77,7 +77,7 @@ export default function ContentCalendarPage() {
 
 	const getPlatformColor = (platform: string) => {
 		const colors: Record<string, string> = {
-			instagram: "bg-pink-500",
+			instagram: "bg-gradient-to-r from-purple-500 to-pink-500",
 			facebook: "bg-blue-500",
 			tiktok: "bg-black",
 			linkedin: "bg-blue-600",
@@ -170,6 +170,21 @@ export default function ContentCalendarPage() {
 					{isLoading ? (
 						<div className="flex items-center justify-center py-8">
 							<Loader2 className="h-6 w-6 animate-spin" />
+						</div>
+					) : posts.length === 0 ? (
+						<div className="text-center py-12">
+							<p className="text-muted-foreground text-lg mb-2">
+								No hay posts programados
+							</p>
+							<p className="text-sm text-muted-foreground mb-4">
+								¡Crea el primero!
+							</p>
+							<Button asChild>
+								<a href={`/app/${organizationSlug}/marketing/content/create`}>
+									<Plus className="mr-2 h-4 w-4" />
+									Crear post
+								</a>
+							</Button>
 						</div>
 					) : (
 						<div className="grid grid-cols-7 gap-2">
