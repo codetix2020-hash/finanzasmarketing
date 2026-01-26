@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { Button } from "@repo/ui/components/button";
-import { Badge } from "@repo/ui/components/badge";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@repo/ui/components/select";
-import { Progress } from "@repo/ui/components/progress";
-import { Checkbox } from "@repo/ui/components/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/components/card";
+import { Button } from "@ui/components/button";
+import { Badge } from "@ui/components/badge";
+import { Input } from "@ui/components/input";
+import { Label } from "@ui/components/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/components/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui/components/select";
+import { Progress } from "@ui/components/progress";
+import { Checkbox } from "@ui/components/checkbox";
 import { 
   Globe, Search, AlertCircle, CheckCircle, Copy, ExternalLink, 
   Play, ChevronDown, ChevronRight, RefreshCw, Zap, Target,
