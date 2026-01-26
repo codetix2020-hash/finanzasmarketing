@@ -76,7 +76,8 @@ export async function GET(request: NextRequest) {
 			0,
 		);
 		const engagementRate = totalReach > 0 ? (totalEngagement / totalReach) * 100 : 0;
-		const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.followersCount || 0), 0) || socialAccounts.length * 1000; // Fallback mock
+		// Obtener seguidores reales de las cuentas conectadas, o 0 si no hay datos
+		const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.followersCount || 0), 0);
 
 		// Obtener media count
 		const mediaCount = await prisma.mediaLibrary.count({

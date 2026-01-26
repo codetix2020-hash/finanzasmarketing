@@ -11,11 +11,13 @@ import {
   DollarSign, Timer, Award, Rocket
 } from "lucide-react";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { useSession } from "@saas/auth/hooks/use-session";
 
 export default function MarketingDashboard() {
   const params = useParams();
   const orgSlug = params.organizationSlug as string;
   const { activeOrganization, loaded } = useActiveOrganization();
+  const { user } = useSession();
   
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -24,6 +26,9 @@ export default function MarketingDashboard() {
   const [isAutomationActive, setIsAutomationActive] = useState(true);
 
   useEffect(() => {
+    // Actualizar título de la página
+    document.title = "Dashboard | MarketingOS";
+    
     if (loaded && activeOrganization?.id) {
       fetchDashboardData();
     }
@@ -80,7 +85,8 @@ export default function MarketingDashboard() {
   // Obtener hora actual para saludo
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
-  const userName = activeOrganization?.name || 'Usuario';
+  // Obtener el nombre real del usuario (solo primer nombre)
+  const userName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario';
 
   if (!loaded || isLoading) {
     return <DashboardSkeleton />;
@@ -248,25 +254,25 @@ export default function MarketingDashboard() {
         <KPICard 
           icon={Eye}
           label="Alcance Total"
-          value={stats?.totalReach?.toLocaleString() || '0'}
-          change="+12%"
-          positive
+          value={stats?.totalReach ? stats.totalReach.toLocaleString() : '—'}
+          change={stats?.totalReach ? undefined : 'Conecta redes para ver'}
+          positive={!!stats?.totalReach}
           color="blue"
         />
         <KPICard 
           icon={Heart}
           label="Engagement"
-          value={`${stats?.engagementRate || '0'}%`}
-          change="+0.5%"
-          positive
+          value={stats?.engagementRate ? `${stats.engagementRate}%` : '—'}
+          change={stats?.engagementRate ? undefined : undefined}
+          positive={!!stats?.engagementRate}
           color="pink"
         />
         <KPICard 
           icon={Users}
           label="Seguidores"
-          value={stats?.totalFollowers?.toLocaleString() || '0'}
-          change="+23"
-          positive
+          value={stats?.totalFollowers ? stats.totalFollowers.toLocaleString() : '—'}
+          change={stats?.totalFollowers ? undefined : 'Conecta cuentas para ver'}
+          positive={!!stats?.totalFollowers}
           color="purple"
         />
         <KPICard 
@@ -337,10 +343,20 @@ export default function MarketingDashboard() {
                 <ActivityItem key={i} {...activity} />
               ))
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <RefreshCw className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Aún no hay actividad</p>
-                <p className="text-sm">Crea tu primer post para empezar</p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="font-medium text-gray-900 mb-1">Sin actividad aún</h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  Cuando publiques contenido, verás la actividad aquí
+                </p>
+                <Link href={`/app/${orgSlug}/marketing/content/create`}>
+                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                    <Sparkles className="w-4 h-4" />
+                    Crear primer post
+                  </button>
+                </Link>
               </div>
             )}
           </div>
@@ -502,13 +518,26 @@ function QuickAction({ href, icon: Icon, label, color }: any) {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="h-40 bg-gray-200 rounded-2xl" />
-      <div className="grid grid-cols-4 gap-4">
-        {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-200 rounded-xl" />)}
+      {/* Hero skeleton */}
+      <div className="h-40 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl" />
+      
+      {/* Progress bar skeleton */}
+      <div className="h-24 bg-gray-100 rounded-xl" />
+      
+      {/* Value section skeleton */}
+      <div className="h-32 bg-gray-100 rounded-xl" />
+      
+      {/* KPIs skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="h-28 bg-gray-100 rounded-xl" />
+        ))}
       </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="h-64 bg-gray-200 rounded-xl" />
-        <div className="h-64 bg-gray-200 rounded-xl" />
+      
+      {/* Two columns skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="h-64 bg-gray-100 rounded-xl" />
+        <div className="h-64 bg-gray-100 rounded-xl" />
       </div>
     </div>
   );

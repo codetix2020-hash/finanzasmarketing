@@ -39,10 +39,10 @@ export function SettingsMenu({
 								<Link
 									href={subitem.href}
 									className={cn(
-										"lg:-ml-0.5 flex items-center gap-2 border-b-2 py-1.5 text-sm lg:border-b-0 lg:border-l-2 lg:pl-2",
+										"lg:-ml-0.5 flex items-center gap-2 border-b-2 py-1.5 text-sm lg:border-b-0 lg:border-l-2 lg:pl-2 lg:rounded-r-lg transition-colors",
 										isActiveMenuItem(subitem.href)
-											? "border-primary font-bold"
-											: "border-transparent",
+											? "border-primary font-bold lg:bg-primary/10 lg:text-primary"
+											: "border-transparent hover:lg:bg-muted/50",
 									)}
 									data-active={isActiveMenuItem(subitem.href)}
 								>

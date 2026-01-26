@@ -9,12 +9,14 @@ import {
 	Calendar,
 	FileImage,
 	LayoutDashboard,
-	Megaphone,
+	MessageSquare,
 	Settings,
 	Sparkles,
-	TrendingUp,
+	Send,
+	Target,
+	Building2,
 	Plug,
-	CircleAlert,
+	CreditCard,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { PropsWithChildren } from "react";
@@ -40,12 +42,13 @@ export default async function MarketingLayout({
 
 	const menuItems = [
 		{
-			title: "Marketing",
+			title: "MarketingOS",
 			avatar: (
-				<OrganizationLogo
-					name={organization.name}
-					logoUrl={organization.logo}
-				/>
+				<div className="flex items-center gap-2">
+					<div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+						<BarChart3 className="w-5 h-5 text-white" />
+					</div>
+				</div>
 			),
 			items: [
 				{
@@ -56,24 +59,17 @@ export default async function MarketingLayout({
 				{
 					title: "Automatización",
 					href: `${marketingBasePath}/automation`,
-					icon: (
-						<div className="relative">
-							<Bot className="size-4 opacity-50" />
-							<span className="absolute -top-1 -right-1 flex h-2 w-2">
-								<span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-							</span>
-						</div>
-					),
+					icon: <Bot className="size-4 opacity-50" />,
 				},
 				{
 					title: "Asistente AI",
 					href: `${marketingBasePath}/assistant`,
 					icon: (
 						<div className="relative">
-							<Bot className="size-4 opacity-50" />
+							<MessageSquare className="size-4 opacity-50" />
 							<span className="absolute -top-1 -right-1 flex h-2 w-2">
-								<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-								<span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+								<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
+								<span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
 							</span>
 						</div>
 					),
@@ -81,7 +77,7 @@ export default async function MarketingLayout({
 				{
 					title: "Contenido",
 					href: `${marketingBasePath}/content`,
-					icon: <Megaphone className="size-4 opacity-50" />,
+					icon: <Sparkles className="size-4 opacity-50" />,
 				},
 				{
 					title: "Calendario",
@@ -91,7 +87,7 @@ export default async function MarketingLayout({
 				{
 					title: "Publicados",
 					href: `${marketingBasePath}/published`,
-					icon: <TrendingUp className="size-4 opacity-50" />,
+					icon: <Send className="size-4 opacity-50" />,
 				},
 				{
 					title: "Banco de Fotos",
@@ -101,24 +97,12 @@ export default async function MarketingLayout({
 				{
 					title: "SEO",
 					href: `${marketingBasePath}/seo`,
-					icon: (
-						<div className="relative">
-							<BarChart3 className="size-4 opacity-50" />
-							<span className="absolute -top-1 -right-1 flex h-2 w-2">
-								<span className="relative inline-flex h-2 w-2 rounded-full bg-muted"></span>
-							</span>
-						</div>
-					),
+					icon: <Target className="size-4 opacity-50" />,
 				},
 				{
 					title: "Analytics",
 					href: `${marketingBasePath}/analytics`,
 					icon: <BarChart3 className="size-4 opacity-50" />,
-				},
-				{
-					title: "Configuración",
-					href: `${marketingBasePath}/settings`,
-					icon: <Settings className="size-4 opacity-50" />,
 				},
 			],
 		},
@@ -127,40 +111,30 @@ export default async function MarketingLayout({
 			avatar: <Settings className="size-8 opacity-50" />,
 			items: [
 				{
-					title: "Perfil de empresa",
+					title: "Perfil empresa",
 					href: `${marketingBasePath}/profile`,
-					icon: (
-						<div className="relative">
-							<Sparkles className="size-4 opacity-50" />
-							{!isProfileComplete && (
-								<span className="absolute -top-1 -right-1 flex h-2 w-2">
-									<span className="relative inline-flex h-2 w-2 rounded-full bg-destructive"></span>
-								</span>
-							)}
-						</div>
-					),
+					icon: <Building2 className="size-4 opacity-50" />,
 				},
 				{
 					title: "Integraciones",
 					href: `/app/${organizationSlug}/settings/integrations`,
 					icon: <Plug className="size-4 opacity-50" />,
 				},
+				{
+					title: "Facturación",
+					href: `/app/${organizationSlug}/settings/billing`,
+					icon: <CreditCard className="size-4 opacity-50" />,
+				},
 			],
 		},
 	];
 
 	return (
-		<>
-			<PageHeader
-				title="Marketing"
-				subtitle="Gestiona tu contenido y campañas de marketing"
-			/>
-			<SidebarContentLayout
-				sidebar={<SettingsMenu menuItems={menuItems} />}
-			>
-				{children}
-			</SidebarContentLayout>
-		</>
+		<SidebarContentLayout
+			sidebar={<SettingsMenu menuItems={menuItems} />}
+		>
+			{children}
+		</SidebarContentLayout>
 	);
 }
 
