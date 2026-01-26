@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { organizationId, websiteUrl, keywords, competitors, analysisFrequency } = body;
+		const { organizationId, websiteUrl, keywords, competitors } = body;
 
 		if (!organizationId || !websiteUrl) {
 			return NextResponse.json(
@@ -40,16 +40,14 @@ export async function POST(request: NextRequest) {
 			where: { organizationId },
 			update: {
 				websiteUrl,
-				keywords: keywords || [],
+				targetKeywords: keywords || [],
 				competitors: competitors || [],
-				analysisFrequency: analysisFrequency || "weekly",
 			},
 			create: {
 				organizationId,
 				websiteUrl,
-				keywords: keywords || [],
+				targetKeywords: keywords || [],
 				competitors: competitors || [],
-				analysisFrequency: analysisFrequency || "weekly",
 			},
 		});
 
