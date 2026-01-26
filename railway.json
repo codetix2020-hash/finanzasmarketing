@@ -1,0 +1,10 @@
+{
+  "crons": [
+    {
+      "schedule": "0 */3 * * *",
+      "endpoint": "/api/cron/marketing-engine"
+    }
+  ]
+}
+
+
