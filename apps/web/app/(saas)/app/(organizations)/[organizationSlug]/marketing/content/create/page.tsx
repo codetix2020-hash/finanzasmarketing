@@ -13,8 +13,8 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
-import { useParams } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Calendar } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -69,6 +69,9 @@ export default function CreateContentPage() {
 	const [variations, setVariations] = useState<GeneratedVariation[]>([]);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
+	const [isPublishing, setIsPublishing] = useState(false);
+	const router = useRouter();
+	const orgSlug = organizationSlug;
 
 	const canProceedStep1 = contentType !== "";
 	const canProceedStep2 = platform !== "";
@@ -135,6 +138,134 @@ export default function CreateContentPage() {
 			setIsGenerating(false);
 		}
 	}
+
+	const handlePublishNow = async (variation: GeneratedVariation) => {
+		console.log('Publishing variation:', variation);
+		setIsPublishing(true);
+		
+		try {
+			// Paso 1: Crear el post
+			const createRes = await fetch('/api/marketing/posts', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					organizationSlug: orgSlug,
+					content: variation.text,
+					hashtags: variation.hashtags || [],
+					platform: platform || 'instagram',
+					status: 'draft',
+					imageUrl: imageUrl || undefined,
+				}),
+			});
+
+			console.log('Create response status:', createRes.status);
+
+			if (!createRes.ok) {
+				const errorData = await createRes.json();
+				throw new Error(errorData.error || 'Error al crear post');
+			}
+
+			const createData = await createRes.json();
+			const post = createData.post || createData;
+			console.log('Post created:', post);
+
+			// Paso 2: Publicar
+			const publishRes = await fetch(`/api/marketing/posts/${post.id}/publish`, {
+				method: 'POST',
+			});
+
+			console.log('Publish response status:', publishRes.status);
+
+			const publishData = await publishRes.json();
+			console.log('Publish result:', publishData);
+
+			if (publishData.success) {
+				toast.success('¡Publicado correctamente!');
+				router.push(`/app/${orgSlug}/marketing/content/calendar`);
+			} else if (publishData.needsManualPublish) {
+				toast.info(publishData.message);
+				// Mostrar modal con el contenido para copiar
+				alert('No hay cuenta de Instagram conectada. Copia el contenido y publícalo manualmente:\n\n' + variation.text);
+			} else {
+				toast.error(publishData.error || 'Error al publicar');
+			}
+
+		} catch (error: any) {
+			console.error('Error in handlePublishNow:', error);
+			toast.error(error.message || 'Error al publicar. Intenta de nuevo.');
+		} finally {
+			setIsPublishing(false);
+		}
+	};
+
+	const handleSchedule = async (variation: GeneratedVariation) => {
+		console.log('Scheduling variation:', variation);
+		
+		try {
+			const res = await fetch('/api/marketing/posts', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					organizationSlug: orgSlug,
+					content: variation.text,
+					hashtags: variation.hashtags || [],
+					platform: platform || 'instagram',
+					status: 'scheduled',
+					// Programar para mañana a las 10:00
+					scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+					imageUrl: imageUrl || undefined,
+				}),
+			});
+
+			console.log('Schedule response status:', res.status);
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.error || 'Error al programar');
+			}
+
+			const data = await res.json();
+			const post = data.post || data;
+			console.log('Post scheduled:', post);
+
+			toast.success('Post programado para mañana a las 10:00');
+			router.push(`/app/${orgSlug}/marketing/content/calendar`);
+
+		} catch (error: any) {
+			console.error('Error in handleSchedule:', error);
+			toast.error(error.message || 'Error al programar. Intenta de nuevo.');
+		}
+	};
+
+	const handleSaveDraft = async (variation: GeneratedVariation) => {
+		console.log('Saving draft:', variation);
+		
+		try {
+			const res = await fetch('/api/marketing/posts', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					organizationSlug: orgSlug,
+					content: variation.text,
+					hashtags: variation.hashtags || [],
+					platform: platform || 'instagram',
+					status: 'draft',
+					imageUrl: imageUrl || undefined,
+				}),
+			});
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.error || 'Error al guardar');
+			}
+
+			toast.success('Borrador guardado');
+
+		} catch (error: any) {
+			console.error('Error saving draft:', error);
+			toast.error(error.message || 'Error al guardar');
+		}
+	};
 
 	if (!loaded) {
 		return (
@@ -443,14 +574,38 @@ export default function CreateContentPage() {
 														</div>
 														{selectedVariation === idx && (
 															<div className="flex gap-2 pt-2 flex-wrap">
-																<Button size="sm" variant="outline">
-																	Editar
+																<Button 
+																	size="sm" 
+																	onClick={() => handlePublishNow(variation)}
+																	disabled={isPublishing}
+																	className="flex items-center gap-2"
+																>
+																	{isPublishing ? (
+																		<>
+																			<Loader2 className="w-4 h-4 animate-spin" />
+																			Publicando...
+																		</>
+																	) : (
+																		<>
+																			<Send className="w-4 h-4" />
+																			Publicar ahora
+																		</>
+																	)}
 																</Button>
-																<Button size="sm">Publicar ahora</Button>
-																<Button size="sm" variant="secondary">
+																<Button 
+																	size="sm" 
+																	variant="secondary"
+																	onClick={() => handleSchedule(variation)}
+																	className="flex items-center gap-2"
+																>
+																	<Calendar className="w-4 h-4" />
 																	Programar
 																</Button>
-																<Button size="sm" variant="ghost">
+																<Button 
+																	size="sm" 
+																	variant="ghost"
+																	onClick={() => handleSaveDraft(variation)}
+																>
 																	Guardar como borrador
 																</Button>
 															</div>
