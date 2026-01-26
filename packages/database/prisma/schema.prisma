@@ -261,6 +261,8 @@ model MediaLibrary {
   // IA
   aiTags          String[]  // tags generados por IA
   aiDescription   String?   // descripción generada por IA
+  isAiGenerated   Boolean   @default(false)  // si fue generada con IA
+  aiPrompt        String?   @db.Text  // prompt usado para generar
   
   // Uso
   usageCount      Int       @default(0)  // cuántas veces se ha usado
