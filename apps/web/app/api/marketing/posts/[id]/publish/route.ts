@@ -145,6 +145,46 @@ export async function POST(
 		try {
 			let result: { postId: string; url?: string };
 
+			// Intentar publicar via Publer (más confiable) si está configurado
+			if (post.platform === "instagram" && process.env.PUBLER_API_KEY && process.env.PUBLER_WORKSPACE_ID) {
+				try {
+					const publerResponse = await fetch('https://api.publer.io/v1/posts', {
+						method: 'POST',
+						headers: {
+							'Authorization': `Bearer ${process.env.PUBLER_API_KEY}`,
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							workspace_id: process.env.PUBLER_WORKSPACE_ID,
+							text: post.content + '\n\n' + post.hashtags.map(h => `#${h}`).join(' '),
+							media: post.mediaUrls && post.mediaUrls.length > 0 ? [{ url: post.mediaUrls[0] }] : [],
+							channels: ['instagram'],
+							publish_at: 'now',
+						}),
+					});
+
+					const publerData = await publerResponse.json();
+					console.log('Publer response:', publerData);
+
+					if (publerResponse.ok && publerData.id) {
+						await updateMarketingPost(id, {
+							status: 'published',
+							publishedAt: new Date(),
+							externalId: String(publerData.id),
+						});
+
+						return NextResponse.json({ 
+							success: true, 
+							message: 'Publicado via Publer',
+							post: await getMarketingPost(id),
+						});
+					}
+				} catch (publerError) {
+					console.error('Publer error:', publerError);
+					// Continuar con el método normal si Publer falla
+				}
+			}
+
 			if (post.platform === "instagram") {
 				if (!post.mediaUrls || post.mediaUrls.length === 0) {
 					throw new Error("Instagram requiere al menos una imagen");
