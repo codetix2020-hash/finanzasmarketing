@@ -13,9 +13,9 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Calendar } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Calendar, X, Image as ImageIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const CONTENT_TYPES = [
@@ -70,8 +70,29 @@ export default function CreateContentPage() {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
 	const [isPublishing, setIsPublishing] = useState(false);
+	const [selectedImages, setSelectedImages] = useState<Record<number, string>>({});
+	const [showImagePicker, setShowImagePicker] = useState<number | null>(null);
+	const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
 	const router = useRouter();
 	const orgSlug = organizationSlug;
+
+	// Cargar banco de fotos
+	useEffect(() => {
+		const loadMedia = async () => {
+			try {
+				const res = await fetch(`/api/marketing/media?organizationSlug=${orgSlug}`);
+				if (res.ok) {
+					const data = await res.json();
+					setMediaLibrary(Array.isArray(data) ? data : (data.media || []));
+				}
+			} catch (error) {
+				console.error('Error loading media:', error);
+			}
+		};
+		if (orgSlug) {
+			loadMedia();
+		}
+	}, [orgSlug]);
 
 	const canProceedStep1 = contentType !== "";
 	const canProceedStep2 = platform !== "";
@@ -139,7 +160,14 @@ export default function CreateContentPage() {
 		}
 	}
 
-	const handlePublishNow = async (variation: GeneratedVariation) => {
+	const handlePublishNow = async (variation: GeneratedVariation, index: number) => {
+		const imageUrl = selectedImages[index];
+		
+		if (!imageUrl && platform === 'instagram') {
+			toast.error('Instagram requiere una imagen. Haz click en el área de imagen para seleccionar una.');
+			return;
+		}
+		
 		console.log('Publishing variation:', variation);
 		setIsPublishing(true);
 		
@@ -180,7 +208,7 @@ export default function CreateContentPage() {
 			console.log('Publish result:', publishData);
 
 			if (publishData.success) {
-				toast.success('¡Publicado correctamente!');
+				toast.success('¡Publicado en Instagram!');
 				router.push(`/app/${orgSlug}/marketing/content/calendar`);
 			} else if (publishData.needsManualPublish) {
 				toast.info(publishData.message);
@@ -198,7 +226,14 @@ export default function CreateContentPage() {
 		}
 	};
 
-	const handleSchedule = async (variation: GeneratedVariation) => {
+	const handleSchedule = async (variation: GeneratedVariation, index: number) => {
+		const imageUrl = selectedImages[index];
+		
+		if (!imageUrl && platform === 'instagram') {
+			toast.error('Instagram requiere una imagen. Selecciona una antes de programar.');
+			return;
+		}
+
 		console.log('Scheduling variation:', variation);
 		
 		try {
@@ -211,9 +246,8 @@ export default function CreateContentPage() {
 					hashtags: variation.hashtags || [],
 					platform: platform || 'instagram',
 					status: 'scheduled',
-					// Programar para mañana a las 10:00
+					imageUrl: imageUrl,
 					scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-					imageUrl: imageUrl || undefined,
 				}),
 			});
 
@@ -228,7 +262,7 @@ export default function CreateContentPage() {
 			const post = data.post || data;
 			console.log('Post scheduled:', post);
 
-			toast.success('Post programado para mañana a las 10:00');
+			toast.success('Post programado para mañana');
 			router.push(`/app/${orgSlug}/marketing/content/calendar`);
 
 		} catch (error: any) {
@@ -497,22 +531,31 @@ export default function CreateContentPage() {
 															<MoreHorizontal className="w-5 h-5 text-gray-500" />
 														</div>
 														
-														{/* Image */}
-														<div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
-															{imageUrl ? (
-																<img
-																	src={imageUrl}
-																	alt="Post preview"
-																	className="w-full h-full object-cover rounded"
-																	onError={(e) => {
-																		(e.target as HTMLImageElement).style.display = 'none';
-																	}}
-																/>
+														{/* Image - clickeable para seleccionar */}
+														<div 
+															onClick={() => setShowImagePicker(idx)}
+															className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded flex flex-col items-center justify-center cursor-pointer hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all overflow-hidden relative"
+														>
+															{selectedImages[idx] ? (
+																<>
+																	<img 
+																		src={selectedImages[idx]} 
+																		alt="Imagen seleccionada" 
+																		className="w-full h-full object-cover"
+																		onError={(e) => {
+																			(e.target as HTMLImageElement).style.display = 'none';
+																		}}
+																	/>
+																	<div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+																		Cambiar
+																	</div>
+																</>
 															) : (
-																<div className="text-center p-4">
-																	<Sparkles className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-																	<p className="text-xs text-gray-500">Imagen</p>
-																</div>
+																<>
+																	<ImageIcon className="w-10 h-10 text-gray-400 dark:text-gray-500 mb-2" />
+																	<span className="text-sm text-gray-500 dark:text-gray-400">Click para añadir imagen</span>
+																	<span className="text-xs text-gray-400 dark:text-gray-500">Requerido para Instagram</span>
+																</>
 															)}
 														</div>
 														
@@ -576,7 +619,7 @@ export default function CreateContentPage() {
 															<div className="flex gap-2 pt-2 flex-wrap">
 																<Button 
 																	size="sm" 
-																	onClick={() => handlePublishNow(variation)}
+																	onClick={() => handlePublishNow(variation, idx)}
 																	disabled={isPublishing}
 																	className="flex items-center gap-2"
 																>
@@ -595,7 +638,7 @@ export default function CreateContentPage() {
 																<Button 
 																	size="sm" 
 																	variant="secondary"
-																	onClick={() => handleSchedule(variation)}
+																	onClick={() => handleSchedule(variation, idx)}
 																	className="flex items-center gap-2"
 																>
 																	<Calendar className="w-4 h-4" />
@@ -665,6 +708,71 @@ export default function CreateContentPage() {
 					</div>
 				</CardContent>
 			</Card>
+
+			{/* Modal de selección de imagen */}
+			{showImagePicker !== null && (
+				<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowImagePicker(null)}>
+					<div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+						<div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
+							<h3 className="font-semibold dark:text-white">Selecciona una imagen</h3>
+							<button onClick={() => setShowImagePicker(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+								<X className="w-5 h-5" />
+							</button>
+						</div>
+						
+						<div className="p-4 overflow-y-auto max-h-[60vh]">
+							{mediaLibrary.length > 0 ? (
+								<div className="grid grid-cols-3 gap-3">
+									{mediaLibrary.map((media: any) => (
+										<button
+											key={media.id}
+											onClick={() => {
+												setSelectedImages(prev => ({ ...prev, [showImagePicker]: media.fileUrl || media.url }));
+												setShowImagePicker(null);
+											}}
+											className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
+										>
+											<img src={media.fileUrl || media.url} alt="" className="w-full h-full object-cover" />
+										</button>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8">
+									<ImageIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+									<p className="text-gray-500 dark:text-gray-400 mb-4">No tienes imágenes en tu banco de fotos</p>
+									<button
+										onClick={() => router.push(`/app/${orgSlug}/marketing/media`)}
+										className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+									>
+										Subir imágenes
+									</button>
+								</div>
+							)}
+						</div>
+						
+						{/* Opción de URL externa */}
+						<div className="p-4 border-t dark:border-gray-700">
+							<p className="text-sm text-gray-500 dark:text-gray-400 mb-2">O pega una URL de imagen:</p>
+							<div className="flex gap-2">
+								<input
+									type="url"
+									placeholder="https://ejemplo.com/imagen.jpg"
+									className="flex-1 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm"
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											const url = (e.target as HTMLInputElement).value;
+											if (url) {
+												setSelectedImages(prev => ({ ...prev, [showImagePicker!]: url }));
+												setShowImagePicker(null);
+											}
+										}
+									}}
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
