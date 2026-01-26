@@ -2,6 +2,7 @@ import { getSession } from "@saas/auth/lib/server";
 import {
 	createMarketingPost,
 	getMarketingPosts,
+	getOrganizationBySlug,
 } from "@repo/database";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
 		const body = await request.json();
 		const {
 			organizationId,
+			organizationSlug,
 			content,
 			contentHtml,
 			mediaUrls,
@@ -72,20 +74,38 @@ export async function POST(request: NextRequest) {
 			scheduledAt,
 			aiGenerated,
 			aiPrompt,
+			imageUrl,
 		} = body;
 
-		if (!organizationId || !content || !platform) {
+		// Resolver organizationId desde organizationSlug si es necesario
+		let finalOrganizationId = organizationId;
+		if (organizationSlug && !finalOrganizationId) {
+			const org = await getOrganizationBySlug(organizationSlug);
+			if (!org) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+			finalOrganizationId = org.id;
+		}
+
+		if (!finalOrganizationId || !content || !platform) {
 			return NextResponse.json(
-				{ error: "organizationId, content y platform son requeridos" },
+				{ error: "organizationId (o organizationSlug), content y platform son requeridos" },
 				{ status: 400 },
 			);
 		}
 
+		console.log('Creating post:', { organizationId: finalOrganizationId, platform, status });
+
+		// Si hay imageUrl, agregarlo a mediaUrls
+		const finalMediaUrls = imageUrl 
+			? [...(mediaUrls || []), imageUrl]
+			: (mediaUrls || []);
+
 		const post = await createMarketingPost({
-			organizationId,
+			organizationId: finalOrganizationId,
 			content,
 			contentHtml,
-			mediaUrls: mediaUrls || [],
+			mediaUrls: finalMediaUrls,
 			mediaLibraryIds: mediaLibraryIds || [],
 			platform,
 			postType: postType || "feed",
@@ -99,6 +119,8 @@ export async function POST(request: NextRequest) {
 			aiPrompt,
 			createdBy: session.user.id,
 		});
+
+		console.log('Post created:', post.id);
 
 		return NextResponse.json({
 			success: true,
