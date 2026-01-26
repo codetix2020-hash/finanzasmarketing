@@ -161,10 +161,11 @@ export default function CreateContentPage() {
 	}
 
 	const handlePublishNow = async (variation: GeneratedVariation, index: number) => {
-		const imageUrl = selectedImages[index];
+		// Usar imagen de la variación o la seleccionada manualmente
+		const imageUrl = selectedImages[index] || (variation as any).imageUrl;
 		
 		if (!imageUrl && platform === 'instagram') {
-			toast.error('Instagram requiere una imagen. Haz click en el área de imagen para seleccionar una.');
+			toast.error('Instagram requiere una imagen. Esperando imagen generada...');
 			return;
 		}
 		
@@ -182,7 +183,7 @@ export default function CreateContentPage() {
 					hashtags: variation.hashtags || [],
 					platform: platform || 'instagram',
 					status: 'draft',
-					imageUrl: imageUrl || undefined,
+					imageUrl: imageUrl,
 				}),
 			});
 
@@ -227,10 +228,11 @@ export default function CreateContentPage() {
 	};
 
 	const handleSchedule = async (variation: GeneratedVariation, index: number) => {
-		const imageUrl = selectedImages[index];
+		// Usar imagen de la variación o la seleccionada manualmente
+		const imageUrl = selectedImages[index] || (variation as any).imageUrl;
 		
 		if (!imageUrl && platform === 'instagram') {
-			toast.error('Instagram requiere una imagen. Selecciona una antes de programar.');
+			toast.error('Instagram requiere una imagen. Esperando imagen generada...');
 			return;
 		}
 
@@ -531,31 +533,29 @@ export default function CreateContentPage() {
 															<MoreHorizontal className="w-5 h-5 text-gray-500" />
 														</div>
 														
-														{/* Image - clickeable para seleccionar */}
-														<div 
-															onClick={() => setShowImagePicker(idx)}
-															className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded flex flex-col items-center justify-center cursor-pointer hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700 transition-all overflow-hidden relative"
-														>
-															{selectedImages[idx] ? (
+														{/* Imagen generada */}
+														<div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded relative overflow-hidden">
+															{variation.imageUrl ? (
 																<>
 																	<img 
-																		src={selectedImages[idx]} 
-																		alt="Imagen seleccionada" 
+																		src={variation.imageUrl} 
+																		alt="Imagen generada" 
 																		className="w-full h-full object-cover"
 																		onError={(e) => {
 																			(e.target as HTMLImageElement).style.display = 'none';
 																		}}
 																	/>
-																	<div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+																	<div 
+																		onClick={() => setShowImagePicker(idx)}
+																		className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-blue-600"
+																	>
 																		Cambiar
 																	</div>
 																</>
 															) : (
-																<>
-																	<ImageIcon className="w-10 h-10 text-gray-400 dark:text-gray-500 mb-2" />
-																	<span className="text-sm text-gray-500 dark:text-gray-400">Click para añadir imagen</span>
-																	<span className="text-xs text-gray-400 dark:text-gray-500">Requerido para Instagram</span>
-																</>
+																<div className="w-full h-full flex items-center justify-center">
+																	<Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+																</div>
 															)}
 														</div>
 														
@@ -620,7 +620,7 @@ export default function CreateContentPage() {
 																<Button 
 																	size="sm" 
 																	onClick={() => handlePublishNow(variation, idx)}
-																	disabled={isPublishing}
+																	disabled={isPublishing || !(variation as any).imageUrl}
 																	className="flex items-center gap-2"
 																>
 																	{isPublishing ? (
@@ -639,6 +639,7 @@ export default function CreateContentPage() {
 																	size="sm" 
 																	variant="secondary"
 																	onClick={() => handleSchedule(variation, idx)}
+																	disabled={!(variation as any).imageUrl}
 																	className="flex items-center gap-2"
 																>
 																	<Calendar className="w-4 h-4" />
