@@ -14,7 +14,7 @@ import {
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
 import { Check, ChevronLeft, ChevronRight, Loader2, Pencil, Building2, Users, MessageSquare, Package, CheckCircle } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -134,6 +134,7 @@ type FormData = {
 
 export default function BusinessProfilePage() {
 	const params = useParams();
+	const router = useRouter();
 	const orgSlug = params.organizationSlug as string;
 	const { activeOrganization } = useActiveOrganization();
 	const [currentStep, setCurrentStep] = useState(0);
@@ -181,10 +182,11 @@ export default function BusinessProfilePage() {
 
 	useEffect(() => {
 		async function loadProfile() {
-			if (!activeOrganization?.id) return;
+			if (!activeOrganization?.id && !orgSlug) return;
 
 			try {
-				const res = await fetch(`/api/marketing/profile?organizationId=${activeOrganization.id}`);
+				const url = `/api/marketing/profile?${activeOrganization?.id ? `organizationId=${activeOrganization.id}` : `organizationSlug=${orgSlug}`}`;
+				const res = await fetch(url);
 				if (res.ok) {
 					const data = await res.json();
 					if (data.profile) {
@@ -237,7 +239,7 @@ export default function BusinessProfilePage() {
 								? profileData.marketingGoals
 								: [],
 							monthlyBudget: profileData.monthlyBudget?.toString() || "",
-							postingFrequency: "daily",
+							postingFrequency: profileData.contentPreferences?.postingFrequency || "daily",
 						});
 						setCompletedSteps(profileData.completedSteps || []);
 						setIsEditing(!profileData.isComplete);
@@ -251,10 +253,10 @@ export default function BusinessProfilePage() {
 		}
 
 		loadProfile();
-	}, [activeOrganization?.id]);
+	}, [activeOrganization?.id, orgSlug]);
 
-	async function saveProfile(isComplete = false) {
-		if (!activeOrganization?.id) {
+	async function saveProfile(isComplete = false, silent = false) {
+		if (!activeOrganization?.id && !orgSlug) {
 			toast.error("No se encontró la organización activa");
 			return;
 		}
@@ -285,7 +287,9 @@ export default function BusinessProfilePage() {
 					mainProducts = JSON.parse(formData.mainProducts);
 				}
 			} catch {
-				toast.error("Formato JSON inválido en productos");
+				if (!silent) {
+					toast.error("Formato JSON inválido en productos");
+				}
 				return;
 			}
 			try {
@@ -293,7 +297,9 @@ export default function BusinessProfilePage() {
 					services = JSON.parse(formData.services);
 				}
 			} catch {
-				toast.error("Formato JSON inválido en servicios");
+				if (!silent) {
+					toast.error("Formato JSON inválido en servicios");
+				}
 				return;
 			}
 
@@ -301,47 +307,49 @@ export default function BusinessProfilePage() {
 				postingFrequency: formData.postingFrequency,
 			};
 
+			const requestBody = {
+				...(activeOrganization?.id ? { organizationId: activeOrganization.id } : { organizationSlug: orgSlug }),
+				businessName: formData.businessName,
+				tagline: formData.tagline || null,
+				industry: formData.industry,
+				description: formData.description,
+				foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
+				location: formData.location || null,
+				phone: formData.phone || null,
+				email: formData.email || null,
+				websiteUrl: formData.websiteUrl || null,
+				instagramUrl: formData.instagramUrl || null,
+				facebookUrl: formData.facebookUrl || null,
+				tiktokUrl: formData.tiktokUrl || null,
+				linkedinUrl: formData.linkedinUrl || null,
+				targetAudience: formData.targetAudience,
+				ageRangeMin: formData.ageRangeMin ? parseInt(formData.ageRangeMin) : null,
+				ageRangeMax: formData.ageRangeMax ? parseInt(formData.ageRangeMax) : null,
+				targetGender: formData.targetGender || null,
+				targetLocations: targetLocationsArray,
+				customerPainPoints: formData.customerPainPoints || null,
+				brandPersonality: formData.brandPersonality,
+				toneOfVoice: formData.toneOfVoice,
+				useEmojis: formData.useEmojis,
+				emojiStyle: formData.emojiStyle,
+				wordsToUse: wordsToUseArray,
+				wordsToAvoid: wordsToAvoidArray,
+				hashtagsToUse: hashtagsToUseArray,
+				mainProducts,
+				services,
+				priceRange: formData.priceRange || null,
+				uniqueSellingPoint: formData.uniqueSellingPoint || null,
+				marketingGoals: formData.marketingGoals,
+				monthlyBudget: formData.monthlyBudget ? parseFloat(formData.monthlyBudget) : null,
+				contentPreferences,
+				...(isComplete !== undefined ? { isComplete } : {}),
+				completedSteps: completedSteps,
+			};
+
 			const res = await fetch("/api/marketing/profile", {
-				method: "PATCH",
+				method: isComplete ? "POST" : "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					organizationId: activeOrganization.id,
-					businessName: formData.businessName,
-					tagline: formData.tagline || null,
-					industry: formData.industry,
-					description: formData.description,
-					foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
-					location: formData.location || null,
-					phone: formData.phone || null,
-					email: formData.email || null,
-					websiteUrl: formData.websiteUrl || null,
-					instagramUrl: formData.instagramUrl || null,
-					facebookUrl: formData.facebookUrl || null,
-					tiktokUrl: formData.tiktokUrl || null,
-					linkedinUrl: formData.linkedinUrl || null,
-					targetAudience: formData.targetAudience,
-					ageRangeMin: formData.ageRangeMin ? parseInt(formData.ageRangeMin) : null,
-					ageRangeMax: formData.ageRangeMax ? parseInt(formData.ageRangeMax) : null,
-					targetGender: formData.targetGender || null,
-					targetLocations: targetLocationsArray,
-					customerPainPoints: formData.customerPainPoints || null,
-					brandPersonality: formData.brandPersonality,
-					toneOfVoice: formData.toneOfVoice,
-					useEmojis: formData.useEmojis,
-					emojiStyle: formData.emojiStyle,
-					wordsToUse: wordsToUseArray,
-					wordsToAvoid: wordsToAvoidArray,
-					hashtagsToUse: hashtagsToUseArray,
-					mainProducts,
-					services,
-					priceRange: formData.priceRange || null,
-					uniqueSellingPoint: formData.uniqueSellingPoint || null,
-					marketingGoals: formData.marketingGoals,
-					monthlyBudget: formData.monthlyBudget ? parseFloat(formData.monthlyBudget) : null,
-					contentPreferences,
-					isComplete,
-					completedSteps: completedSteps,
-				}),
+				body: JSON.stringify(requestBody),
 			});
 
 			const data = await res.json();
@@ -349,13 +357,26 @@ export default function BusinessProfilePage() {
 				throw new Error(data.error || "Error guardando perfil");
 			}
 
-			toast.success(isComplete ? "Perfil completado" : "Perfil guardado");
+			if (!silent) {
+				if (isComplete) {
+					toast.success("¡Perfil completado! Tu marketing automático está listo.");
+					// REDIRIGIR AL DASHBOARD
+					setTimeout(() => {
+						router.push(`/app/${orgSlug}/marketing/dashboard`);
+					}, 1000);
+				} else {
+					toast.success("Perfil guardado");
+				}
+			}
+
 			if (isComplete) {
 				setCompletedSteps(STEPS.map((s) => s.id));
 				setIsEditing(false);
 			}
+
 			// Recargar perfil
-			const res2 = await fetch(`/api/marketing/profile?organizationId=${activeOrganization.id}`);
+			const reloadUrl = `/api/marketing/profile?${activeOrganization?.id ? `organizationId=${activeOrganization.id}` : `organizationSlug=${orgSlug}`}`;
+			const res2 = await fetch(reloadUrl);
 			if (res2.ok) {
 				const data2 = await res2.json();
 				if (data2.profile) {
@@ -364,20 +385,25 @@ export default function BusinessProfilePage() {
 			}
 		} catch (error) {
 			console.error(error);
-			toast.error(error instanceof Error ? error.message : "Error guardando perfil");
+			if (!silent) {
+				toast.error(error instanceof Error ? error.message : "Error guardando perfil");
+			}
 		} finally {
 			setIsSaving(false);
 		}
 	}
 
-	function nextStep() {
+	async function nextStep() {
 		if (currentStep < STEPS.length - 1) {
-			setCurrentStep(currentStep + 1);
+			// Guardar datos del paso actual (auto-save silencioso)
 			const stepId = STEPS[currentStep].id;
 			if (!completedSteps.includes(stepId)) {
 				setCompletedSteps([...completedSteps, stepId]);
 			}
-			saveProfile(false);
+			// Auto-guardar sin mostrar toast
+			await saveProfile(false, true);
+			// Avanzar al siguiente paso
+			setCurrentStep(currentStep + 1);
 		}
 	}
 
@@ -1126,16 +1152,35 @@ export default function BusinessProfilePage() {
 						)}
 					</Button>
 					{currentStep < STEPS.length - 1 ? (
-						<Button onClick={nextStep}>
-							Siguiente
-							<ChevronRight className="h-4 w-4 ml-2" />
+						<Button onClick={nextStep} disabled={isSaving}>
+							{isSaving ? (
+								<>
+									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									Guardando...
+								</>
+							) : (
+								<>
+									Siguiente
+									<ChevronRight className="h-4 w-4 ml-2" />
+								</>
+							)}
 						</Button>
 					) : (
-						<Button onClick={() => saveProfile(true)} disabled={isSaving}>
+						<Button
+							onClick={() => saveProfile(true)}
+							disabled={isSaving}
+							className="bg-green-600 hover:bg-green-700"
+						>
 							{isSaving ? (
-								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								<>
+									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									Guardando...
+								</>
 							) : (
-								"Completar perfil"
+								<>
+									<Check className="h-4 w-4 mr-2" />
+									Completar configuración
+								</>
 							)}
 						</Button>
 					)}
