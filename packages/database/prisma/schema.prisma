@@ -789,6 +789,19 @@ model MarketingConfig {
   @@map("marketing_config")
 }
 
+model CronLog {
+  id          String   @id @default(cuid())
+  jobName     String
+  status      String   // running, completed, failed
+  results     String?  @db.Text
+  error       String?  @db.Text
+  executedAt  DateTime @default(now())
+  duration    Int?     // milliseconds
+
+  @@index([jobName, executedAt])
+  @@map("cron_log")
+}
+
 
 // ============================================
 // SOCIAL ACCOUNTS - MULTITENANT SYSTEM
