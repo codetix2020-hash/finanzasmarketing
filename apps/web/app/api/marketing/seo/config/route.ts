@@ -5,16 +5,44 @@ export async function GET(request: NextRequest) {
 	try {
 		const searchParams = request.nextUrl.searchParams;
 		const organizationId = searchParams.get("organizationId");
+		const organizationSlug = searchParams.get("organizationSlug");
 
-		if (!organizationId) {
-			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		let organization;
+
+		if (organizationSlug) {
+			organization = await prisma.organization.findFirst({
+				where: { slug: organizationSlug },
+			});
+			if (!organization) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+		} else if (organizationId) {
+			organization = await prisma.organization.findUnique({
+				where: { id: organizationId },
+			});
+			if (!organization) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+		} else {
+			return NextResponse.json({ error: "Missing organizationId or organizationSlug" }, { status: 400 });
 		}
 
 		const config = await prisma.seoConfig.findUnique({
-			where: { organizationId },
+			where: { organizationId: organization.id },
+			include: {
+				issues: {
+					orderBy: [
+						{ severity: 'asc' },
+						{ impactScore: 'desc' },
+					],
+				},
+			},
 		});
 
-		return NextResponse.json({ config });
+		return NextResponse.json({ 
+			config,
+			issues: config?.issues || []
+		});
 	} catch (error) {
 		console.error("Error fetching SEO config:", error);
 		return NextResponse.json(
