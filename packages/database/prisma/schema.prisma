@@ -157,6 +157,7 @@ model Organization {
   mediaLibrary          MediaLibrary[]
   seoConfig             SeoConfig?
   seoKeywords           SeoKeyword[]
+  seoIssues             SeoIssue[]
   socialAccounts        SocialAccount[]
   socialComments        SocialComment[]
   socialMessages        SocialMessage[]
@@ -296,13 +297,65 @@ model SeoConfig {
   targetKeywords  String[]  // keywords principales
   competitors     String[]  // URLs de competidores para comparar
   
+  // Plataforma del cliente
+  platform        String?   // wordpress, wix, shopify, squarespace, html, other
+  platformVersion String?
+  
   // Resultados del scan
   scanResults     Json?     // {issues: [], opportunities: [], scores: {}}
+  
+  // Relaciones
+  issues          SeoIssue[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
   @@map("seo_config")
+}
+
+// ============================================
+// SEO ISSUES - Problemas detectados con soluciones
+// ============================================
+model SeoIssue {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  seoConfigId     String
+  seoConfig       SeoConfig @relation(fields: [seoConfigId], references: [id], onDelete: Cascade)
+  
+  // Problema detectado
+  type            String    // meta-description, images, speed, headings, alt-text, etc.
+  severity        String    // critical, warning, info
+  title           String
+  description     String    @db.Text
+  
+  // Páginas afectadas
+  affectedUrls    String[]
+  affectedCount   Int
+  
+  // Impacto estimado
+  impactScore     Int       // 1-100
+  impactDescription String?
+  
+  // Solución generada
+  solution        String?   @db.Text  // Explicación
+  solutionCode    String?   @db.Text  // Código a copiar
+  solutionSteps   Json?     // Pasos detallados [{step, description, image?, video?}]
+  
+  // Estado
+  status          String    @default("pending") // pending, in_progress, fixed, ignored
+  fixedAt         DateTime?
+  verifiedAt      DateTime?
+  
+  // Plataforma específica
+  platformGuide   Json?     // {wordpress: [...], wix: [...], shopify: [...], html: [...]}
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([organizationId, status])
+  @@index([seoConfigId])
+  @@map("seo_issue")
 }
 
 // ============================================
