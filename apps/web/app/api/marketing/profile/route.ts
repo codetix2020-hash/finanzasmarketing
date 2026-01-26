@@ -44,23 +44,51 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { organizationId, ...data } = body;
+		const { organizationId, organizationSlug, ...profileData } = body;
 
-		if (!organizationId) {
-			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		let orgId = organizationId;
+
+		// Si se proporciona organizationSlug, obtener el organizationId
+		if (organizationSlug && !orgId) {
+			const org = await getOrganizationBySlug(organizationSlug);
+			if (!org) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+			orgId = org.id;
 		}
 
-		const profile = await updateBusinessProfile(organizationId, {
-			...data,
-			isComplete: false,
-			completedSteps: [],
+		if (!orgId) {
+			return NextResponse.json(
+				{ error: "Missing organizationId or organizationSlug" },
+				{ status: 400 },
+			);
+		}
+
+		// Verificar si el perfil está completo (todos los campos obligatorios)
+		const isComplete = Boolean(
+			profileData.businessName &&
+			profileData.industry &&
+			profileData.description &&
+			profileData.targetAudience &&
+			profileData.brandPersonality &&
+			Array.isArray(profileData.brandPersonality) &&
+			profileData.brandPersonality.length > 0 &&
+			profileData.toneOfVoice &&
+			profileData.marketingGoals &&
+			Array.isArray(profileData.marketingGoals) &&
+			profileData.marketingGoals.length > 0
+		);
+
+		const profile = await updateBusinessProfile(orgId, {
+			...profileData,
+			isComplete,
 		});
 
-		return NextResponse.json({ profile });
-	} catch (error) {
-		console.error("Error creating business profile:", error);
+		return NextResponse.json({ profile, success: true });
+	} catch (error: any) {
+		console.error("Error saving business profile:", error);
 		return NextResponse.json(
-			{ error: "Error creating business profile" },
+			{ error: error.message || "Error saving business profile" },
 			{ status: 500 },
 		);
 	}
@@ -69,19 +97,51 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { organizationId, ...data } = body;
+		const { organizationId, organizationSlug, ...profileData } = body;
 
-		if (!organizationId) {
-			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		let orgId = organizationId;
+
+		// Si se proporciona organizationSlug, obtener el organizationId
+		if (organizationSlug && !orgId) {
+			const org = await getOrganizationBySlug(organizationSlug);
+			if (!org) {
+				return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+			}
+			orgId = org.id;
 		}
 
-		const profile = await updateBusinessProfile(organizationId, data);
+		if (!orgId) {
+			return NextResponse.json(
+				{ error: "Missing organizationId or organizationSlug" },
+				{ status: 400 },
+			);
+		}
 
-		return NextResponse.json({ profile });
-	} catch (error) {
+		// Si no se pasa isComplete explícitamente, calcularlo
+		if (profileData.isComplete === undefined) {
+			// Obtener perfil actual para verificar campos obligatorios
+			const currentProfile = await getBusinessProfile(orgId);
+			const isComplete = Boolean(
+				(profileData.businessName || currentProfile?.businessName) &&
+				(profileData.industry || currentProfile?.industry) &&
+				(profileData.description || currentProfile?.description) &&
+				(profileData.targetAudience || currentProfile?.targetAudience) &&
+				((profileData.brandPersonality && Array.isArray(profileData.brandPersonality) && profileData.brandPersonality.length > 0) ||
+					(currentProfile?.brandPersonality && Array.isArray(currentProfile.brandPersonality) && currentProfile.brandPersonality.length > 0)) &&
+				(profileData.toneOfVoice || currentProfile?.toneOfVoice) &&
+				((profileData.marketingGoals && Array.isArray(profileData.marketingGoals) && profileData.marketingGoals.length > 0) ||
+					(currentProfile?.marketingGoals && Array.isArray(currentProfile.marketingGoals) && currentProfile.marketingGoals.length > 0))
+			);
+			profileData.isComplete = isComplete;
+		}
+
+		const profile = await updateBusinessProfile(orgId, profileData);
+
+		return NextResponse.json({ profile, success: true });
+	} catch (error: any) {
 		console.error("Error updating business profile:", error);
 		return NextResponse.json(
-			{ error: "Error updating business profile" },
+			{ error: error.message || "Error updating business profile" },
 			{ status: 500 },
 		);
 	}
