@@ -3,6 +3,566 @@
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { Button } from "@ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
+import { Calendar, Check, Heart, Loader2, MessageCircle, MoreHorizontal, Send, Sparkles, Bookmark, ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+
+// Paso 1: Categorías visuales
+const CONTENT_CATEGORIES = [
+  { 
+    id: "surprise", 
+    label: "✨ Sorpréndeme", 
+    description: "La IA elige el mejor contenido para hoy",
+    color: "from-purple-500 to-pink-500",
+    recommended: true,
+  },
+  { 
+    id: "promotional", 
+    label: "🛍️ Promocionar", 
+    description: "Destacar productos o servicios",
+    color: "from-green-500 to-emerald-500",
+  },
+  { 
+    id: "educational", 
+    label: "📚 Educar", 
+    description: "Tips y conocimiento para tu audiencia",
+    color: "from-blue-500 to-cyan-500",
+  },
+  { 
+    id: "entertaining", 
+    label: "🎉 Entretener", 
+    description: "Contenido cercano y divertido",
+    color: "from-yellow-500 to-orange-500",
+  },
+  { 
+    id: "behind-scenes", 
+    label: "🎬 Detrás de escenas", 
+    description: "Mostrar el lado humano",
+    color: "from-pink-500 to-rose-500",
+  },
+  { 
+    id: "engagement", 
+    label: "💬 Generar conversación", 
+    description: "Posts para interactuar con tu audiencia",
+    color: "from-indigo-500 to-purple-500",
+  },
+];
+
+interface GeneratedVariation {
+  text: string;
+  hashtags: string[];
+  hook?: string;
+  callToAction?: string;
+  bestTimeToPost?: string;
+  contentType?: string;
+  imageUrl?: string;
+}
+
+export default function CreateContentPage() {
+  const params = useParams();
+  const organizationSlug = params.organizationSlug as string;
+  const { activeOrganization, loaded } = useActiveOrganization();
+
+  const [step, setStep] = useState(1);
+  const [contentType, setContentType] = useState<string>("surprise");
+
+  const [variations, setVariations] = useState<GeneratedVariation[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const router = useRouter();
+  const orgSlug = organizationSlug;
+
+  const canProceedStep1 = contentType !== "";
+
+  async function handleGenerate() {
+    if (!orgSlug || !contentType) return;
+
+    setIsGenerating(true);
+    setVariations([]);
+    setSelectedVariation(null);
+
+    try {
+      const res = await fetch("/api/marketing/content/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationSlug: orgSlug,
+          contentType,
+          customTopic: undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (data?.redirectTo) {
+          toast.error(data?.error || "Primero debes completar el perfil de tu empresa");
+          router.push(data.redirectTo);
+          return;
+        }
+        throw new Error(data?.error || data?.message || "No se pudo generar contenido");
+      }
+
+      if (data.variations && Array.isArray(data.variations)) {
+        setVariations(data.variations);
+      }
+
+      setStep(2);
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Error generando contenido");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  const handlePublishNow = async (variation: GeneratedVariation, index: number) => {
+    const imageUrl = variation.imageUrl;
+    
+    if (!imageUrl) {
+      toast.error("Instagram requiere una imagen. Esperando imagen generada...");
+      return;
+    }
+    
+    console.log("Publishing variation:", variation);
+    setIsPublishing(true);
+    
+    try {
+      // Paso 1: Crear el post
+      const createRes = await fetch("/api/marketing/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationSlug: orgSlug,
+          content: variation.text,
+          hashtags: variation.hashtags || [],
+          platform: "instagram",
+          status: "draft",
+          imageUrl: imageUrl,
+        }),
+      });
+
+      console.log("Create response status:", createRes.status);
+
+      if (!createRes.ok) {
+        const errorData = await createRes.json();
+        throw new Error(errorData.error || "Error al crear post");
+      }
+
+      const createData = await createRes.json();
+      const post = createData.post || createData;
+      console.log("Post created:", post);
+
+      // Paso 2: Publicar
+      const publishRes = await fetch(`/api/marketing/posts/${post.id}/publish`, {
+        method: "POST",
+      });
+
+      console.log("Publish response status:", publishRes.status);
+
+      const publishData = await publishRes.json();
+      console.log("Publish result:", publishData);
+
+      if (publishData.success) {
+        toast.success("¡Publicado en Instagram!");
+        router.push(`/app/${orgSlug}/marketing/content/calendar`);
+      } else if (publishData.needsManualPublish) {
+        toast.info(publishData.message);
+        alert(
+          "No hay cuenta de Instagram conectada. Copia el contenido y publícalo manualmente:\n\n" +
+            variation.text,
+        );
+      } else {
+        toast.error(publishData.error || "Error al publicar");
+      }
+    } catch (error: any) {
+      console.error("Error in handlePublishNow:", error);
+      toast.error(error.message || "Error al publicar. Intenta de nuevo.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleSchedule = async (variation: GeneratedVariation, index: number) => {
+    const imageUrl = variation.imageUrl;
+    
+    if (!imageUrl) {
+      toast.error("Instagram requiere una imagen. Esperando imagen generada...");
+      return;
+    }
+
+    console.log("Scheduling variation:", variation);
+    
+    try {
+      const res = await fetch("/api/marketing/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationSlug: orgSlug,
+          content: variation.text,
+          hashtags: variation.hashtags || [],
+          platform: "instagram",
+          status: "scheduled",
+          imageUrl: imageUrl,
+          scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }),
+      });
+
+      console.log("Schedule response status:", res.status);
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Error al programar");
+      }
+
+      const data = await res.json();
+      const post = data.post || data;
+      console.log("Post scheduled:", post);
+
+      toast.success("Post programado para mañana");
+      router.push(`/app/${orgSlug}/marketing/content/calendar`);
+    } catch (error: any) {
+      console.error("Error in handleSchedule:", error);
+      toast.error(error.message || "Error al programar. Intenta de nuevo.");
+    }
+  };
+
+  const handleSaveDraft = async (variation: GeneratedVariation) => {
+    console.log("Saving draft:", variation);
+    
+    try {
+      const res = await fetch("/api/marketing/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationSlug: orgSlug,
+          content: variation.text,
+          hashtags: variation.hashtags || [],
+          platform: "instagram",
+          status: "draft",
+          imageUrl: variation.imageUrl || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Error al guardar");
+      }
+
+      toast.success("Borrador guardado");
+    } catch (error: any) {
+      console.error("Error saving draft:", error);
+      toast.error(error.message || "Error al guardar");
+    }
+  };
+
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const accountName =
+    activeOrganization?.name?.toLowerCase().replace(/\s+/g, "") || "tunegocio";
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Crear contenido</h1>
+          <p className="text-muted-foreground mt-2">
+            La IA analiza tu perfil de empresa y genera contenido listo para publicar.
+          </p>
+        </div>
+      </div>
+
+      {/* Progress indicator */}
+      <div className="flex items-center gap-2">
+        {[1, 2].map((s) => (
+          <div key={s} className="flex items-center gap-2">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                s < step
+                  ? "bg-primary text-primary-foreground"
+                  : s === step
+                  ? "bg-primary/20 text-primary border-2 border-primary"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {s < step ? <Check className="h-4 w-4" /> : s}
+            </div>
+            {s < 2 && (
+              <div
+                className={`h-1 w-12 ${
+                  s < step ? "bg-primary" : "bg-muted"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {step === 1 && "Elige el tipo de contenido"}
+            {step === 2 && "Variaciones generadas para tu empresa"}
+          </CardTitle>
+          <CardDescription>
+            {step === 1 && "Basado al 100% en tu perfil de empresa. Sin escribir nada."}
+            {step === 2 && "Elige una variación y publícala o prográmala en Instagram."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Paso 1: Categoría de contenido */}
+          {step === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {CONTENT_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setContentType(category.id)}
+                  className={`relative p-4 rounded-xl border-2 text-left transition-all bg-gradient-to-br ${category.color} ${
+                    contentType === category.id
+                      ? "border-white shadow-lg scale-[1.02]"
+                      : "border-transparent opacity-90 hover:opacity-100 hover:scale-[1.01]"
+                  }`}
+                >
+                  <div className="absolute inset-0 rounded-xl bg-black/10" />
+                  <div className="relative space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-semibold text-white">
+                        {category.label}
+                      </span>
+                      {category.recommended && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-white/20 text-white border border-white/30">
+                          Recomendado
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/90">
+                      {category.description}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Paso 2: Variaciones generadas */}
+          {step === 2 && (
+            <div className="space-y-4">
+              {isGenerating ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <div className="relative">
+                    <Sparkles className="h-12 w-12 animate-pulse text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary absolute -top-2 -right-2" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="font-medium">Analizando tu negocio...</p>
+                    <p className="text-sm text-muted-foreground animate-pulse">
+                      Generando ideas personalizadas...
+                    </p>
+                  </div>
+                </div>
+              ) : variations.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {variations.map((variation, idx) => {
+                    const caption = variation.text;
+                    const hashtagsText = variation.hashtags.join(" ");
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className={`space-y-4 transition-all ${
+                          selectedVariation === idx
+                            ? "ring-2 ring-primary rounded-lg p-2"
+                            : ""
+                        }`}
+                      >
+                        {/* Instagram Mockup */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-2 max-w-[320px] mx-auto border border-gray-200 dark:border-gray-700">
+                          {/* Header */}
+                          <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                                {accountName.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="font-semibold text-sm">@{accountName}</span>
+                            </div>
+                            <MoreHorizontal className="w-5 h-5 text-gray-500" />
+                          </div>
+                          
+                          {/* Imagen generada */}
+                          <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded relative overflow-hidden">
+                            {variation.imageUrl ? (
+                              <img 
+                                src={variation.imageUrl} 
+                                alt="Imagen generada" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-4 p-3">
+                            <Heart className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                            <MessageCircle className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                            <Send className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                            <div className="flex-1" />
+                            <Bookmark className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                          </div>
+                          
+                          {/* Caption */}
+                          <div className="px-3 pb-3">
+                            <p className="text-sm">
+                              <span className="font-semibold">@{accountName}</span>{" "}
+                              {caption.length > 100 ? `${caption.substring(0, 100)}...` : caption}
+                            </p>
+                            {hashtagsText && (
+                              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                                {hashtagsText.length > 50 ? `${hashtagsText.substring(0, 50)}...` : hashtagsText}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Text Preview */}
+                        <Card
+                          className={`cursor-pointer transition-all ${
+                            selectedVariation === idx
+                              ? "border-primary border-2"
+                              : ""
+                          }`}
+                          onClick={() => setSelectedVariation(idx)}
+                        >
+                          <CardHeader>
+                            <CardTitle className="text-sm">Variación {idx + 1}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="bg-muted p-4 rounded-lg">
+                              <p className="whitespace-pre-wrap text-sm">
+                                {variation.text}
+                              </p>
+                              {variation.hashtags.length > 0 && (
+                                <div className="mt-2 pt-2 border-t">
+                                  <div className="flex flex-wrap gap-1">
+                                    {variation.hashtags.map((tag, tagIdx) => (
+                                      <span
+                                        key={tagIdx}
+                                        className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {selectedVariation === idx && (
+                              <div className="flex gap-2 pt-2 flex-wrap">
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handlePublishNow(variation, idx)}
+                                  disabled={isPublishing || !variation.imageUrl}
+                                  className="flex items-center gap-2"
+                                >
+                                  {isPublishing ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Publicando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="w-4 h-4" />
+                                      Publicar ahora
+                                    </>
+                                  )}
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="secondary"
+                                  onClick={() => handleSchedule(variation, idx)}
+                                  disabled={!variation.imageUrl}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Calendar className="w-4 h-4" />
+                                  Programar
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => handleSaveDraft(variation)}
+                                >
+                                  Guardar como borrador
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No se generaron variaciones
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Navigation buttons */}
+          <div className="flex justify-between pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setStep(1)}
+              disabled={step === 1}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Anterior
+            </Button>
+
+            {step === 1 && (
+              <Button
+                onClick={handleGenerate}
+                disabled={!canProceedStep1 || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generar contenido
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+"use client";
+
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { Button } from "@ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
 import { Input } from "@ui/components/input";
 import { Label } from "@ui/components/label";
 import {
