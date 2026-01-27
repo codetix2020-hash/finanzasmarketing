@@ -7,6 +7,38 @@ const anthropic = new Anthropic();
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
+// Buscar foto propia que coincida con el contenido
+async function getBrandPhoto(
+  organizationId: string, 
+  contentType: string, 
+  searchTerms: string[]
+): Promise<string | null> {
+  try {
+    // Buscar fotos que coincidan con el tipo de contenido o tags
+    const photos = await prisma.brandPhoto.findMany({
+      where: {
+        organizationId,
+        OR: [
+          { useFor: { hasSome: [contentType] } },
+          { tags: { hasSome: searchTerms } },
+          { category: contentType },
+        ],
+      },
+    });
+
+    if (photos.length > 0) {
+      // Seleccionar una aleatoria para variedad
+      const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+      console.log('Using brand photo:', randomPhoto.description || randomPhoto.url);
+      return randomPhoto.url;
+    }
+  } catch (err) {
+    console.error('Error fetching brand photos:', err);
+  }
+  
+  return null;
+}
+
 // Obtener imagen de stock de Pexels usando query personalizado de Claude
 async function getStockImage(customQuery: string, fallbackIndustry: string): Promise<string> {
   // Usar el query personalizado de Claude, o fallback a industria
@@ -188,21 +220,29 @@ Responde SOLO con JSON válido (sin markdown):
 
     const variations = parsed.variations || [];
 
-    // OBTENER IMÁGENES - Usar queries específicos generados por Claude
+    // OBTENER IMÁGENES - PRIORIDAD: Fotos propias primero, luego stock
     const variationsWithImages = await Promise.all(
       variations.map(async (variation: any, index: number) => {
-        // Usar el query específico que Claude generó para este post
-        const imageUrl = await getStockImage(
+        // PRIORIDAD 1: Foto propia del negocio
+        const brandPhoto = await getBrandPhoto(
+          organization.id,
+          variation.style || contentType || 'promotional',
+          variation.imageSearchQuery?.split(' ') || []
+        );
+        
+        if (brandPhoto) {
+          console.log(`Variation ${index}: Using BRAND photo`);
+          return { ...variation, imageUrl: brandPhoto, isOwnPhoto: true };
+        }
+        
+        // PRIORIDAD 2: Stock de Pexels
+        const stockPhoto = await getStockImage(
           variation.imageSearchQuery,
           profile.industry || 'business'
         );
         
-        console.log(`Variation ${index}: Query="${variation.imageSearchQuery}" URL=${imageUrl}`);
-
-        return {
-          ...variation,
-          imageUrl,
-        };
+        console.log(`Variation ${index}: Using stock photo - Query="${variation.imageSearchQuery}"`);
+        return { ...variation, imageUrl: stockPhoto, isOwnPhoto: false };
       })
     );
 

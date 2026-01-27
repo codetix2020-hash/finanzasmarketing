@@ -95,6 +95,11 @@ export default async function MarketingLayout({
 					icon: <FileImage className="size-4 opacity-50" />,
 				},
 				{
+					title: "Fotos de Marca",
+					href: `${marketingBasePath}/brand-photos`,
+					icon: <FileImage className="size-4 opacity-50" />,
+				},
+				{
 					title: "SEO",
 					href: `${marketingBasePath}/seo`,
 					icon: <Target className="size-4 opacity-50" />,
