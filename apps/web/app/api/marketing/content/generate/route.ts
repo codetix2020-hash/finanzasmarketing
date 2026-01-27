@@ -7,34 +7,82 @@ const anthropic = new Anthropic();
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// Buscar imagen de stock profesional en Unsplash (SIEMPRE FUNCIONA)
+// Obtener imagen de stock de Pexels (URLs directas que Instagram puede descargar)
 async function getStockImage(contentType: string, industry: string): Promise<string> {
-  const searchTerms: Record<string, string[]> = {
-    'direct': ['business meeting', 'team success', 'modern office', 'laptop workspace'],
-    'storytelling': ['coffee shop work', 'creative team', 'startup office', 'entrepreneur'],
-    'educational': ['notebook desk', 'learning workspace', 'professional planning', 'strategy meeting'],
-    'promotional': ['product showcase', 'business professional', 'modern technology', 'success celebration'],
-    'default': ['business professional', 'modern workspace', 'team collaboration', 'office lifestyle'],
+  const searchQueries: Record<string, string[]> = {
+    'direct': ['business meeting', 'office team', 'professional work', 'success'],
+    'storytelling': ['coffee work', 'creative office', 'startup', 'entrepreneur laptop'],
+    'educational': ['desk notebook', 'workspace', 'planning', 'computer work'],
+    'promotional': ['business', 'technology', 'modern office', 'professional'],
+    'default': ['business office', 'professional workspace', 'team work', 'modern desk'],
   };
 
-  const industryTerms: Record<string, string> = {
-    'technology': 'tech,software,computer',
-    'desarrollo web': 'coding,developer,laptop',
-    'marketing': 'marketing,creative,digital',
-    'diseño': 'design,creative,minimal',
-    'default': 'business,professional,modern',
+  const industryQueries: Record<string, string> = {
+    'technology': 'technology computer',
+    'desarrollo web': 'coding laptop',
+    'marketing': 'marketing digital',
+    'diseño': 'design creative',
+    'default': 'business professional',
   };
 
-  const contentTerms = searchTerms[contentType] || searchTerms['default'];
-  const randomTerm = contentTerms[Math.floor(Math.random() * contentTerms.length)];
-  const industryTerm = industryTerms[industry?.toLowerCase()] || industryTerms['default'];
-
-  // Unsplash Source API - fotos REALES de fotógrafos profesionales
-  const query = encodeURIComponent(`${randomTerm},${industryTerm}`);
-  const timestamp = Date.now();
+  const queries = searchQueries[contentType] || searchQueries['default'];
+  const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+  const industryQuery = industryQueries[industry?.toLowerCase()] || industryQueries['default'];
   
-  // Esta URL SIEMPRE devuelve una imagen real
-  return `https://source.unsplash.com/1080x1080/?${query}&t=${timestamp}`;
+  const fullQuery = `${randomQuery} ${industryQuery}`;
+
+  // Intentar con Pexels primero (URLs directas)
+  if (process.env.PEXELS_API_KEY) {
+    try {
+      const response = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(fullQuery)}&per_page=15&orientation=square`,
+        {
+          headers: {
+            'Authorization': process.env.PEXELS_API_KEY,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.photos && data.photos.length > 0) {
+          // Seleccionar foto aleatoria
+          const randomIndex = Math.floor(Math.random() * data.photos.length);
+          const photo = data.photos[randomIndex];
+          
+          // Usar URL directa de la imagen (large2x es ~1200px, perfecto para Instagram)
+          const directUrl = photo.src.large2x || photo.src.large || photo.src.original;
+          console.log('Pexels direct URL:', directUrl);
+          return directUrl;
+        }
+      }
+    } catch (err) {
+      console.error('Pexels API error:', err);
+    }
+  }
+
+  // Fallback: Resolver el redirect de Unsplash manualmente
+  try {
+    const unsplashUrl = `https://source.unsplash.com/1080x1080/?${encodeURIComponent(fullQuery)}`;
+    const response = await fetch(unsplashUrl, { 
+      method: 'HEAD',
+      redirect: 'follow' 
+    });
+    
+    // La URL final después del redirect es la imagen directa
+    if (response.url && response.url.includes('images.unsplash.com')) {
+      console.log('Unsplash resolved URL:', response.url);
+      return response.url;
+    }
+  } catch (err) {
+    console.error('Unsplash resolve error:', err);
+  }
+
+  // Fallback final: Picsum (siempre funciona, URLs directas)
+  const picsum = `https://picsum.photos/1080/1080?random=${Date.now()}`;
+  console.log('Using Picsum fallback:', picsum);
+  return picsum;
 }
 
 export async function POST(request: NextRequest) {
