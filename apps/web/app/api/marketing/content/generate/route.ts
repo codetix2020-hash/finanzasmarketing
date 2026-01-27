@@ -40,20 +40,23 @@ async function getBrandPhoto(
 }
 
 // Obtener imagen de stock de Pexels usando query personalizado de Claude
-async function getStockImage(customQuery: string, fallbackIndustry: string): Promise<string> {
-  // Usar el query personalizado de Claude, o fallback a industria
-  const searchQuery = customQuery || `${fallbackIndustry} business`;
+async function getStockImage(customQuery: string, industry: string): Promise<string> {
+  // Limpiar y mejorar el query
+  let searchQuery = customQuery || `${industry} business`;
   
-  console.log('Pexels search query:', searchQuery);
+  // Agregar términos que mejoran calidad en Pexels
+  const qualityTerms = ['minimal', 'professional', 'modern'];
+  const randomQuality = qualityTerms[Math.floor(Math.random() * qualityTerms.length)];
+  searchQuery = `${searchQuery} ${randomQuality}`;
+  
+  console.log('Pexels search:', searchQuery);
 
   if (process.env.PEXELS_API_KEY) {
     try {
       const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=15&orientation=square`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=20&orientation=square`,
         {
-          headers: {
-            'Authorization': process.env.PEXELS_API_KEY,
-          },
+          headers: { 'Authorization': process.env.PEXELS_API_KEY },
         }
       );
 
@@ -61,38 +64,23 @@ async function getStockImage(customQuery: string, fallbackIndustry: string): Pro
         const data = await response.json();
         
         if (data.photos && data.photos.length > 0) {
-          const randomIndex = Math.floor(Math.random() * data.photos.length);
-          const photo = data.photos[randomIndex];
-          const directUrl = photo.src.large2x || photo.src.large || photo.src.original;
-          console.log('Pexels image found:', directUrl);
-          return directUrl;
+          // Filtrar fotos muy pequeñas
+          const goodPhotos = data.photos.filter((p: any) => p.width >= 1000);
+          const photos = goodPhotos.length > 0 ? goodPhotos : data.photos;
+          
+          const randomIndex = Math.floor(Math.random() * Math.min(photos.length, 10));
+          const photo = photos[randomIndex];
+          
+          return photo.src.large2x || photo.src.large || photo.src.original;
         }
       }
     } catch (err) {
-      console.error('Pexels API error:', err);
+      console.error('Pexels error:', err);
     }
   }
 
-  // Fallback: Resolver el redirect de Unsplash manualmente
-  try {
-    const unsplashUrl = `https://source.unsplash.com/1080x1080/?${encodeURIComponent(searchQuery)}`;
-    const response = await fetch(unsplashUrl, { 
-      method: 'HEAD',
-      redirect: 'follow' 
-    });
-    
-    if (response.url && response.url.includes('images.unsplash.com')) {
-      console.log('Unsplash resolved URL:', response.url);
-      return response.url;
-    }
-  } catch (err) {
-    console.error('Unsplash resolve error:', err);
-  }
-
-  // Fallback final: Picsum (siempre funciona, URLs directas)
-  const picsum = `https://picsum.photos/1080/1080?random=${Date.now()}`;
-  console.log('Using Picsum fallback:', picsum);
-  return picsum;
+  // Fallback
+  return `https://picsum.photos/1080/1080?random=${Date.now()}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -118,78 +106,65 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // PROMPT QUE PIENSA COMO HUMANO
-    const prompt = `Eres un Social Media Manager profesional con 5 años de experiencia manejando cuentas de empresas en Instagram.
+    // PROMPT MEJORADO - MÁS HUMANO
+    const prompt = `Eres un Social Media Manager freelance con 8 años de experiencia. Manejas la cuenta de Instagram de esta empresa y te pagan por resultados.
 
-EMPRESA QUE MANEJAS:
+EMPRESA:
 - Nombre: ${profile.businessName}
+- Qué hacen: ${profile.description}
 - Industria: ${profile.industry}
-- Descripción: ${profile.description}
-- Público objetivo: ${profile.targetAudience || 'Empresas y emprendedores'}
-- Tono de voz: ${profile.toneOfVoice || 'Profesional pero cercano'}
-- Usa emojis: ${profile.useEmojis ? 'Sí, con moderación' : 'Muy pocos o ninguno'}
+- Público: ${profile.targetAudience || 'No especificado'}
+- Tono: ${profile.toneOfVoice || 'Profesional pero cercano'}
+- Emojis: ${profile.useEmojis ? 'Sí, con moderación' : 'Muy pocos'}
+- Propuesta única: ${profile.uniqueSellingPoint || 'No especificada'}
+- Productos/Servicios: ${profile.mainProducts ? JSON.stringify(profile.mainProducts) : profile.services ? JSON.stringify(profile.services) : 'No especificado'}
 
-TU TAREA:
-${contentType && contentType !== 'auto' 
-  ? `Crear un post de tipo: ${contentType}` 
-  : 'Decidir qué tipo de post sería más efectivo hoy'}
-${topic ? `Tema específico: ${topic}` : 'Elige un tema relevante basándote en la empresa'}
+${topic ? `TEMA DEL POST: ${topic}` : 'TEMA: Elige tú el mejor tema para hoy basándote en la empresa'}
+${contentType && contentType !== 'auto' ? `TIPO: ${contentType}` : 'TIPO: Decide qué tipo de post funcionará mejor'}
 
-PIENSA COMO LO HARÍA UN HUMANO:
-1. ¿Qué quiero que mi audiencia sienta/haga al ver este post?
-2. ¿Qué gancho uso para captar atención en los primeros 2 segundos?
-3. ¿Cómo escribo esto de forma natural, no robótica?
-4. ¿Qué call-to-action tiene sentido?
+CÓMO ESCRIBES TÚ (un humano real):
+- Escribes como si hablaras con un amigo que tiene un negocio
+- NUNCA empiezas con emoji + pregunta retórica (eso es de bots)
+- Usas frases cortas. Párrafos de 1-2 líneas máximo.
+- El gancho es TODO. Si no enganchas en 1 segundo, pierdes.
+- Cuentas mini-historias reales o creíbles
+- El CTA es natural, no forzado
 
-REGLAS DE UN BUEN SOCIAL MEDIA MANAGER:
-- NUNCA escribas como IA (nada de "En el mundo actual...", "¿Sabías que...?", "Es importante destacar...")
-- Escribe como hablarías con un cliente en persona
-- Usa frases cortas y directas
-- El primer párrafo es el gancho - hazlo irresistible
-- Los hashtags van al final, no interrumpen el texto
-- Máximo 5-7 hashtags relevantes, no spam
-- Si usas emojis, que sean naturales, no al inicio de cada línea
+PROHIBIDO (esto delata que es IA):
+- "¿Sabías que...?" como inicio
+- "En el mundo actual..." / "En la era digital..."
+- "¡Descubre cómo...!" 
+- "Es importante destacar que..."
+- Emojis al inicio de cada línea 🚀💡✨
+- Más de 3 hashtags seguidos
+- Preguntas retóricas obvias
 
-EJEMPLOS DE LO QUE NO QUIERO (típico de IA):
-❌ "🚀 ¿Tienes una idea brillante pero no sabes cómo llevarla al mundo digital? 💡"
-❌ "En la era digital actual, es fundamental..."
-❌ "¡Descubre cómo transformar tu negocio!"
+EJEMPLOS BUENOS (copia este estilo):
+---
+"3 semanas. Eso tardamos en lanzar la app de María.
+Ella tenía la idea hace 2 años. Nosotros la ejecutamos en 21 días.
+¿Tienes algo guardado en notas del móvil? Hablemos."
+---
+"No voy a mentirte: el 80% de los proyectos web fallan.
+Pero no por la tecnología. Fallan porque nadie validó la idea antes de construir.
+Nosotros primero preguntamos, después programamos."
+---
+"Cliente real, historia real:
+Llegó con un Excel de 47 pestañas. 'Es mi sistema de reservas', dijo.
+Hoy tiene una app. Tarda 10 segundos en lo que antes tardaba 10 minutos."
+---
 
-EJEMPLOS DE LO QUE SÍ QUIERO (humano real):
-✅ "La semana pasada un cliente nos dijo: 'Tengo la idea, pero no sé por dónde empezar'. Le construimos su app en 3 semanas."
-✅ "Esto es lo que nadie te cuenta sobre lanzar un producto digital..."
-✅ "Pregunta honesta: ¿cuántas ideas tienes guardadas en notas del móvil que nunca ejecutaste?"
+Genera 3 variaciones MUY diferentes entre sí.
 
-SOBRE LA IMAGEN (imageSearchQuery):
-Piensa como un Social Media Manager buscando la foto PERFECTA en Pexels/Unsplash.
-- La foto debe ser ESPECÍFICA para esta empresa y este post
-- NO uses términos genéricos como "business" o "professional"
-- USA términos que describan exactamente lo que debería mostrar la foto
-- El query debe estar en INGLÉS (Pexels funciona mejor en inglés)
-- 3-5 palabras máximo, muy específicas
-
-EJEMPLOS por industria:
-- Si la empresa es una PANADERÍA y el post habla de croissants → "fresh croissants bakery display"
-- Si la empresa es de DESARROLLO WEB y el post habla de apps → "smartphone app interface hand"
-- Si la empresa es un RESTAURANTE y el post habla de reservas → "restaurant table reservation elegant"
-- Si la empresa es un GIMNASIO y el post habla de resultados → "before after fitness transformation"
-
-La foto debe COMPLEMENTAR el texto, no ser genérica.
-
-Genera EXACTAMENTE 3 variaciones diferentes. Cada una con enfoque distinto:
-1. Una más directa/vendedora
-2. Una más storytelling/emocional  
-3. Una más educativa/valor
-
-Responde SOLO con JSON válido (sin markdown):
+JSON (sin markdown, sin backticks):
 {
   "variations": [
     {
-      "text": "El texto completo del post (SIN hashtags en el texto)",
-      "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
-      "hook": "El gancho principal en 5 palabras",
+      "text": "texto del post SIN hashtags",
+      "hashtags": ["sin#", "maximo5"],
+      "hook": "gancho en 5 palabras",
       "style": "direct|storytelling|educational",
-      "imageSearchQuery": "query específico para buscar la foto perfecta en un banco de imágenes (en inglés, 3-5 palabras, MUY específico para esta empresa y este post)"
+      "imageSearchQuery": "query en inglés para Pexels, 3-4 palabras, específico para ESTA empresa"
     }
   ]
 }`;

@@ -55,6 +55,7 @@ export default function CreateContentPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['instagram']);
 
   const canProceedStep1 = contentType !== "";
   const canGenerate = contentType !== "";
@@ -98,53 +99,57 @@ export default function CreateContentPage() {
   }
 
   const handlePublishNow = async (variation: GeneratedVariation, index: number) => {
-    if (!variation.imageUrl && platform === 'instagram') {
-      toast.error('Instagram requiere una imagen. Espera a que se genere.');
+    if (!variation.imageUrl) {
+      toast.error('Se requiere una imagen para publicar.');
+      return;
+    }
+
+    if (selectedPlatforms.length === 0) {
+      toast.error('Selecciona al menos una plataforma');
       return;
     }
 
     setIsPublishing(true);
-
-    try {
-      // Crear post
-      const createRes = await fetch('/api/marketing/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organizationSlug,
-          content: variation.text,
-          hashtags: variation.hashtags || [],
-          platform,
-          status: 'draft',
-          imageUrl: variation.imageUrl,
-        }),
-      });
-
-      if (!createRes.ok) {
-        const errorData = await createRes.json();
-        throw new Error(errorData.error || 'Error al crear post');
+    
+    const results: any[] = [];
+    const caption = `${variation.text}\n\n${variation.hashtags?.map((h: string) => 
+      h.startsWith('#') ? h : `#${h}`
+    ).join(' ') || ''}`;
+    
+    for (const platform of selectedPlatforms) {
+      try {
+        const response = await fetch('/api/marketing/posts/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            organizationSlug,
+            platform,
+            caption,
+            imageUrl: variation.imageUrl,
+          }),
+        });
+        
+        const result = await response.json();
+        results.push({ platform, success: response.ok, ...result });
+        
+        if (response.ok) {
+          toast.success(`Publicado en ${platform}`);
+        } else {
+          toast.error(`${platform}: ${result.error || 'Error'}`);
+        }
+      } catch (err: any) {
+        results.push({ platform, success: false, error: err.message });
+        toast.error(`${platform}: ${err.message || 'Error'}`);
       }
-
-      const createData = await createRes.json();
-      const post = createData.post || createData;
-
-      // Publicar
-      const publishRes = await fetch(`/api/marketing/posts/${post.id}/publish`, {
-        method: 'POST',
-      });
-
-      const publishData = await publishRes.json();
-
-      if (publishData.success) {
-        toast.success('¡Publicado correctamente!');
+    }
+    
+    setIsPublishing(false);
+    
+    // Si al menos una publicación fue exitosa, redirigir
+    if (results.some(r => r.success)) {
+      setTimeout(() => {
         router.push(`/app/${organizationSlug}/marketing/content/calendar`);
-      } else {
-        toast.error(publishData.error || 'Error al publicar');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Error al publicar');
-    } finally {
-      setIsPublishing(false);
+      }, 1500);
     }
   };
 
@@ -348,6 +353,41 @@ export default function CreateContentPage() {
 
                       {/* Actions */}
                       <div className="p-3 border-t space-y-2">
+                        {/* Platform Selection */}
+                        <div className="flex gap-3 mb-2 text-xs">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedPlatforms.includes('instagram')}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                if (e.target.checked) {
+                                  setSelectedPlatforms([...selectedPlatforms, 'instagram']);
+                                } else {
+                                  setSelectedPlatforms(selectedPlatforms.filter(p => p !== 'instagram'));
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            Instagram
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedPlatforms.includes('facebook')}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                if (e.target.checked) {
+                                  setSelectedPlatforms([...selectedPlatforms, 'facebook']);
+                                } else {
+                                  setSelectedPlatforms(selectedPlatforms.filter(p => p !== 'facebook'));
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            Facebook
+                          </label>
+                        </div>
                         <Button
                           size="sm"
                           className="w-full"
@@ -355,7 +395,7 @@ export default function CreateContentPage() {
                             e.stopPropagation();
                             handlePublishNow(variation, idx);
                           }}
-                          disabled={isPublishing || !variation.imageUrl}
+                          disabled={isPublishing || !variation.imageUrl || selectedPlatforms.length === 0}
                         >
                           {isPublishing ? (
                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
