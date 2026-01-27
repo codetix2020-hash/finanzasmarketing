@@ -7,35 +7,17 @@ const anthropic = new Anthropic();
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// Obtener imagen de stock de Pexels (URLs directas que Instagram puede descargar)
-async function getStockImage(contentType: string, industry: string): Promise<string> {
-  const searchQueries: Record<string, string[]> = {
-    'direct': ['business meeting', 'office team', 'professional work', 'success'],
-    'storytelling': ['coffee work', 'creative office', 'startup', 'entrepreneur laptop'],
-    'educational': ['desk notebook', 'workspace', 'planning', 'computer work'],
-    'promotional': ['business', 'technology', 'modern office', 'professional'],
-    'default': ['business office', 'professional workspace', 'team work', 'modern desk'],
-  };
-
-  const industryQueries: Record<string, string> = {
-    'technology': 'technology computer',
-    'desarrollo web': 'coding laptop',
-    'marketing': 'marketing digital',
-    'diseño': 'design creative',
-    'default': 'business professional',
-  };
-
-  const queries = searchQueries[contentType] || searchQueries['default'];
-  const randomQuery = queries[Math.floor(Math.random() * queries.length)];
-  const industryQuery = industryQueries[industry?.toLowerCase()] || industryQueries['default'];
+// Obtener imagen de stock de Pexels usando query personalizado de Claude
+async function getStockImage(customQuery: string, fallbackIndustry: string): Promise<string> {
+  // Usar el query personalizado de Claude, o fallback a industria
+  const searchQuery = customQuery || `${fallbackIndustry} business`;
   
-  const fullQuery = `${randomQuery} ${industryQuery}`;
+  console.log('Pexels search query:', searchQuery);
 
-  // Intentar con Pexels primero (URLs directas)
   if (process.env.PEXELS_API_KEY) {
     try {
       const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(fullQuery)}&per_page=15&orientation=square`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=15&orientation=square`,
         {
           headers: {
             'Authorization': process.env.PEXELS_API_KEY,
@@ -47,13 +29,10 @@ async function getStockImage(contentType: string, industry: string): Promise<str
         const data = await response.json();
         
         if (data.photos && data.photos.length > 0) {
-          // Seleccionar foto aleatoria
           const randomIndex = Math.floor(Math.random() * data.photos.length);
           const photo = data.photos[randomIndex];
-          
-          // Usar URL directa de la imagen (large2x es ~1200px, perfecto para Instagram)
           const directUrl = photo.src.large2x || photo.src.large || photo.src.original;
-          console.log('Pexels direct URL:', directUrl);
+          console.log('Pexels image found:', directUrl);
           return directUrl;
         }
       }
@@ -64,13 +43,12 @@ async function getStockImage(contentType: string, industry: string): Promise<str
 
   // Fallback: Resolver el redirect de Unsplash manualmente
   try {
-    const unsplashUrl = `https://source.unsplash.com/1080x1080/?${encodeURIComponent(fullQuery)}`;
+    const unsplashUrl = `https://source.unsplash.com/1080x1080/?${encodeURIComponent(searchQuery)}`;
     const response = await fetch(unsplashUrl, { 
       method: 'HEAD',
       redirect: 'follow' 
     });
     
-    // La URL final después del redirect es la imagen directa
     if (response.url && response.url.includes('images.unsplash.com')) {
       console.log('Unsplash resolved URL:', response.url);
       return response.url;
@@ -150,6 +128,22 @@ EJEMPLOS DE LO QUE SÍ QUIERO (humano real):
 ✅ "Esto es lo que nadie te cuenta sobre lanzar un producto digital..."
 ✅ "Pregunta honesta: ¿cuántas ideas tienes guardadas en notas del móvil que nunca ejecutaste?"
 
+SOBRE LA IMAGEN (imageSearchQuery):
+Piensa como un Social Media Manager buscando la foto PERFECTA en Pexels/Unsplash.
+- La foto debe ser ESPECÍFICA para esta empresa y este post
+- NO uses términos genéricos como "business" o "professional"
+- USA términos que describan exactamente lo que debería mostrar la foto
+- El query debe estar en INGLÉS (Pexels funciona mejor en inglés)
+- 3-5 palabras máximo, muy específicas
+
+EJEMPLOS por industria:
+- Si la empresa es una PANADERÍA y el post habla de croissants → "fresh croissants bakery display"
+- Si la empresa es de DESARROLLO WEB y el post habla de apps → "smartphone app interface hand"
+- Si la empresa es un RESTAURANTE y el post habla de reservas → "restaurant table reservation elegant"
+- Si la empresa es un GIMNASIO y el post habla de resultados → "before after fitness transformation"
+
+La foto debe COMPLEMENTAR el texto, no ser genérica.
+
 Genera EXACTAMENTE 3 variaciones diferentes. Cada una con enfoque distinto:
 1. Una más directa/vendedora
 2. Una más storytelling/emocional  
@@ -162,7 +156,8 @@ Responde SOLO con JSON válido (sin markdown):
       "text": "El texto completo del post (SIN hashtags en el texto)",
       "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
       "hook": "El gancho principal en 5 palabras",
-      "style": "direct|storytelling|educational"
+      "style": "direct|storytelling|educational",
+      "imageSearchQuery": "query específico para buscar la foto perfecta en un banco de imágenes (en inglés, 3-5 palabras, MUY específico para esta empresa y este post)"
     }
   ]
 }`;
@@ -193,16 +188,16 @@ Responde SOLO con JSON válido (sin markdown):
 
     const variations = parsed.variations || [];
 
-    // OBTENER IMÁGENES - SIEMPRE usar Unsplash (fotos reales que Instagram puede descargar)
+    // OBTENER IMÁGENES - Usar queries específicos generados por Claude
     const variationsWithImages = await Promise.all(
       variations.map(async (variation: any, index: number) => {
-        // SIEMPRE usar Unsplash - fotos reales que Instagram puede descargar
+        // Usar el query específico que Claude generó para este post
         const imageUrl = await getStockImage(
-          variation.style || contentType || 'promotional',
-          profile.industry || 'technology'
+          variation.imageSearchQuery,
+          profile.industry || 'business'
         );
         
-        console.log(`Variation ${index}: Stock photo URL:`, imageUrl);
+        console.log(`Variation ${index}: Query="${variation.imageSearchQuery}" URL=${imageUrl}`);
 
         return {
           ...variation,
