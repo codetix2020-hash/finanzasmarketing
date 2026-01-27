@@ -1,72 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { prisma } from "@repo/database";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
     const { prompt, organizationSlug, postContent } = await request.json();
 
-    console.log('Generating image with DALL-E 3:', prompt?.slice(0, 50));
+    console.log("Generating image with Nano Banana:", prompt?.slice(0, 50));
 
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
     });
 
-    if (!organization) {
-      return NextResponse.json({ error: "Org not found" }, { status: 404 });
-    }
+    const profile = organization
+      ? await prisma.businessProfile.findUnique({
+          where: { organizationId: organization.id },
+        })
+      : null;
 
-    const profile = await prisma.businessProfile.findUnique({
-      where: { organizationId: organization.id },
-    });
-
-    // Crear prompt para DALL-E
-    const imagePrompt = prompt || `Professional social media image for ${profile?.industry || 'technology'} company. 
-Modern, clean design. Theme: ${postContent?.slice(0, 100) || profile?.description || 'business services'}.
-Style: Professional photography, high quality, vibrant colors, suitable for Instagram.
+    const imagePrompt =
+      prompt ||
+      `Professional Instagram post image for ${
+        profile?.industry || "technology"
+      } company.
+Theme: ${
+        postContent?.slice(0, 150) ||
+        profile?.description ||
+        "modern business"
+      }
+Style: Clean, professional, eye-catching, vibrant colors, suitable for social media.
 DO NOT include any text, words, or letters in the image.`;
 
     let imageUrl: string;
 
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.GOOGLE_AI_API_KEY) {
       try {
-        const response = await openai.images.generate({
-          model: "dall-e-3",
-          prompt: imagePrompt,
-          n: 1,
-          size: "1024x1024",
-          quality: "standard",
+        const response = await genai.models.generateContent({
+          model: "gemini-2.5-flash-preview-05-20",
+          contents: imagePrompt,
+          config: {
+            responseModalities: ["image", "text"],
+          },
         });
 
-        imageUrl = response.data[0].url!;
-        console.log('DALL-E 3 generated:', imageUrl);
+        for (const part of response.candidates?.[0]?.content?.parts || []) {
+          if ((part as any).inlineData) {
+            const inlineData = (part as any).inlineData as {
+              data: string;
+              mimeType?: string;
+            };
+            const base64 = inlineData.data;
+            const mimeType = inlineData.mimeType || "image/png";
+            imageUrl = `data:${mimeType};base64,${base64}`;
+            break;
+          }
+        }
 
-      } catch (dalleError: any) {
-        console.error('DALL-E error:', dalleError.message);
-        // Fallback a Picsum
-        const seed = Date.now();
-        imageUrl = `https://picsum.photos/seed/${seed}/1080/1080`;
+        if (!imageUrl) {
+          throw new Error("No image in response");
+        }
+
+        console.log("Nano Banana generated image successfully");
+      } catch (geminiError: any) {
+        console.error("Nano Banana error:", geminiError.message);
+
+        if (process.env.OPENAI_API_KEY) {
+          const OpenAIModule = await import("openai");
+          const OpenAI = OpenAIModule.default;
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+          const dalleResponse = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: imagePrompt,
+            n: 1,
+            size: "1024x1024",
+          });
+
+          imageUrl = dalleResponse.data[0].url!;
+        } else {
+          imageUrl = `https://picsum.photos/seed/${Date.now()}/1080/1080`;
+        }
       }
+    } else if (process.env.OPENAI_API_KEY) {
+      const OpenAIModule = await import("openai");
+      const OpenAI = OpenAIModule.default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: imagePrompt,
+        n: 1,
+        size: "1024x1024",
+      });
+
+      imageUrl = response.data[0].url!;
     } else {
-      // Fallback a Picsum
-      const seed = Date.now();
-      imageUrl = `https://picsum.photos/seed/${seed}/1080/1080`;
+      imageUrl = `https://picsum.photos/seed/${Date.now()}/1080/1080`;
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       imageUrl,
       success: true,
     });
-
   } catch (error: any) {
     console.error("Error generating image:", error);
-    const seed = Date.now();
     return NextResponse.json({
-      imageUrl: `https://picsum.photos/seed/${seed}/1080/1080`,
+      imageUrl: `https://picsum.photos/seed/${Date.now()}/1080/1080`,
       error: error.message,
       isFallback: true,
     });
