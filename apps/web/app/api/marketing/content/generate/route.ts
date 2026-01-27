@@ -1,205 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const anthropic = new Anthropic();
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
-// Función para crear prompts de imagen más realistas
-function createRealisticImagePrompt(
-  industry: string,
-  contentText: string,
-  contentType: string
-): string {
-  // Extraer tema principal del texto (primeras palabras clave)
-  const keywords = contentText
-    .slice(0, 100)
-    .replace(/[^\w\s]/g, '')
-    .split(' ')
-    .filter(w => w.length > 4)
-    .slice(0, 3)
-    .join(' ');
-
-  // Mapeo de industrias a escenas fotográficas realistas
-  const industryScenes: Record<string, string[]> = {
-    'technology': [
-      'modern minimalist office workspace with laptop and coffee, natural lighting through window',
-      'hands typing on MacBook in cozy cafe, shallow depth of field, warm tones',
-      'team meeting in bright modern office, candid moment, professional photography',
-      'smartphone on wooden desk with plants, flat lay, clean aesthetic',
-    ],
-    'marketing': [
-      'creative team brainstorming with sticky notes on glass wall, natural light',
-      'laptop showing analytics dashboard, coffee cup beside, morning light',
-      'professional workspace with notebook and pen, minimal style',
-      'hands holding smartphone showing social media app, blurred background',
-    ],
-    'desarrollo web': [
-      'developer workspace with multiple monitors showing code, ambient lighting',
-      'MacBook on clean white desk, minimalist setup, natural light',
-      'close-up of hands on keyboard, code on screen, shallow depth of field',
-      'modern home office setup, plants and natural elements, cozy atmosphere',
-    ],
-    'default': [
-      'professional business meeting, natural candid moment, soft lighting',
-      'modern workspace with laptop, coffee and notebook, clean aesthetic',
-      'team collaboration in bright office space, authentic moment',
-      'hands working on laptop, minimalist desk setup, warm tones',
-    ],
+// Buscar imagen de stock profesional en Unsplash
+async function getStockImage(contentType: string, industry: string): Promise<string> {
+  // Mapeo de tipo de contenido a búsquedas de stock realistas
+  const searchTerms: Record<string, string[]> = {
+    'promotional': ['product photography', 'business professional', 'modern office', 'team success'],
+    'educational': ['laptop workspace', 'notebook pen', 'learning study', 'professional desk'],
+    'entertaining': ['coffee break', 'team celebration', 'office fun', 'workspace lifestyle'],
+    'behind-scenes': ['team meeting', 'office candid', 'workspace real', 'business casual'],
+    'tips': ['checklist notebook', 'organized desk', 'planning strategy', 'professional advice'],
+    'news': ['business newspaper', 'announcement celebration', 'milestone achievement', 'company growth'],
   };
 
-  // Seleccionar escena aleatoria para la industria
-  const scenes = industryScenes[industry.toLowerCase()] || industryScenes['default'];
-  const randomScene = scenes[Math.floor(Math.random() * scenes.length)];
+  const industryTerms: Record<string, string> = {
+    'technology': 'tech,software,digital',
+    'desarrollo web': 'coding,developer,programming',
+    'marketing': 'marketing,creative,strategy',
+    'diseño': 'design,creative,minimal',
+    'consultoría': 'business,consulting,professional',
+    'default': 'business,professional,modern',
+  };
 
-  // Construir prompt realista
-  return `Professional stock photography style image. ${randomScene}. 
+  const contentTerms = searchTerms[contentType] || searchTerms['promotional'];
+  const randomTerm = contentTerms[Math.floor(Math.random() * contentTerms.length)];
+  const industryTerm = industryTerms[industry.toLowerCase()] || industryTerms['default'];
 
-STYLE REQUIREMENTS:
-- Shot on Canon EOS R5 or Sony A7IV
-- Natural lighting, not artificial or neon
-- Realistic colors, not oversaturated
-- Clean, minimalist composition
-- Professional but warm and approachable
-- Could be from Unsplash or Shutterstock premium
-- NO digital art, NO illustrations, NO 3D renders
-- NO glowing effects, NO neon colors, NO futuristic elements
-- NO text, NO logos, NO watermarks
-- Photorealistic only
-
-The image should look like it was taken by a professional photographer for a business magazine or premium stock photo site.`;
+  // Unsplash Source API - imágenes reales de fotógrafos profesionales
+  const query = encodeURIComponent(`${randomTerm},${industryTerm}`);
+  const timestamp = Date.now(); // Para evitar caché y obtener variedad
+  
+  return `https://source.unsplash.com/1080x1080/?${query}&${timestamp}`;
 }
 
-// Función para obtener imágenes de stock reales de Unsplash
-async function getStockImage(keywords: string): Promise<string> {
-  // Unsplash Source API (gratuito, imágenes reales)
-  const searchTerms = encodeURIComponent(keywords);
-  
-  // Usar Unsplash con términos específicos de negocio
-  const url = `https://source.unsplash.com/1080x1080/?${searchTerms},business,professional,minimal`;
-  
-  // Hacer request para obtener URL final (Unsplash redirige)
+// Buscar en el banco de fotos del usuario primero
+async function getUserImage(organizationId: string): Promise<string | null> {
   try {
-    const response = await fetch(url, { redirect: 'follow' });
-    return response.url;
-  } catch {
-    return url;
-  }
-}
+    const media = await prisma.mediaLibrary.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
 
-// Función para generar imagen
-async function generateImage(prompt: string, index: number): Promise<string> {
-  // Primero intentar con AI (Nano Banana)
-  if (process.env.GOOGLE_AI_API_KEY) {
-    try {
-      const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-exp",
-        generationConfig: { responseModalities: ["image", "text"] } as any,
-      });
-
-      if (index > 0) await new Promise(r => setTimeout(r, 3000));
-
-      const result = await model.generateContent(prompt);
-      for (const part of result.response.candidates?.[0]?.content?.parts || []) {
-        if ((part as any).inlineData) {
-          const inlineData = (part as any).inlineData;
-          return `data:${inlineData.mimeType};base64,${inlineData.data}`;
-        }
-      }
-    } catch (err: any) {
-      console.error(`Gemini error for image ${index}:`, err.message);
-      // Continuar con fallback
+    if (media.length > 0) {
+      // Seleccionar una imagen aleatoria del banco del usuario
+      const randomMedia = media[Math.floor(Math.random() * media.length)];
+      return randomMedia.fileUrl;
     }
+  } catch (err) {
+    console.error('Error fetching user media:', err);
   }
-
-  // Segundo intento: DALL-E 3
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const OpenAI = (await import('openai')).default;
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      if (index > 0) await new Promise(r => setTimeout(r, 2000));
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-      });
-      return response.data[0].url!;
-    } catch (err: any) {
-      console.error(`DALL-E error:`, err.message);
-      // Continuar con fallback
-    }
-  }
-
-  // Fallback: usar imágenes de stock reales de Unsplash
-  console.log('Using stock photos from Unsplash as fallback');
-  const keywords = prompt
-    .match(/\b(office|workspace|laptop|team|meeting|coffee|desk|business|professional|modern|minimalist)\b/gi)
-    ?.slice(0, 3)
-    .join(',') || 'business,professional';
-    
-  return await getStockImage(keywords);
-}
-  if (process.env.GOOGLE_AI_API_KEY) {
-    try {
-      const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-exp",
-        generationConfig: { responseModalities: ["image", "text"] } as any,
-      });
-
-      if (index > 0) await new Promise(r => setTimeout(r, 3000));
-
-      const result = await model.generateContent(prompt);
-      for (const part of result.response.candidates?.[0]?.content?.parts || []) {
-        if ((part as any).inlineData) {
-          const inlineData = (part as any).inlineData;
-          return `data:${inlineData.mimeType};base64,${inlineData.data}`;
-        }
-      }
-    } catch (err: any) {
-      console.error(`Gemini error for image ${index}:`, err.message);
-    }
-  }
-
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const OpenAI = (await import('openai')).default;
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      if (index > 0) await new Promise(r => setTimeout(r, 2000));
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-      });
-      return response.data[0].url!;
-    } catch (err: any) {
-      console.error(`DALL-E error:`, err.message);
-    }
-  }
-
-  return `https://picsum.photos/seed/${Date.now() + index}/1080/1080`;
+  return null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { organizationSlug, contentType, customTopic } = await request.json();
+    const { organizationSlug, topic, contentType, platform } = await request.json();
 
-    // 1. OBTENER ORGANIZACIÓN
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
     });
 
     if (!organization) {
-      return NextResponse.json({ error: "Organización no encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
     }
 
-    // 2. OBTENER PERFIL COMPLETO DE EMPRESA
     const profile = await prisma.businessProfile.findUnique({
       where: { organizationId: organization.id },
     });
@@ -211,139 +82,115 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 3. CONSTRUIR CONTEXTO COMPLETO DE LA EMPRESA
-    const businessContext = `
-INFORMACIÓN DE LA EMPRESA:
-- Nombre: ${profile.businessName || 'No especificado'}
-- Industria: ${profile.industry || 'No especificada'}
-- Descripción: ${profile.description || 'No especificada'}
-- Tagline: ${profile.tagline || 'No especificado'}
-- Ubicación: ${profile.location || 'No especificada'}
-- Año de fundación: ${profile.foundedYear || 'No especificado'}
-- Sitio web: ${profile.websiteUrl || 'No especificado'}
+    // PROMPT QUE PIENSA COMO HUMANO
+    const prompt = `Eres un Social Media Manager profesional con 5 años de experiencia manejando cuentas de empresas en Instagram.
 
-PÚBLICO OBJETIVO:
-- Cliente ideal: ${profile.targetAudience || 'No especificado'}
-- Rango de edad: ${profile.ageRangeMin || 18} - ${profile.ageRangeMax || 65} años
-- Género objetivo: ${profile.targetGender || 'Todos'}
-- Ubicaciones objetivo: ${Array.isArray(profile.targetLocations) ? profile.targetLocations.join(', ') : profile.targetLocations || 'No especificadas'}
-- Problemas que resuelve: ${profile.customerPainPoints || 'No especificados'}
+EMPRESA QUE MANEJAS:
+- Nombre: ${profile.businessName}
+- Industria: ${profile.industry}
+- Descripción: ${profile.description}
+- Público objetivo: ${profile.targetAudience || 'Empresas y emprendedores'}
+- Tono de voz: ${profile.toneOfVoice || 'Profesional pero cercano'}
+- Usa emojis: ${profile.useEmojis ? 'Sí, con moderación' : 'Muy pocos o ninguno'}
 
-VOZ DE MARCA:
-- Personalidad: ${Array.isArray(profile.brandPersonality) ? profile.brandPersonality.join(', ') : profile.brandPersonality || 'Profesional'}
-- Tono de voz: ${profile.toneOfVoice || 'Amigable y profesional'}
-- Usa emojis: ${profile.useEmojis ? 'Sí' : 'No'}
-- Estilo de emojis: ${profile.emojiStyle || 'Moderado'}
-- Palabras a usar: ${Array.isArray(profile.wordsToUse) && profile.wordsToUse.length > 0 ? profile.wordsToUse.join(', ') : 'No especificadas'}
-- Palabras a evitar: ${Array.isArray(profile.wordsToAvoid) && profile.wordsToAvoid.length > 0 ? profile.wordsToAvoid.join(', ') : 'No especificadas'}
-- Hashtags de marca: ${Array.isArray(profile.hashtagsToUse) && profile.hashtagsToUse.length > 0 ? profile.hashtagsToUse.map(h => '#' + h).join(' ') : 'No especificados'}
+TU TAREA:
+${contentType && contentType !== 'auto' 
+  ? `Crear un post de tipo: ${contentType}` 
+  : 'Decidir qué tipo de post sería más efectivo hoy'}
+${topic ? `Tema específico: ${topic}` : 'Elige un tema relevante basándote en la empresa'}
 
-PRODUCTOS/SERVICIOS:
-${profile.mainProducts || profile.services || 'No especificados'}
-- Rango de precios: ${profile.priceRange || 'No especificado'}
-- Propuesta única de valor: ${profile.uniqueSellingPoint || 'No especificada'}
+PIENSA COMO LO HARÍA UN HUMANO:
+1. ¿Qué quiero que mi audiencia sienta/haga al ver este post?
+2. ¿Qué gancho uso para captar atención en los primeros 2 segundos?
+3. ¿Cómo escribo esto de forma natural, no robótica?
+4. ¿Qué call-to-action tiene sentido?
 
-OBJETIVOS DE MARKETING:
-- Objetivos: ${Array.isArray(profile.marketingGoals) ? profile.marketingGoals.join(', ') : profile.marketingGoals || 'No especificados'}
-- Frecuencia de publicación: ${(profile.contentPreferences as any)?.postingFrequency || 'Diaria'}
+REGLAS DE UN BUEN SOCIAL MEDIA MANAGER:
+- NUNCA escribas como IA (nada de "En el mundo actual...", "¿Sabías que...?", "Es importante destacar...")
+- Escribe como hablarías con un cliente en persona
+- Usa frases cortas y directas
+- El primer párrafo es el gancho - hazlo irresistible
+- Los hashtags van al final, no interrumpen el texto
+- Máximo 5-7 hashtags relevantes, no spam
+- Si usas emojis, que sean naturales, no al inicio de cada línea
 
-REDES SOCIALES:
-- Instagram: ${profile.instagramUrl || 'No configurado'}
-- Facebook: ${profile.facebookUrl || 'No configurado'}
-- TikTok: ${profile.tiktokUrl || 'No configurado'}
-`.trim();
+EJEMPLOS DE LO QUE NO QUIERO (típico de IA):
+❌ "🚀 ¿Tienes una idea brillante pero no sabes cómo llevarla al mundo digital? 💡"
+❌ "En la era digital actual, es fundamental..."
+❌ "¡Descubre cómo transformar tu negocio!"
 
-    // 4. DETERMINAR TIPO DE CONTENIDO
-    const contentTypes: Record<string, string> = {
-      'promotional': 'Promocionar un producto o servicio de la empresa. Destacar beneficios y llamada a la acción.',
-      'educational': 'Contenido educativo que posicione a la empresa como experta. Tips, consejos, datos útiles para el público objetivo.',
-      'entertaining': 'Contenido entretenido y cercano. Mostrar el lado humano de la empresa, humor relacionado con la industria.',
-      'behind-scenes': 'Mostrar el detrás de escenas. El equipo, el proceso de trabajo, el día a día de la empresa.',
-      'testimonial': 'Destacar resultados de clientes o casos de éxito (sin inventar nombres reales).',
-      'news': 'Compartir una novedad, actualización o logro de la empresa.',
-      'engagement': 'Post diseñado para generar interacción. Preguntas, encuestas, opiniones.',
-      'surprise': 'Elige tú el mejor tipo de contenido basándote en los objetivos de marketing de la empresa.',
-    };
+EJEMPLOS DE LO QUE SÍ QUIERO (humano real):
+✅ "La semana pasada un cliente nos dijo: 'Tengo la idea, pero no sé por dónde empezar'. Le construimos su app en 3 semanas."
+✅ "Esto es lo que nadie te cuenta sobre lanzar un producto digital..."
+✅ "Pregunta honesta: ¿cuántas ideas tienes guardadas en notas del móvil que nunca ejecutaste?"
 
-    const selectedType = contentType || 'surprise';
-    const typeInstruction = contentTypes[selectedType] || contentTypes['surprise'];
+Genera EXACTAMENTE 3 variaciones diferentes. Cada una con enfoque distinto:
+1. Una más directa/vendedora
+2. Una más storytelling/emocional  
+3. Una más educativa/valor
 
-    // 5. GENERAR CONTENIDO CON CLAUDE
-    const prompt = `Eres un experto en marketing digital y community manager profesional.
-
-${businessContext}
-
-TIPO DE CONTENIDO A CREAR:
-${typeInstruction}
-
-${customTopic ? `TEMA ESPECÍFICO DEL CLIENTE: ${customTopic}` : 'El cliente NO ha especificado un tema. Tú debes elegir el mejor tema basándote en el perfil de la empresa, sus productos/servicios y objetivos de marketing.'}
-
-INSTRUCCIONES:
-1. Genera EXACTAMENTE 3 variaciones de posts para Instagram
-2. Cada post debe ser ÚNICO en enfoque pero coherente con la marca
-3. Usa el tono de voz y personalidad especificados
-4. ${profile.useEmojis ? 'Incluye emojis de forma natural' : 'NO uses emojis'}
-5. Incluye hashtags relevantes (máximo 10 por post)
-6. El texto debe ser óptimo para Instagram (máximo 2200 caracteres, pero idealmente 150-300)
-7. IMPORTANTE: El contenido debe parecer escrito por la propia empresa, no por una IA
-
-RESPONDE EN ESTE FORMATO JSON EXACTO:
+Responde SOLO con JSON válido (sin markdown):
 {
   "variations": [
     {
-      "text": "Texto completo del post aquí...",
+      "text": "El texto completo del post (SIN hashtags en el texto)",
       "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
-      "hook": "Primera línea que engancha (para preview)",
-      "callToAction": "Llamada a la acción del post",
-      "bestTimeToPost": "Mejor hora para publicar este tipo de contenido",
-      "contentType": "promotional|educational|entertaining|behind-scenes|testimonial|news|engagement"
+      "hook": "El gancho principal en 5 palabras",
+      "style": "direct|storytelling|educational"
     }
-  ],
-  "reasoning": "Breve explicación de por qué elegiste estos temas/enfoques"
+  ]
 }`;
 
-    console.log('Generating content with Claude...');
+    console.log('Generating human-like content for:', profile.businessName);
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
+      max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
 
-    // Parsear respuesta
     const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
     
-    let parsedResponse;
+    let cleanedResponse = responseText.trim();
+    if (cleanedResponse.startsWith('```json')) cleanedResponse = cleanedResponse.slice(7);
+    if (cleanedResponse.startsWith('```')) cleanedResponse = cleanedResponse.slice(3);
+    if (cleanedResponse.endsWith('```')) cleanedResponse = cleanedResponse.slice(0, -3);
+    cleanedResponse = cleanedResponse.trim();
+
+    let parsed;
     try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found');
-      }
+      parsed = JSON.parse(cleanedResponse);
     } catch (parseError) {
       console.error('Error parsing Claude response:', parseError);
       return NextResponse.json({ error: "Error al generar contenido" }, { status: 500 });
     }
 
-    const variations = parsedResponse.variations || [];
+    const variations = parsed.variations || [];
 
-    // 6. GENERAR IMÁGENES PARA CADA VARIACIÓN
-    console.log('Generating images for variations...');
-    
+    // OBTENER IMÁGENES - PRIORIDAD:
+    // 1. Banco de fotos del usuario (si tiene)
+    // 2. Fotos de stock profesionales de Unsplash
+
     const variationsWithImages = await Promise.all(
       variations.map(async (variation: any, index: number) => {
-        // Crear prompt realista basado en la industria y contenido
-        const imagePrompt = createRealisticImagePrompt(
-          profile?.industry || 'technology',
-          variation.text || '',
-          variation.contentType || 'promotional'
-        );
+        let imageUrl: string;
 
-        console.log('Image prompt:', imagePrompt.slice(0, 100));
-
-        const imageUrl = await generateImage(imagePrompt, index);
+        // Primero: intentar usar imagen del banco del usuario
+        const userImage = await getUserImage(organization.id);
         
+        if (userImage && Math.random() > 0.5) {
+          // 50% chance de usar imagen del usuario si tiene
+          imageUrl = userImage;
+          console.log(`Variation ${index}: Using user's own image`);
+        } else {
+          // Usar stock de Unsplash (fotos reales de fotógrafos)
+          imageUrl = await getStockImage(
+            variation.style || contentType || 'promotional',
+            profile.industry || 'technology'
+          );
+          console.log(`Variation ${index}: Using Unsplash stock photo`);
+        }
+
         return {
           ...variation,
           imageUrl,
@@ -353,8 +200,7 @@ RESPONDE EN ESTE FORMATO JSON EXACTO:
 
     return NextResponse.json({ 
       variations: variationsWithImages,
-      reasoning: parsedResponse.reasoning,
-      businessName: profile.businessName,
+      companyName: profile.businessName,
     });
 
   } catch (error: any) {
@@ -362,4 +208,3 @@ RESPONDE EN ESTE FORMATO JSON EXACTO:
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
