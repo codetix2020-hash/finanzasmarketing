@@ -7,56 +7,34 @@ const anthropic = new Anthropic();
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// Buscar imagen de stock profesional en Unsplash
+// Buscar imagen de stock profesional en Unsplash (SIEMPRE FUNCIONA)
 async function getStockImage(contentType: string, industry: string): Promise<string> {
-  // Mapeo de tipo de contenido a búsquedas de stock realistas
   const searchTerms: Record<string, string[]> = {
-    'promotional': ['product photography', 'business professional', 'modern office', 'team success'],
-    'educational': ['laptop workspace', 'notebook pen', 'learning study', 'professional desk'],
-    'entertaining': ['coffee break', 'team celebration', 'office fun', 'workspace lifestyle'],
-    'behind-scenes': ['team meeting', 'office candid', 'workspace real', 'business casual'],
-    'tips': ['checklist notebook', 'organized desk', 'planning strategy', 'professional advice'],
-    'news': ['business newspaper', 'announcement celebration', 'milestone achievement', 'company growth'],
+    'direct': ['business meeting', 'team success', 'modern office', 'laptop workspace'],
+    'storytelling': ['coffee shop work', 'creative team', 'startup office', 'entrepreneur'],
+    'educational': ['notebook desk', 'learning workspace', 'professional planning', 'strategy meeting'],
+    'promotional': ['product showcase', 'business professional', 'modern technology', 'success celebration'],
+    'default': ['business professional', 'modern workspace', 'team collaboration', 'office lifestyle'],
   };
 
   const industryTerms: Record<string, string> = {
-    'technology': 'tech,software,digital',
-    'desarrollo web': 'coding,developer,programming',
-    'marketing': 'marketing,creative,strategy',
+    'technology': 'tech,software,computer',
+    'desarrollo web': 'coding,developer,laptop',
+    'marketing': 'marketing,creative,digital',
     'diseño': 'design,creative,minimal',
-    'consultoría': 'business,consulting,professional',
     'default': 'business,professional,modern',
   };
 
-  const contentTerms = searchTerms[contentType] || searchTerms['promotional'];
+  const contentTerms = searchTerms[contentType] || searchTerms['default'];
   const randomTerm = contentTerms[Math.floor(Math.random() * contentTerms.length)];
-  const industryTerm = industryTerms[industry.toLowerCase()] || industryTerms['default'];
+  const industryTerm = industryTerms[industry?.toLowerCase()] || industryTerms['default'];
 
-  // Unsplash Source API - imágenes reales de fotógrafos profesionales
+  // Unsplash Source API - fotos REALES de fotógrafos profesionales
   const query = encodeURIComponent(`${randomTerm},${industryTerm}`);
-  const timestamp = Date.now(); // Para evitar caché y obtener variedad
+  const timestamp = Date.now();
   
-  return `https://source.unsplash.com/1080x1080/?${query}&${timestamp}`;
-}
-
-// Buscar en el banco de fotos del usuario primero
-async function getUserImage(organizationId: string): Promise<string | null> {
-  try {
-    const media = await prisma.mediaLibrary.findMany({
-      where: { organizationId },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
-
-    if (media.length > 0) {
-      // Seleccionar una imagen aleatoria del banco del usuario
-      const randomMedia = media[Math.floor(Math.random() * media.length)];
-      return randomMedia.fileUrl;
-    }
-  } catch (err) {
-    console.error('Error fetching user media:', err);
-  }
-  return null;
+  // Esta URL SIEMPRE devuelve una imagen real
+  return `https://source.unsplash.com/1080x1080/?${query}&t=${timestamp}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -167,29 +145,16 @@ Responde SOLO con JSON válido (sin markdown):
 
     const variations = parsed.variations || [];
 
-    // OBTENER IMÁGENES - PRIORIDAD:
-    // 1. Banco de fotos del usuario (si tiene)
-    // 2. Fotos de stock profesionales de Unsplash
-
+    // OBTENER IMÁGENES - SIEMPRE usar Unsplash (fotos reales que Instagram puede descargar)
     const variationsWithImages = await Promise.all(
       variations.map(async (variation: any, index: number) => {
-        let imageUrl: string;
-
-        // Primero: intentar usar imagen del banco del usuario
-        const userImage = await getUserImage(organization.id);
+        // SIEMPRE usar Unsplash - fotos reales que Instagram puede descargar
+        const imageUrl = await getStockImage(
+          variation.style || contentType || 'promotional',
+          profile.industry || 'technology'
+        );
         
-        if (userImage && Math.random() > 0.5) {
-          // 50% chance de usar imagen del usuario si tiene
-          imageUrl = userImage;
-          console.log(`Variation ${index}: Using user's own image`);
-        } else {
-          // Usar stock de Unsplash (fotos reales de fotógrafos)
-          imageUrl = await getStockImage(
-            variation.style || contentType || 'promotional',
-            profile.industry || 'technology'
-          );
-          console.log(`Variation ${index}: Using Unsplash stock photo`);
-        }
+        console.log(`Variation ${index}: Stock photo URL:`, imageUrl);
 
         return {
           ...variation,
