@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@repo/database";
-
-const genai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
     const { prompt, organizationSlug, postContent } = await request.json();
 
-    console.log("Generating image with Nano Banana:", prompt?.slice(0, 50));
+    console.log("Generating image with Nano Banana (Gemini)");
 
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
@@ -30,74 +28,71 @@ Theme: ${
         profile?.description ||
         "modern business"
       }
-Style: Clean, professional, eye-catching, vibrant colors, suitable for social media.
-DO NOT include any text, words, or letters in the image.`;
+Style: Clean, modern, professional, eye-catching, vibrant colors, perfect for social media marketing.
+DO NOT include any text, words, letters, or watermarks in the image.`;
 
-    let imageUrl: string;
+    let imageUrl = "";
 
+    // 1) Nano Banana (Gemini)
     if (process.env.GOOGLE_AI_API_KEY) {
       try {
-        const response = await genai.models.generateContent({
-          model: "gemini-2.5-flash-preview-05-20",
-          contents: imagePrompt,
-          config: {
-            responseModalities: ["image", "text"],
-          },
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.0-flash-exp",
+          // Tipado de config todavía experimental
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          generationConfig: { responseModalities: ["image", "text"] } as any,
         });
 
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
+        const result = await model.generateContent(imagePrompt);
+
+        for (const part of result.response.candidates?.[0]?.content?.parts ||
+          []) {
           if ((part as any).inlineData) {
             const inlineData = (part as any).inlineData as {
               data: string;
               mimeType?: string;
             };
-            const base64 = inlineData.data;
-            const mimeType = inlineData.mimeType || "image/png";
-            imageUrl = `data:${mimeType};base64,${base64}`;
+            imageUrl = `data:${inlineData.mimeType};base64,${inlineData.data}`;
+            console.log("Nano Banana generated image successfully");
             break;
           }
         }
 
         if (!imageUrl) {
-          throw new Error("No image in response");
+          throw new Error("No image generated");
         }
-
-        console.log("Nano Banana generated image successfully");
       } catch (geminiError: any) {
-        console.error("Nano Banana error:", geminiError.message);
-
-        if (process.env.OPENAI_API_KEY) {
-          const OpenAIModule = await import("openai");
-          const OpenAI = OpenAIModule.default;
-          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-          const dalleResponse = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: imagePrompt,
-            n: 1,
-            size: "1024x1024",
-          });
-
-          imageUrl = dalleResponse.data[0].url!;
-        } else {
-          imageUrl = `https://picsum.photos/seed/${Date.now()}/1080/1080`;
-        }
+        console.error("Nano Banana error:", geminiError?.message);
       }
-    } else if (process.env.OPENAI_API_KEY) {
-      const OpenAIModule = await import("openai");
-      const OpenAI = OpenAIModule.default;
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    }
 
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: imagePrompt,
-        n: 1,
-        size: "1024x1024",
-      });
+    // 2) DALL-E 3 (fallback)
+    if (!imageUrl && process.env.OPENAI_API_KEY) {
+      try {
+        const OpenAIModule = await import("openai");
+        const OpenAI = OpenAIModule.default;
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      imageUrl = response.data[0].url!;
-    } else {
+        const response = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: imagePrompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
+        });
+
+        imageUrl = response.data[0].url!;
+        console.log("DALL-E 3 generated image");
+      } catch (dalleError: any) {
+        console.error("DALL-E error:", dalleError?.message);
+      }
+    }
+
+    // 3) Picsum (fallback final)
+    if (!imageUrl) {
       imageUrl = `https://picsum.photos/seed/${Date.now()}/1080/1080`;
+      console.log("Using Picsum fallback");
     }
 
     return NextResponse.json({

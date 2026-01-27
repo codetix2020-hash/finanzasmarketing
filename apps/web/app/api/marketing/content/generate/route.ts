@@ -1,11 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { getBusinessProfile, prisma } from "@repo/database";
+import { getBusinessProfile } from "@repo/database";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +63,7 @@ function buildPrompt(params: {
 	hashtags?: string[];
 }) {
 	const rules = PLATFORM_RULES[params.platform] || PLATFORM_RULES.instagram;
-	
+
 	let contextPrompt = "";
 	if (params.businessProfile) {
 		contextPrompt = `
@@ -121,6 +117,66 @@ Devuelve SOLO un JSON válido con este formato:
     }
   ]
 }`;
+}
+
+async function generateImage(prompt: string, index: number): Promise<string> {
+	// 1) Nano Banana (Gemini)
+	if (process.env.GOOGLE_AI_API_KEY) {
+		try {
+			const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+			const model = genAI.getGenerativeModel({
+				model: "gemini-2.0-flash-exp",
+				// Tipado experimental
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				generationConfig: { responseModalities: ["image", "text"] } as any,
+			});
+
+			if (index > 0) {
+				await new Promise((r) => setTimeout(r, 3000));
+			}
+
+			const result = await model.generateContent(prompt);
+
+			for (const part of result.response.candidates?.[0]?.content?.parts || []) {
+				if ((part as any).inlineData) {
+					const inlineData = (part as any).inlineData as {
+						data: string;
+						mimeType?: string;
+					};
+					return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+				}
+			}
+		} catch (err: any) {
+			console.error(`Gemini error for image ${index}:`, err?.message);
+		}
+	}
+
+	// 2) DALL-E 3
+	if (process.env.OPENAI_API_KEY) {
+		try {
+			const OpenAIModule = await import("openai");
+			const OpenAI = OpenAIModule.default;
+			const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+			if (index > 0) {
+				await new Promise((r) => setTimeout(r, 2000));
+			}
+
+			const response = await openai.images.generate({
+				model: "dall-e-3",
+				prompt,
+				n: 1,
+				size: "1024x1024",
+			});
+
+			return response.data[0].url!;
+		} catch (err: any) {
+			console.error(`DALL-E error for image ${index}:`, err?.message);
+		}
+	}
+
+	// 3) Picsum
+	return `https://picsum.photos/seed/${Date.now() + index}/1080/1080`;
 }
 
 export async function POST(request: Request) {
@@ -178,21 +234,29 @@ export async function POST(request: Request) {
 				messages: [{ role: "user", content: prompt }],
 			});
 		} catch (error: any) {
-			if (error?.status === 429 || error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
+			if (
+				error?.status === 429 ||
+				error?.message?.includes("rate limit") ||
+				error?.message?.includes("Rate limit")
+			) {
 				return NextResponse.json(
 					{
 						success: false,
-						error: 'rate_limit',
-						message: 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
-						retryAfter: 30
+						error: "rate_limit",
+						message:
+							"El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.",
+						retryAfter: 30,
 					},
-					{ status: 429 }
+					{ status: 429 },
 				);
 			}
 			throw error;
 		}
 
-		const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+		const text =
+			response.content[0]?.type === "text"
+				? response.content[0].text
+				: "";
 		const jsonMatch = text.match(/\{[\s\S]*\}/);
 
 		let parsed: any = null;
@@ -204,9 +268,9 @@ export async function POST(request: Request) {
 			}
 		}
 
-		// Si tenemos variaciones, retornarlas
+		let variations: any[] = [];
 		if (parsed?.variations && Array.isArray(parsed.variations)) {
-			const variations = parsed.variations
+			variations = parsed.variations
 				.filter((v: any) => v?.text && typeof v.text === "string")
 				.map((v: any) => ({
 					text: v.text.trim(),
@@ -214,83 +278,44 @@ export async function POST(request: Request) {
 						? v.hashtags.filter((h: unknown) => typeof h === "string")
 						: [],
 				}));
+		} else {
+			const generatedText =
+				typeof parsed?.text === "string" && parsed.text.trim()
+					? parsed.text.trim()
+					: text.trim();
+			const generatedHashtags = Array.isArray(parsed?.hashtags)
+				? parsed.hashtags.filter((h: unknown) => typeof h === "string")
+				: [];
 
-			if (variations.length > 0) {
-				// Generar imágenes para cada variación
-				const variationsWithImages = await Promise.all(
-					variations.map(async (variation: any, index: number) => {
-						try {
-							const imagePrompt = `Professional Instagram post image for ${businessProfile?.industry || 'technology'} company.
-Theme: ${variation.text?.slice(0, 150)}
-Style: Modern, professional, eye-catching, suitable for social media.
-DO NOT include any text, words, letters, or watermarks in the image.`;
-
-							let imageUrl = '';
-
-							if (process.env.OPENAI_API_KEY) {
-								try {
-									// Añadir delay entre requests para evitar rate limits
-									if (index > 0) {
-										await new Promise(r => setTimeout(r, 2000));
-									}
-
-									const response = await openai.images.generate({
-										model: "dall-e-3",
-										prompt: imagePrompt,
-										n: 1,
-										size: "1024x1024",
-										quality: "standard",
-									});
-
-									imageUrl = response.data[0].url!;
-									console.log(`Image ${index + 1} generated:`, imageUrl.slice(0, 50));
-
-								} catch (err: any) {
-									console.error(`DALL-E error for variation ${index}:`, err.message);
-									imageUrl = `https://picsum.photos/seed/${Date.now() + index}/1080/1080`;
-								}
-							} else {
-								imageUrl = `https://picsum.photos/seed/${Date.now() + index}/1080/1080`;
-							}
-
-							return {
-								...variation,
-								imageUrl,
-							};
-						} catch (err) {
-							console.error('Error generating image for variation', index, err);
-							return {
-								...variation,
-								imageUrl: `https://picsum.photos/seed/${Date.now() + index}/1080/1080`,
-							};
-						}
-					})
-				);
-
-				return NextResponse.json({
-					success: true,
-					variations: variationsWithImages,
-				});
-			}
-		}
-
-		// Fallback: crear una variación con el contenido generado
-		const generatedText =
-			typeof parsed?.text === "string" && parsed.text.trim()
-				? parsed.text.trim()
-				: text.trim();
-		const generatedHashtags = Array.isArray(parsed?.hashtags)
-			? parsed.hashtags.filter((h: unknown) => typeof h === "string")
-			: [];
-
-		return NextResponse.json({
-			success: true,
-			variations: [
+			variations = [
 				{
 					text: generatedText,
 					hashtags: generatedHashtags,
 				},
-			],
+			];
+		}
+
+		const variationsWithImages = await Promise.all(
+			variations.map(async (variation: any, index: number) => {
+				const imagePrompt = `Professional Instagram marketing image for ${
+					businessProfile?.industry || "technology"
+				} business.
+Content theme: ${variation.text?.slice(0, 100)}
+Style: Modern, clean, professional, vibrant, eye-catching, social media ready.
+NO text, NO words, NO letters, NO watermarks.`;
+
+				const imageUrl = await generateImage(imagePrompt, index);
+
+				return {
+					...variation,
+					imageUrl,
+				};
+			}),
+		);
+
+		return NextResponse.json({
+			success: true,
+			variations: variationsWithImages,
 		});
 	} catch (error) {
 		console.error("API error generating content:", error);
