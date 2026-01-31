@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     const { organizationSlug, caption, imageUrl } = await request.json();
 
+    console.log('Facebook publish request:', { organizationSlug, caption: caption?.substring(0, 50), imageUrl });
+
     // Obtener organización y cuenta de Facebook
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
@@ -30,25 +32,48 @@ export async function POST(request: NextRequest) {
     }
 
     const pageId = facebookAccount.accountId;
-    const accessToken = facebookAccount.accessToken;
+    const pageAccessToken = facebookAccount.accessToken;
 
     console.log('Publishing to Facebook Page:', pageId);
 
-    // Publicar foto con caption
-    const response = await fetch(
-      `https://graph.facebook.com/v21.0/${pageId}/photos`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: imageUrl,
-          caption: caption,
-          access_token: accessToken,
-        }),
-      }
-    );
+    let result;
 
-    const result = await response.json();
+    if (imageUrl) {
+      // Publicar foto con caption
+      console.log('Publishing photo to Facebook...');
+      const response = await fetch(
+        `https://graph.facebook.com/v24.0/${pageId}/photos`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: imageUrl,
+            caption: caption,
+            access_token: pageAccessToken,
+          }),
+        }
+      );
+
+      result = await response.json();
+    } else {
+      // Publicar solo texto
+      console.log('Publishing text post to Facebook...');
+      const response = await fetch(
+        `https://graph.facebook.com/v24.0/${pageId}/feed`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: caption,
+            access_token: pageAccessToken,
+          }),
+        }
+      );
+
+      result = await response.json();
+    }
+
+    console.log('Facebook API response:', result);
 
     if (result.error) {
       console.error('Facebook API error:', result.error);
@@ -57,19 +82,19 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('Facebook post created:', result.id);
+    console.log('Facebook post created:', result.id || result.post_id);
 
-    // Guardar en base de datos (usando MarketingPost si existe, o crear tabla)
+    // Guardar en base de datos
     try {
       await prisma.marketingPost.create({
         data: {
           organizationId: organization.id,
           platform: 'facebook',
           content: caption,
-          mediaUrls: [imageUrl],
+          mediaUrls: imageUrl ? [imageUrl] : [],
           status: 'published',
           publishedAt: new Date(),
-          externalId: result.id,
+          externalId: result.id || result.post_id,
         },
       });
     } catch (dbError) {
@@ -79,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      postId: result.id,
+      postId: result.id || result.post_id,
       platform: 'facebook',
     });
 
@@ -88,4 +113,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
 

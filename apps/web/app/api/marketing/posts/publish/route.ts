@@ -59,9 +59,16 @@ export async function POST(request: NextRequest) {
 
     const { organizationSlug, platform, caption, imageUrl } = await request.json();
 
-    if (!organizationSlug || !platform || !caption || !imageUrl) {
+    if (!organizationSlug || !platform || !caption) {
       return NextResponse.json({ 
-        error: "organizationSlug, platform, caption, and imageUrl are required" 
+        error: "organizationSlug, platform, and caption are required" 
+      }, { status: 400 });
+    }
+
+    // Instagram requiere imagen, Facebook puede publicar sin imagen
+    if (platform === 'instagram' && !imageUrl) {
+      return NextResponse.json({ 
+        error: "imageUrl is required for Instagram" 
       }, { status: 400 });
     }
 
@@ -103,7 +110,7 @@ export async function POST(request: NextRequest) {
         imageUrl,
       });
     } else if (platform === 'facebook') {
-      // Redirigir a endpoint de Facebook
+      // Publicar en Facebook
       const fbResponse = await fetch(
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080'}/api/marketing/posts/publish-facebook`,
         {
@@ -112,7 +119,14 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({ organizationSlug, caption, imageUrl }),
         }
       );
-      return NextResponse.json(await fbResponse.json(), { status: fbResponse.status });
+      
+      const fbResult = await fbResponse.json();
+      
+      if (!fbResponse.ok) {
+        return NextResponse.json(fbResult, { status: fbResponse.status });
+      }
+      
+      return NextResponse.json(fbResult);
     } else if (platform === 'tiktok') {
       return NextResponse.json({ 
         error: "TikTok integration coming soon. Requires TikTok Developer App approval." 
