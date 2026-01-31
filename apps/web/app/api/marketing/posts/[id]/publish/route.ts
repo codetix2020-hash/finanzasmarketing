@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const GRAPH_BASE = "https://graph.facebook.com/v18.0";
+const GRAPH_BASE = "https://graph.facebook.com/v24.0";
 
 async function publishToInstagram(params: {
 	accessToken: string;
@@ -54,50 +54,53 @@ async function publishToInstagram(params: {
 }
 
 async function publishToFacebook(params: {
-	userAccessToken: string;
+	pageAccessToken: string;
 	pageId: string;
-	message: string;
+	caption: string;
+	imageUrl?: string;
 }) {
-	const pagesUrl = new URL(`${GRAPH_BASE}/me/accounts`);
-	pagesUrl.searchParams.set("fields", "id,access_token");
-	pagesUrl.searchParams.set("access_token", params.userAccessToken);
+	let result;
 
-	const pagesRes = await fetch(pagesUrl.toString(), { cache: "no-store" });
-	const pagesData = await pagesRes.json();
-
-	if (!pagesRes.ok || !Array.isArray(pagesData?.data)) {
-		throw new Error(`Failed to fetch pages: ${JSON.stringify(pagesData)}`);
-	}
-
-	const page = (pagesData.data as Array<{ id?: string; access_token?: string }>).find(
-		(p) => p?.id === params.pageId && p?.access_token,
-	);
-
-	if (!page?.access_token) {
-		throw new Error(
-			`No page access token found for pageId=${params.pageId}. Re-authorize with pages_show_list/pages_read_engagement.`,
+	if (params.imageUrl) {
+		// Publicar foto con caption
+		const response = await fetch(
+			`${GRAPH_BASE}/${params.pageId}/photos`,
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					url: params.imageUrl,
+					caption: params.caption,
+					access_token: params.pageAccessToken,
+				}),
+				cache: "no-store",
+			}
 		);
+
+		result = await response.json();
+	} else {
+		// Publicar solo texto
+		const response = await fetch(
+			`${GRAPH_BASE}/${params.pageId}/feed`,
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					message: params.caption,
+					access_token: params.pageAccessToken,
+				}),
+				cache: "no-store",
+			}
+		);
+
+		result = await response.json();
 	}
 
-	const postUrl = new URL(`${GRAPH_BASE}/${params.pageId}/feed`);
-	const postBody = new URLSearchParams({
-		message: params.message,
-		access_token: page.access_token,
-	});
-
-	const postRes = await fetch(postUrl.toString(), {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: postBody,
-		cache: "no-store",
-	});
-	const postData = await postRes.json();
-
-	if (!postRes.ok || !postData?.id) {
-		throw new Error(`Facebook publish failed: ${JSON.stringify(postData)}`);
+	if (result.error) {
+		throw new Error(`Facebook publish failed: ${JSON.stringify(result)}`);
 	}
 
-	return { postId: String(postData.id) };
+	return { postId: String(result.id || result.post_id) };
 }
 
 export async function POST(
@@ -116,6 +119,8 @@ export async function POST(
 		if (!post) {
 			return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
 		}
+
+		console.log('Publishing post:', { id: post.id, platform: post.platform });
 
 		// Obtener cuenta conectada
 		const accounts = await socialAccountsService.getAccounts(post.organizationId);
@@ -202,28 +207,28 @@ export async function POST(
 					imageUrl: post.mediaUrls[0],
 				});
 			} else if (post.platform === "facebook") {
-				if (!account.pageId) {
-					throw new Error("Facebook Page ID no encontrado");
+				if (!account.accessToken || !account.accountId) {
+					throw new Error("Facebook not connected. Please connect your Facebook Page first.");
 				}
 
-				const message = `${post.content}\n\n${post.hashtags.join(" ")}`;
+				// Construir caption con hashtags
+				const hashtagsArray = post.hashtags || [];
+				const hashtags = hashtagsArray.map(h => h.startsWith('#') ? h : `#${h}`).join(' ');
+				const caption = `${post.content}\n\n${hashtags}`;
+
+				console.log('Publishing to Facebook Page:', account.accountId);
+
 				result = await publishToFacebook({
-					userAccessToken: account.accessToken,
-					pageId: account.pageId,
-					message,
+					pageAccessToken: account.accessToken, // Ya es el Page Access Token
+					pageId: account.accountId,
+					caption,
+					imageUrl: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined,
 				});
 			} else {
 				throw new Error(`Plataforma ${post.platform} no soportada para publicación automática`);
 			}
 
 			// Actualizar post como publicado
-			await updateMarketingPost(id, {
-				status: "published",
-				publishedAt: new Date(),
-				externalId: result.postId,
-				externalUrl: result.url,
-			});
-
 			const updatedPost = await updateMarketingPost(id, {
 				status: "published",
 				publishedAt: new Date(),
