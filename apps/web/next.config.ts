@@ -47,6 +47,14 @@ const nextConfig: NextConfig = {
 												},
 								];
 				},
+				async rewrites() {
+								return [
+												{
+																source: "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt",
+																destination: "/api/tiktok-verify",
+												},
+								];
+				},
 				webpack: (config, { webpack, isServer }) => {
 								config.plugins.push(
 												new webpack.IgnorePlugin({
