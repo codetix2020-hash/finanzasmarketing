@@ -13,7 +13,8 @@ export default async function proxy(req: NextRequest) {
 	if (pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
 		pathname === "/tiktyklmwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
 		pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
-		pathname === "/tiktyklmwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt") {
+		pathname === "/tiktyklmwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
+		pathname.startsWith("/tiktok73USIYvtfVo4tubm56MdAN8dDYcPX2N1")) {
 		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
 	}
 
