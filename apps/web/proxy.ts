@@ -10,7 +10,10 @@ export default async function proxy(req: NextRequest) {
 	const { pathname } = req.nextUrl;
 
 	// Bypass i18n para verificación de TikTok
-	if (pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt") {
+	if (pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
+		pathname === "/tiktyklmwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
+		pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
+		pathname === "/tiktyklmwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt") {
 		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
 	}
 
