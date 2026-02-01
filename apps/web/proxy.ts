@@ -9,6 +9,11 @@ const intlMiddleware = createMiddleware(routing);
 export default async function proxy(req: NextRequest) {
 	const { pathname } = req.nextUrl;
 
+	// Bypass i18n para verificación de TikTok
+	if (pathname === "/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt") {
+		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
+	}
+
 	// Permitir acceso directo a rutas que no necesitan locale (/app, /auth, /api, etc)
 	if (
 		pathname.startsWith("/app") ||
