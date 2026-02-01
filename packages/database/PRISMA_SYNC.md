@@ -52,3 +52,4 @@ Revisa los cambios en `packages/database/prisma/schema.prisma` y asegúrate de q
 El comando `db pull` es seguro y solo lee la estructura de la base de datos. No modifica datos ni estructura.
 
 
+
