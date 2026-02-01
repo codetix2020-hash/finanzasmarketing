@@ -1,22 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { socialAccountsService } from '@repo/api/modules/marketing/services/social-accounts-service';
-import { getOrganizationById } from '@repo/database';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@repo/database";
+import { auth } from "@repo/auth";
+import { headers } from "next/headers";
 
-const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY!;
-const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET!;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/tiktok/callback';
+export const dynamic = "force-dynamic";
 
 function getBaseUrl(requestUrl: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(requestUrl).origin;
   return baseUrl.replace(/\/$/, '');
 }
 
+async function buildRedirectUrl(requestUrl: string, organizationId: string, qs: string) {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true },
+  });
+  const baseUrl = getBaseUrl(requestUrl);
+  if (org?.slug) {
+    return `${baseUrl}/app/${org.slug}/settings/integrations?${qs}`;
+  }
+  return `${baseUrl}/app/settings/integrations?${qs}`;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const code = searchParams.get("code");
+  const stateParam = searchParams.get("state");
+  const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
   
-  const code = searchParams.get('code');
-  const state = searchParams.get('state'); // Contiene organizationId
-  const error = searchParams.get('error');
+  console.log("TikTok callback received:", { code: !!code, state: !!stateParam, error });
 
   // Helper para construir URL de redirección correcta
   const buildRedirectUrl = async (organizationId: string, params: string) => {
@@ -29,13 +42,19 @@ export async function GET(request: NextRequest) {
   };
 
   if (error) {
-    console.error('TikTok OAuth error:', error);
-    const state = searchParams.get('state');
-    if (state) {
+    console.error("TikTok OAuth error:", error, errorDescription);
+    if (stateParam) {
       try {
-        const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
-        const redirectUrl = await buildRedirectUrl(organizationId, 'error=tiktok_auth_failed');
-        return NextResponse.redirect(redirectUrl);
+        const stateData = JSON.parse(Buffer.from(stateParam, "base64").toString());
+        const organizationId = stateData.organizationId;
+        if (organizationId) {
+          const redirectUrl = await buildRedirectUrl(
+            request.url,
+            organizationId,
+            "error=tiktok_auth_failed"
+          );
+          return NextResponse.redirect(redirectUrl);
+        }
       } catch {
         // Fallback
       }
@@ -43,98 +62,131 @@ export async function GET(request: NextRequest) {
     const baseUrl = getBaseUrl(request.url);
     return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=tiktok_auth_failed`);
   }
-
-  if (!code || !state) {
+  
+  if (!code || !stateParam) {
+    console.error("Missing code or state");
     const baseUrl = getBaseUrl(request.url);
-    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=missing_params`);
+    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=tiktok_invalid`);
   }
 
   try {
-    // Decodificar state para obtener organizationId
-    const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
-
-    // PASO 1: Intercambiar code por access token
-    const tokenResponse = await fetch(
-      `https://open.tiktokapis.com/v2/oauth/token/`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_key: TIKTOK_CLIENT_KEY,
-          client_secret: TIKTOK_CLIENT_SECRET,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: REDIRECT_URI,
-        }),
-      }
-    );
-
-    const tokenData = await tokenResponse.json();
-    
-    if (!tokenData.data?.access_token) {
-      throw new Error('No access token received: ' + JSON.stringify(tokenData));
+    // Decode state to get organizationId
+    let organizationId: string | null = null;
+    try {
+      const stateData = JSON.parse(Buffer.from(stateParam, "base64").toString());
+      organizationId = stateData.organizationId;
+    } catch (e) {
+      console.error("Failed to decode state:", e);
     }
-
-    const accessToken = tokenData.data.access_token;
-    const refreshToken = tokenData.data.refresh_token;
-    const expiresIn = tokenData.data.expires_in || 7200; // 2 horas por defecto
-
-    // PASO 2: Obtener información del usuario
+    
+    // Exchange code for access token
+    const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Cache-Control": "no-cache",
+      },
+      body: new URLSearchParams({
+        client_key: process.env.TIKTOK_CLIENT_KEY!,
+        client_secret: process.env.TIKTOK_CLIENT_SECRET!,
+        code,
+        grant_type: "authorization_code",
+        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`,
+      }),
+    });
+    
+    const tokenData = await tokenResponse.json();
+    console.log("TikTok token response:", JSON.stringify(tokenData, null, 2));
+    
+    if (tokenData.error || !tokenData.data?.access_token) {
+      console.error("TikTok token error:", tokenData);
+      const baseUrl = getBaseUrl(request.url);
+      return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=tiktok_token_failed`);
+    }
+    
+    const { access_token, refresh_token, open_id, expires_in, refresh_expires_in } = tokenData.data;
+    
+    // Get user info
     const userResponse = await fetch(
-      `https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name`,
+      "https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,display_name,avatar_url,username",
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          "Authorization": `Bearer ${access_token}`,
         },
       }
     );
     
     const userData = await userResponse.json();
-    const userInfo = userData.data?.user || {};
-
-    // PASO 3: Guardar en base de datos
-    await socialAccountsService.connectAccount({
-      organizationId,
-      platform: 'tiktok',
-      accountId: userInfo.open_id || userInfo.union_id || 'unknown',
-      accountName: userInfo.display_name || 'TikTok User',
-      accessToken,
-      refreshToken,
-      tokenExpiresAt: new Date(Date.now() + expiresIn * 1000),
-      avatarUrl: userInfo.avatar_url || undefined,
-    });
-
-    console.log(`TikTok connected: ${userInfo.display_name} for org ${organizationId}`);
-
-    // Obtener slug de la organización para redirección correcta
-    const org = await getOrganizationById(organizationId);
-    const baseUrl = getBaseUrl(request.url);
-    const redirectUrl = org?.slug 
-      ? `${baseUrl}/app/${org.slug}/settings/integrations?success=tiktok_connected`
-      : `${baseUrl}/app/settings/integrations?success=tiktok_connected`;
-
-    return NextResponse.redirect(redirectUrl);
-  } catch (error) {
-    console.error('TikTok OAuth callback error:', error);
+    console.log("TikTok user data:", JSON.stringify(userData, null, 2));
     
-    // Intentar obtener organizationId del state para redirección correcta
-    try {
-      const state = searchParams.get('state');
-      if (state) {
-        const { organizationId } = JSON.parse(Buffer.from(state, 'base64').toString());
-        const org = await getOrganizationById(organizationId);
-        const baseUrl = getBaseUrl(request.url);
-        const redirectUrl = org?.slug
-          ? `${baseUrl}/app/${org.slug}/settings/integrations?error=connection_failed`
-          : `${baseUrl}/app/settings/integrations?error=connection_failed`;
-        return NextResponse.redirect(redirectUrl);
+    const userInfo = userData.data?.user || {};
+    const displayName = userInfo.display_name || userInfo.username || "TikTok User";
+    const username = userInfo.username || open_id;
+    
+    // If no organizationId in state, get from session
+    if (!organizationId) {
+      const session = await auth.api.getSession({ headers: await headers() });
+      if (session?.session?.userId) {
+        const membership = await prisma.member.findFirst({
+          where: { userId: session.session.userId },
+          select: { organizationId: true },
+        });
+        organizationId = membership?.organizationId || null;
       }
-    } catch {
-      // Fallback
     }
     
+    if (!organizationId) {
+      console.error("No organizationId found");
+      const baseUrl = getBaseUrl(request.url);
+      return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=no_organization`);
+    }
+    
+    // Save or update TikTok account
+    await prisma.socialAccount.upsert({
+      where: {
+        organizationId_platform_accountId: {
+          organizationId: organizationId,
+          platform: "tiktok",
+          accountId: open_id,
+        },
+      },
+      update: {
+        accessToken: access_token,
+        refreshToken: refresh_token || null,
+        accountId: open_id,
+        accountName: displayName,
+        avatarUrl: userInfo.avatar_url || null,
+        tokenExpiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
+        isActive: true,
+        lastSyncAt: new Date(),
+      },
+      create: {
+        platform: "tiktok",
+        organizationId: organizationId,
+        accessToken: access_token,
+        refreshToken: refresh_token || null,
+        accountId: open_id,
+        accountName: displayName,
+        avatarUrl: userInfo.avatar_url || null,
+        tokenExpiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
+        isActive: true,
+      },
+    });
+    
+    console.log("TikTok account saved successfully for org:", organizationId);
+    
+    const redirectUrl = await buildRedirectUrl(
+      request.url,
+      organizationId,
+      "success=tiktok_connected"
+    );
+    
+    return NextResponse.redirect(redirectUrl);
+    
+  } catch (error) {
+    console.error("TikTok OAuth error:", error);
     const baseUrl = getBaseUrl(request.url);
-    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=connection_failed`);
+    return NextResponse.redirect(`${baseUrl}/app/settings/integrations?error=tiktok_failed`);
   }
 }
 

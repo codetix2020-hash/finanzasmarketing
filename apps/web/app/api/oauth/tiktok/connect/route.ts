@@ -1,32 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@repo/auth";
+import { headers } from "next/headers";
 
-const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY!;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL + '/api/oauth/tiktok/callback';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const organizationId = searchParams.get('organizationId');
+  try {
+    // Verificar que el usuario está autenticado
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.session?.userId) {
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
+    }
 
-  if (!organizationId) {
-    return NextResponse.json({ error: 'Missing organizationId' }, { status: 400 });
+    const clientKey = process.env.TIKTOK_CLIENT_KEY;
+    
+    if (!clientKey) {
+      console.error("TIKTOK_CLIENT_KEY not configured");
+      return NextResponse.json(
+        { error: "TikTok Client Key not configured" },
+        { status: 500 }
+      );
+    }
+
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`;
+    
+    // Obtener organizationId del query param
+    const organizationId = request.nextUrl.searchParams.get("organizationId");
+    
+    // Scopes necesarios para publicar
+    const scope = "user.info.basic,user.info.profile,video.upload,video.publish";
+    
+    // State incluye organizationId para recuperarlo en callback
+    const state = Buffer.from(JSON.stringify({
+      organizationId,
+      nonce: crypto.randomUUID()
+    })).toString("base64");
+    
+    const authUrl = new URL("https://www.tiktok.com/v2/auth/authorize/");
+    authUrl.searchParams.set("client_key", clientKey);
+    authUrl.searchParams.set("redirect_uri", redirectUri);
+    authUrl.searchParams.set("scope", scope);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("state", state);
+    
+    console.log("Redirecting to TikTok OAuth:", authUrl.toString());
+    
+    return NextResponse.redirect(authUrl.toString());
+  } catch (error) {
+    console.error("TikTok connect error:", error);
+    return NextResponse.json(
+      { error: "Failed to initiate TikTok OAuth" },
+      { status: 500 }
+    );
   }
-
-  if (!TIKTOK_CLIENT_KEY) {
-    return NextResponse.json({ error: 'TikTok Client Key not configured' }, { status: 500 });
-  }
-
-  // Crear state con organizationId (encriptado en base64)
-  const state = Buffer.from(JSON.stringify({ organizationId })).toString('base64');
-
-  // URL de autorización de TikTok
-  const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
-  authUrl.searchParams.set('client_key', TIKTOK_CLIENT_KEY);
-  authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
-  authUrl.searchParams.set('scope', 'user.info.basic,video.upload,video.publish');
-  authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('state', state);
-
-  return NextResponse.redirect(authUrl.toString());
 }
 
 

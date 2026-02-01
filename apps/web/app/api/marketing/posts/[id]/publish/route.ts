@@ -1,6 +1,7 @@
 import { getSession } from "@saas/auth/lib/server";
 import { getMarketingPost, updateMarketingPost } from "@repo/database";
 import { socialAccountsService } from "@repo/api/modules/marketing/services/social-accounts-service";
+import { publishToTikTok } from "@repo/api/modules/marketing/services/tiktok-publisher";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -224,6 +225,30 @@ export async function POST(
 					caption,
 					imageUrl: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined,
 				});
+			} else if (post.platform === "tiktok") {
+				if (!post.mediaUrls || post.mediaUrls.length === 0) {
+					throw new Error("TikTok requires a video URL");
+				}
+
+				// Construir caption con hashtags
+				const hashtagsArray = post.hashtags || [];
+				const hashtags = hashtagsArray.map(h => h.startsWith('#') ? h : `#${h}`).join(' ');
+				const caption = `${post.content}\n\n${hashtags}`;
+
+				console.log('Publishing to TikTok:', account.accountId);
+
+				const tiktokResult = await publishToTikTok(
+					post.organizationId,
+					post.mediaUrls[0], // Video URL
+					caption
+				);
+
+				if (!tiktokResult.success) {
+					throw new Error(tiktokResult.error || "Failed to publish to TikTok");
+				}
+
+				// TikTok devuelve publishId, no postId directamente
+				result = { postId: tiktokResult.publishId || "pending" };
 			} else {
 				throw new Error(`Plataforma ${post.platform} no soportada para publicación automática`);
 			}
