@@ -14,6 +14,11 @@ export default async function proxy(req: NextRequest) {
 		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
 	}
 
+	if (pathname === "/en/terms/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt" ||
+		pathname === "/en/privacy/tiktokImwO4eJFx1jJwLYHjtfrqbuWiXQGjobD.txt") {
+		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
+	}
+
 	// Permitir acceso directo a rutas que no necesitan locale (/app, /auth, /api, etc)
 	if (
 		pathname.startsWith("/app") ||
