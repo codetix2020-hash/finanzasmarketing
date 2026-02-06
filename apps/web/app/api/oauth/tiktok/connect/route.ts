@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@repo/auth";
-import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar que el usuario está autenticado
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth.api.getSession({ headers: request.headers });
     if (!session?.session?.userId) {
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`);
     }
@@ -23,14 +21,9 @@ export async function GET(request: NextRequest) {
     }
 
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`;
-    
-    // Obtener organizationId del query param
     const organizationId = request.nextUrl.searchParams.get("organizationId");
-    
-    // Scopes necesarios para publicar
     const scope = "user.info.basic,user.info.profile,video.upload,video.publish";
     
-    // State incluye organizationId para recuperarlo en callback
     const state = Buffer.from(JSON.stringify({
       organizationId,
       nonce: crypto.randomUUID()
@@ -43,18 +36,9 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("state", state);
     
-    console.log("Redirecting to TikTok OAuth:", authUrl.toString());
-    
     return NextResponse.redirect(authUrl.toString());
   } catch (error) {
     console.error("TikTok connect error:", error);
-    return NextResponse.json(
-      { error: "Failed to initiate TikTok OAuth" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to initiate TikTok OAuth" }, { status: 500 });
   }
 }
-
-
-
-
