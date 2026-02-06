@@ -38,18 +38,22 @@ export async function GET(request: NextRequest) {
     console.log("Code:", code);
     console.log("===================");
     
-    const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
+    const bodyParams = new URLSearchParams({
+      client_key: process.env.TIKTOK_CLIENT_KEY!,
+      client_secret: process.env.TIKTOK_CLIENT_SECRET!,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`,
+    });
+
+    console.log("Token request body:", bodyParams.toString());
+
+    const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        client_key: process.env.TIKTOK_CLIENT_KEY!,
-        client_secret: process.env.TIKTOK_CLIENT_SECRET!,
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`,
-      }),
+      body: bodyParams,
     });
     
     const tokenData = await tokenResponse.json();
