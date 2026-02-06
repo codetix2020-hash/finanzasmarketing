@@ -48,15 +48,28 @@ export async function GET(request: NextRequest) {
 
     console.log("Token request body:", bodyParams.toString());
 
-    const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token", {
+    const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: bodyParams,
     });
-    
-    const tokenData = await tokenResponse.json();
+
+    // Log raw response for debugging
+    const responseText = await tokenResponse.text();
+    console.log("TikTok raw response:", responseText);
+    console.log("TikTok response status:", tokenResponse.status);
+
+    // Try to parse as JSON
+    let tokenData;
+    try {
+      tokenData = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Failed to parse TikTok response as JSON:", responseText);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/app?error=tiktok_invalid_response`);
+    }
+
     console.log("TikTok token response:", tokenData);
     
     // TikTok API v2 returns data in tokenData.data or tokenData directly
