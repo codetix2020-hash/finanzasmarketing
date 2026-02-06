@@ -29,6 +29,15 @@ export async function GET(request: NextRequest) {
     }
     
     // Exchange code for access token
+    console.log("=== TIKTOK DEBUG ===");
+    console.log("Client Key:", process.env.TIKTOK_CLIENT_KEY);
+    console.log("Client Key length:", process.env.TIKTOK_CLIENT_KEY?.length);
+    console.log("Client Secret first 5 chars:", process.env.TIKTOK_CLIENT_SECRET?.substring(0, 5));
+    console.log("Client Secret length:", process.env.TIKTOK_CLIENT_SECRET?.length);
+    console.log("Redirect URI:", `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/tiktok/callback`);
+    console.log("Code:", code);
+    console.log("===================");
+    
     const tokenResponse = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
       method: "POST",
       headers: {
