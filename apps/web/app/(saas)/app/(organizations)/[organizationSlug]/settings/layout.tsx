@@ -12,6 +12,7 @@ import {
 	Users2Icon,
 	Plug,
 	Building2,
+	Package,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -65,11 +66,16 @@ export default async function SettingsLayout({
 				href: `${organizationSettingsBasePath}/integrations`,
 				icon: <Plug className="size-4 opacity-50" />,
 			},
-			{
-				title: "Perfil de negocio",
-				href: `${organizationSettingsBasePath}/business-profile`,
-				icon: <Building2 className="size-4 opacity-50" />,
-			},
+		{
+			title: "Perfil de negocio",
+			href: `${organizationSettingsBasePath}/business-profile`,
+			icon: <Building2 className="size-4 opacity-50" />,
+		},
+		{
+			title: "Productos/Servicios",
+			href: `${organizationSettingsBasePath}/products`,
+			icon: <Package className="size-4 opacity-50" />,
+		},
 				...(config.organizations.enable &&
 				config.organizations.enableBilling &&
 				userIsOrganizationAdmin
