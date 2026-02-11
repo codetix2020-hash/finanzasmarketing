@@ -106,6 +106,44 @@ import {
 } from './procedures/dashboard-data';
 import { cleanupTestContent } from './procedures/cleanup';
 import { cleanupTestData } from './procedures/admin';
+import {
+	businessIdentityGet,
+	businessIdentityUpsert
+} from './procedures/business-identity';
+import {
+	targetAudienceGet,
+	targetAudienceUpsert
+} from './procedures/target-audience';
+import {
+	productsList,
+	productsGet,
+	productsCreate,
+	productsUpdate,
+	productsDelete,
+	productsReorder
+} from './procedures/products';
+import {
+	marketingEventsList,
+	marketingEventsGet,
+	marketingEventsCreate,
+	marketingEventsUpdate,
+	marketingEventsDelete,
+	marketingEventsUpdateStatus
+} from './procedures/marketing-events';
+import {
+	mediaAssetsList,
+	mediaAssetsGet,
+	mediaAssetsCreate,
+	mediaAssetsUpdate,
+	mediaAssetsDelete,
+	mediaAssetsToggleFavorite,
+	mediaAssetsIncrementUsage,
+	mediaAssetsBulkCreate
+} from './procedures/media-assets';
+import {
+	contentStyleGet,
+	contentStyleUpsert
+} from './procedures/content-style';
 
 export const marketingRouter = publicProcedure.router({
 	guardsFinancial,
@@ -185,4 +223,42 @@ export const marketingRouter = publicProcedure.router({
 	// Cleanup
 	cleanupTestContent,
 	cleanupTestData,
+
+	// Business Identity
+	businessIdentityGet,
+	businessIdentityUpsert,
+
+	// Target Audience
+	targetAudienceGet,
+	targetAudienceUpsert,
+
+	// Products
+	productsList,
+	productsGet,
+	productsCreate,
+	productsUpdate,
+	productsDelete,
+	productsReorder,
+
+	// Marketing Events
+	marketingEventsList,
+	marketingEventsGet,
+	marketingEventsCreate,
+	marketingEventsUpdate,
+	marketingEventsDelete,
+	marketingEventsUpdateStatus,
+
+	// Media Assets
+	mediaAssetsList,
+	mediaAssetsGet,
+	mediaAssetsCreate,
+	mediaAssetsUpdate,
+	mediaAssetsDelete,
+	mediaAssetsToggleFavorite,
+	mediaAssetsIncrementUsage,
+	mediaAssetsBulkCreate,
+
+	// Content Style
+	contentStyleGet,
+	contentStyleUpsert,
 });
