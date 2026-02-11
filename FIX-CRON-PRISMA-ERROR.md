@@ -244,3 +244,4 @@ El error de Prisma está **CORREGIDO**. El cron ahora:
 
 
 
+

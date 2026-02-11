@@ -9,7 +9,20 @@ const intlMiddleware = createMiddleware(routing);
 export default async function proxy(req: NextRequest) {
 	const { pathname } = req.nextUrl;
 
-	// Bypass i18n para verificación de TikTok
+	// Servir directamente la verificación de TikTok
+	if (pathname === "/tiktokIH4m6xBtmO7FgBw5u2n08gMrctWPoaUc.txt") {
+		return new NextResponse(
+			"tiktok-developers-site-verification=IH4m6xBtmO7FgBw5u2n08gMrctWPoaUc",
+			{
+				headers: {
+					"Content-Type": "text/plain",
+					"Cache-Control": "no-store",
+				},
+			}
+		);
+	}
+
+	// Bypass i18n para otras rutas de TikTok
 	if (pathname.startsWith("/tiktok")) {
 		return NextResponse.rewrite(new URL("/api/tiktok-verify", req.url));
 	}
@@ -42,6 +55,7 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
 	matcher: [
+		"/tiktokIH4m6xBtmO7FgBw5u2n08gMrctWPoaUc.txt",
 		"/((?!api|image-proxy|images|fonts|_next/static|_next/image|favicon.ico|icon.png|sitemap.xml|robots.txt).*)",
 	],
 };
