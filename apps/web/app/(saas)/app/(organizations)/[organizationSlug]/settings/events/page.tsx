@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import {
   Card,
   CardContent,
@@ -44,6 +45,7 @@ import {
   Clock,
   Copy,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -695,11 +697,56 @@ function EventModal({
 export default function EventsPage() {
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
+  const { activeOrganization } = useActiveOrganization();
+  const organizationId = activeOrganization?.id;
 
   const [events, setEvents] = useState<MarketingEvent[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [editingEvent, setEditingEvent] = useState<MarketingEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar eventos desde la BD
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const loadEvents = async () => {
+      try {
+        const res = await fetch(`/api/marketing/events-list?organizationId=${organizationId}`);
+        if (res.ok) {
+          const result = await res.json();
+          if (result?.data) {
+            setEvents(result.data.map((e: any) => ({
+              id: e.id,
+              eventType: e.eventType || "evento",
+              title: e.title || "",
+              description: e.description || "",
+              startDate: e.startDate ? new Date(e.startDate).toISOString().split("T")[0] : "",
+              endDate: e.endDate ? new Date(e.endDate).toISOString().split("T")[0] : "",
+              prize: e.prize || "",
+              rules: e.rules || [],
+              winnersCount: e.winnersCount || 1,
+              discountType: e.discountType || "",
+              discountValue: e.discountValue,
+              discountCode: e.discountCode || "",
+              productId: e.productId || "",
+              announcementPost: e.announcementPost || "",
+              reminderPosts: e.reminderPosts || [],
+              winnerPost: e.winnerPost || "",
+              status: e.status || "draft",
+              imageUrl: e.imageUrl || "",
+            })));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [organizationId]);
 
   const filteredEvents = events.filter((e) => {
     if (filter === "all") return true;
@@ -709,34 +756,108 @@ export default function EventsPage() {
     return e.eventType === filter;
   });
 
-  const handleSaveEvent = (event: MarketingEvent) => {
-    const exists = events.find((e) => e.id === event.id);
-    if (exists) {
-      setEvents(events.map((e) => (e.id === event.id ? event : e)));
-      toast.success("Evento actualizado");
-    } else {
-      setEvents([event, ...events]);
-      toast.success("Evento creado");
+  const handleSaveEvent = async (event: MarketingEvent) => {
+    if (!organizationId) return;
+
+    try {
+      const isExisting = events.find((e) => e.id === event.id);
+      const { id, ...eventData } = event;
+
+      if (isExisting) {
+        // Actualizar evento existente
+        const res = await fetch("/api/marketing/events-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, data: eventData }),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setEvents(events.map((e) => (e.id === id ? { ...event, ...result.data } : e)));
+          toast.success("Evento actualizado");
+        } else {
+          toast.error("Error al actualizar evento");
+        }
+      } else {
+        // Crear evento nuevo
+        const res = await fetch("/api/marketing/events-create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: eventData,
+          }),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          const newEvent = {
+            ...event,
+            id: result.data.id,
+          };
+          setEvents([newEvent, ...events]);
+          toast.success("Evento creado");
+        } else {
+          toast.error("Error al crear evento");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving event:", error);
+      toast.error("Error al guardar evento");
     }
     setEditingEvent(null);
   };
 
-  const handleDeleteEvent = (id: string) => {
-    if (confirm("¿Eliminar este evento?")) {
-      setEvents(events.filter((e) => e.id !== id));
-      toast.success("Evento eliminado");
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm("¿Eliminar este evento?")) return;
+
+    try {
+      const res = await fetch("/api/marketing/events-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setEvents(events.filter((e) => e.id !== id));
+        toast.success("Evento eliminado");
+      } else {
+        toast.error("Error al eliminar evento");
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Error al eliminar evento");
     }
   };
 
-  const handleChangeStatus = (
+  const handleChangeStatus = async (
     id: string,
     status: MarketingEvent["status"]
   ) => {
-    setEvents(events.map((e) => (e.id === id ? { ...e, status } : e)));
-    toast.success(
-      `Evento ${status === "active" ? "activado" : status === "ended" ? "finalizado" : status}`
-    );
+    try {
+      const res = await fetch("/api/marketing/events-update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        setEvents(events.map((e) => (e.id === id ? { ...e, status } : e)));
+        toast.success(
+          `Evento ${status === "active" ? "activado" : status === "ended" ? "finalizado" : status}`
+        );
+      } else {
+        toast.error("Error al cambiar estado");
+      }
+    } catch (error) {
+      console.error("Error changing status:", error);
+      toast.error("Error al cambiar estado");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-8">

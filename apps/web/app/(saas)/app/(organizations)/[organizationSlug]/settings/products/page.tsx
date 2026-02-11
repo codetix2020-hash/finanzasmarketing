@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import {
   Card,
   CardContent,
@@ -42,6 +43,7 @@ import {
   GripVertical,
   Image as ImageIcon,
   Euro,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -664,6 +666,8 @@ function ProductModal({
 export default function ProductsPage() {
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
+  const { activeOrganization } = useActiveOrganization();
+  const organizationId = activeOrganization?.id;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState(defaultCategories);
@@ -671,6 +675,55 @@ export default function ProductsPage() {
   const [filter, setFilter] = useState<string>("all");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar productos desde la BD
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const loadProducts = async () => {
+      try {
+        const res = await fetch(`/api/marketing/products-list?organizationId=${organizationId}`);
+        if (res.ok) {
+          const result = await res.json();
+          if (result?.data) {
+            setProducts(result.data.map((p: any) => ({
+              id: p.id,
+              name: p.name || "",
+              shortDescription: p.shortDescription || "",
+              longDescription: p.longDescription || "",
+              category: p.category || "",
+              subcategory: p.subcategory || "",
+              price: p.price,
+              priceRange: p.priceRange || "",
+              ingredients: p.ingredients || [],
+              features: p.features || [],
+              isBestseller: p.isBestseller || false,
+              isNew: p.isNew || false,
+              isSeasonal: p.isSeasonal || false,
+              isLimitedEdition: p.isLimitedEdition || false,
+              isPromo: p.isPromo || false,
+              availability: p.availability || "siempre",
+              seasonStart: p.seasonStart || "",
+              seasonEnd: p.seasonEnd || "",
+              mainImageUrl: p.mainImageUrl || "",
+              images: p.images || [],
+              promotionHook: p.promotionHook || "",
+              hashtags: p.hashtags || [],
+              displayOrder: p.displayOrder || 0,
+              isActive: p.isActive ?? true,
+            })));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [organizationId]);
 
   // Filtrar productos
   const filteredProducts = products.filter((p) => {
@@ -699,33 +752,100 @@ export default function ProductsPage() {
     }
   };
 
-  const handleSaveProduct = (product: Product) => {
-    const exists = products.find((p) => p.id === product.id);
-    if (exists) {
-      setProducts(products.map((p) => (p.id === product.id ? product : p)));
-      toast.success("Producto actualizado");
-    } else {
-      setProducts([
-        ...products,
-        { ...product, displayOrder: products.length },
-      ]);
-      toast.success("Producto añadido");
+  const handleSaveProduct = async (product: Product) => {
+    if (!organizationId) return;
+
+    try {
+      const isExisting = products.find((p) => p.id === product.id);
+      const { id, ...productData } = product;
+
+      if (isExisting) {
+        // Actualizar producto existente
+        const res = await fetch("/api/marketing/products-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, data: productData }),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setProducts(products.map((p) => (p.id === id ? { ...product, ...result.data } : p)));
+          toast.success("Producto actualizado");
+        } else {
+          toast.error("Error al actualizar producto");
+        }
+      } else {
+        // Crear producto nuevo
+        const res = await fetch("/api/marketing/products-create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: { ...productData, displayOrder: products.length },
+          }),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setProducts([...products, { ...product, id: result.data.id, displayOrder: products.length }]);
+          toast.success("Producto añadido");
+        } else {
+          toast.error("Error al crear producto");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast.error("Error al guardar producto");
     }
     setEditingProduct(null);
   };
 
-  const handleDeleteProduct = (id: string) => {
-    if (confirm("¿Eliminar este producto?")) {
-      setProducts(products.filter((p) => p.id !== id));
-      toast.success("Producto eliminado");
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("¿Eliminar este producto?")) return;
+
+    try {
+      const res = await fetch("/api/marketing/products-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setProducts(products.filter((p) => p.id !== id));
+        toast.success("Producto eliminado");
+      } else {
+        toast.error("Error al eliminar producto");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Error al eliminar producto");
     }
   };
 
-  const handleToggleActive = (id: string) => {
-    setProducts(
-      products.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
-    );
+  const handleToggleActive = async (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+
+    try {
+      const res = await fetch("/api/marketing/products-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, data: { isActive: !product.isActive } }),
+      });
+      if (res.ok) {
+        setProducts(
+          products.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling active:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-8">

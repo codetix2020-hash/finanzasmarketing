@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@ui/components/badge";
 import { Building2, Users, Palette, Save, Plus, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 
 // Componente para añadir tags/arrays
 function TagInput({
@@ -91,6 +92,8 @@ const humorLabels: Record<number, string> = {
 export default function BusinessProfilePage() {
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
+  const { activeOrganization } = useActiveOrganization();
+  const organizationId = activeOrganization?.id;
 
   // Estados para cada sección
   const [identity, setIdentity] = useState({
@@ -175,55 +178,104 @@ export default function BusinessProfilePage() {
     { value: "eco", label: "Ecológico y sostenible" },
   ];
 
-  // Cargar datos existentes
+  // Cargar datos existentes desde la BD
   useEffect(() => {
+    if (!organizationId) return;
+
     const loadData = async () => {
       try {
-        const orgRes = await fetch(`/api/marketing/posts?organizationSlug=${organizationSlug}&limit=0`);
-        // Se cargarán los datos cuando las APIs estén conectadas
-        setLoading(false);
-      } catch {
+        const [identityRes, audienceRes, styleRes] = await Promise.all([
+          fetch(`/api/marketing/business-identity?organizationId=${organizationId}`),
+          fetch(`/api/marketing/target-audience?organizationId=${organizationId}`),
+          fetch(`/api/marketing/content-style?organizationId=${organizationId}`),
+        ]);
+
+        if (identityRes.ok) {
+          const result = await identityRes.json();
+          if (result?.data) {
+            setIdentity((prev) => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(result.data).filter(([_, v]) => v != null)
+              ),
+            }));
+          }
+        }
+        if (audienceRes.ok) {
+          const result = await audienceRes.json();
+          if (result?.data) {
+            setAudience((prev) => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(result.data).filter(([_, v]) => v != null)
+              ),
+            }));
+          }
+        }
+        if (styleRes.ok) {
+          const result = await styleRes.json();
+          if (result?.data) {
+            setStyle((prev) => ({
+              ...prev,
+              ...Object.fromEntries(
+                Object.entries(result.data).filter(([_, v]) => v != null)
+              ),
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading profile data:", error);
+      } finally {
         setLoading(false);
       }
     };
+
     loadData();
-  }, [organizationSlug]);
+  }, [organizationId]);
 
   const handleSave = async () => {
+    if (!organizationId) {
+      toast.error("No se encontró la organización");
+      return;
+    }
+
     setSaving(true);
     try {
-      // Guardar BusinessIdentity
-      await fetch("/api/marketing/business-identity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organizationSlug,
-          data: identity,
+      const results = await Promise.all([
+        fetch("/api/marketing/business-identity-upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: identity,
+          }),
         }),
-      });
-
-      // Guardar TargetAudience
-      await fetch("/api/marketing/target-audience", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organizationSlug,
-          data: audience,
+        fetch("/api/marketing/target-audience-upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: audience,
+          }),
         }),
-      });
-
-      // Guardar ContentStyle
-      await fetch("/api/marketing/content-style", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          organizationSlug,
-          data: style,
+        fetch("/api/marketing/content-style-upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: style,
+          }),
         }),
-      });
+      ]);
 
-      toast.success("Perfil guardado correctamente");
+      const allOk = results.every((r) => r.ok);
+      if (allOk) {
+        toast.success("Perfil guardado correctamente");
+      } else {
+        toast.error("Algunos datos no se guardaron correctamente");
+      }
     } catch (error) {
+      console.error("Error saving profile:", error);
       toast.error("No se pudo guardar el perfil. Inténtalo de nuevo.");
     } finally {
       setSaving(false);

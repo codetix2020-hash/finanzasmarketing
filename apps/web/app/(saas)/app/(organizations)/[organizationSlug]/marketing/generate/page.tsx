@@ -32,9 +32,11 @@ import {
   CheckCircle,
   AlertCircle,
   Settings,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 
 // Tipos de contenido
 const contentTypes = [
@@ -99,6 +101,8 @@ const platforms = [
 export default function GenerateContentPage() {
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
+  const { activeOrganization } = useActiveOrganization();
+  const organizationId = activeOrganization?.id;
 
   // Estado del formulario
   const [contentType, setContentType] = useState("promocional");
@@ -119,6 +123,7 @@ export default function GenerateContentPage() {
 
   // Estado de configuración del negocio
   const [businessConfigured, setBusinessConfigured] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [products, setProducts] = useState<
     Array<{ id: string; name: string }>
   >([]);
@@ -126,84 +131,88 @@ export default function GenerateContentPage() {
     Array<{ id: string; title: string }>
   >([]);
 
-  // Simular carga de datos (en producción, cargar de la API)
+  // Cargar datos reales del negocio
   useEffect(() => {
-    // Aquí cargaríamos los datos reales del negocio
-    setBusinessConfigured(true);
-    setProducts([
-      { id: "1", name: "Producto ejemplo 1" },
-      { id: "2", name: "Producto ejemplo 2" },
-    ]);
-    setEvents([{ id: "1", title: "Evento ejemplo" }]);
-  }, []);
+    if (!organizationId) return;
+
+    const loadData = async () => {
+      setLoadingData(true);
+      try {
+        const [identityRes, productsRes, eventsRes] = await Promise.all([
+          fetch(`/api/marketing/business-identity?organizationId=${organizationId}`),
+          fetch(`/api/marketing/products-list?organizationId=${organizationId}`),
+          fetch(`/api/marketing/events-list?organizationId=${organizationId}`),
+        ]);
+
+        if (identityRes.ok) {
+          const identityData = await identityRes.json();
+          setBusinessConfigured(!!identityData?.data?.businessName);
+        }
+
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          setProducts(
+            (productsData?.data || []).map((p: any) => ({
+              id: p.id,
+              name: p.name,
+            }))
+          );
+        }
+
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          setEvents(
+            (eventsData?.data || []).map((e: any) => ({
+              id: e.id,
+              title: e.title,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [organizationId]);
 
   const handleGenerate = async () => {
+    if (!organizationId) {
+      toast.error("No se encontró la organización");
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
-      const response = await fetch(
-        `/api/marketing/generate-content`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            organizationSlug,
-            contentType,
-            platform,
-            customPrompt,
-            productId: selectedProduct || undefined,
-            eventId: selectedEvent || undefined,
-          }),
-        }
-      );
+      const response = await fetch("/api/marketing/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationId,
+          contentType,
+          platform,
+          productId: selectedProduct || undefined,
+          eventId: selectedEvent || undefined,
+          customPrompt: customPrompt || undefined,
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
         setGeneratedContent(data);
         toast.success("Contenido generado");
       } else {
-        // Fallback: contenido de demostración si la API no está lista
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        setGeneratedContent({
-          mainText: `¡Buenos días! ☀️\n\nHoy queremos compartir contigo algo especial...\n\n${contentType === "promocional" ? "Descubre por qué somos la mejor opción para ti." : ""}${contentType === "educativo" ? "¿Sabías que...? Aquí te dejamos un tip que te encantará." : ""}${contentType === "engagement" ? "¿Cuál prefieres tú? 👇 ¡Cuéntanos en los comentarios!" : ""}${contentType === "behind_scenes" ? "Así es como preparamos todo para ti..." : ""}\n\n¡Te esperamos! 💫`,
-          hashtags: [
-            "tunegocio",
-            "barcelona",
-            "calidad",
-            "local",
-            "emprendimiento",
-          ],
-          suggestedCTA: "¡Visítanos hoy!",
-          imagePrompt:
-            "Foto del local con buena iluminación, productos en primer plano, ambiente acogedor",
-          alternativeVersion:
-            "Versión más corta del post para probar...",
-        });
-
-        toast.success("Contenido generado (modo demo)");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Error al generar");
       }
-    } catch {
-      // Fallback demo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setGeneratedContent({
-        mainText: `¡Buenos días! ☀️\n\nHoy queremos compartir contigo algo especial...\n\n${contentType === "promocional" ? "Descubre por qué somos la mejor opción para ti." : ""}${contentType === "educativo" ? "¿Sabías que...? Aquí te dejamos un tip que te encantará." : ""}${contentType === "engagement" ? "¿Cuál prefieres tú? 👇 ¡Cuéntanos en los comentarios!" : ""}${contentType === "behind_scenes" ? "Así es como preparamos todo para ti..." : ""}\n\n¡Te esperamos! 💫`,
-        hashtags: [
-          "tunegocio",
-          "barcelona",
-          "calidad",
-          "local",
-          "emprendimiento",
-        ],
-        suggestedCTA: "¡Visítanos hoy!",
-        imagePrompt:
-          "Foto del local con buena iluminación, productos en primer plano, ambiente acogedor",
-        alternativeVersion:
-          "Versión más corta del post para probar...",
-      });
-
-      toast.success("Contenido generado (modo demo)");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error.message || "Error al generar contenido. Verifica que tu perfil de negocio esté configurado."
+      );
     } finally {
       setIsGenerating(false);
     }
