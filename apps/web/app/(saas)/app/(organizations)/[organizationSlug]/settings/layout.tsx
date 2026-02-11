@@ -13,6 +13,7 @@ import {
 	Plug,
 	Building2,
 	Package,
+	Calendar,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -75,6 +76,11 @@ export default async function SettingsLayout({
 			title: "Productos/Servicios",
 			href: `${organizationSettingsBasePath}/products`,
 			icon: <Package className="size-4 opacity-50" />,
+		},
+		{
+			title: "Eventos y promociones",
+			href: `${organizationSettingsBasePath}/events`,
+			icon: <Calendar className="size-4 opacity-50" />,
 		},
 				...(config.organizations.enable &&
 				config.organizations.enableBilling &&
