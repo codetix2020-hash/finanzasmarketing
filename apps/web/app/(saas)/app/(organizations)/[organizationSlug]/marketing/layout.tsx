@@ -17,6 +17,7 @@ import {
 	Building2,
 	Plug,
 	CreditCard,
+	Wand2,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { PropsWithChildren } from "react";
@@ -74,11 +75,16 @@ export default async function MarketingLayout({
 						</div>
 					),
 				},
-				{
-					title: "Contenido",
-					href: `${marketingBasePath}/content`,
-					icon: <Sparkles className="size-4 opacity-50" />,
-				},
+			{
+				title: "Generar contenido",
+				href: `${marketingBasePath}/generate`,
+				icon: <Wand2 className="size-4 opacity-50" />,
+			},
+			{
+				title: "Contenido",
+				href: `${marketingBasePath}/content`,
+				icon: <Sparkles className="size-4 opacity-50" />,
+			},
 				{
 					title: "Calendario",
 					href: `${marketingBasePath}/content/calendar`,
