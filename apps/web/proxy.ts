@@ -10,9 +10,9 @@ export default async function proxy(req: NextRequest) {
 	const { pathname } = req.nextUrl;
 
 	// Servir directamente la verificación de TikTok
-	if (pathname === "/tiktokIH4m6xBtmO7FgBw5u2n08gMrctWPoaUc.txt") {
+	if (pathname === "/tiktokkgRM7M6jL2rK9Bi7Uc9P9R06o0suwfKm.txt") {
 		return new NextResponse(
-			"tiktok-developers-site-verification=IH4m6xBtmO7FgBw5u2n08gMrctWPoaUc",
+			"tiktok-developers-site-verification=kgRM7M6jL2rK9Bi7Uc9P9R06o0suwfKm",
 			{
 				headers: {
 					"Content-Type": "text/plain",
@@ -55,7 +55,7 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
 	matcher: [
-		"/tiktokIH4m6xBtmO7FgBw5u2n08gMrctWPoaUc.txt",
+		"/tiktokkgRM7M6jL2rK9Bi7Uc9P9R06o0suwfKm.txt",
 		"/((?!api|image-proxy|images|fonts|_next/static|_next/image|favicon.ico|icon.png|sitemap.xml|robots.txt).*)",
 	],
 };
