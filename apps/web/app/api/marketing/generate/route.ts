@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { contentGenerator } from "@repo/api/modules/marketing/services/content-generator";
+import { d2cContentGenerator } from "@repo/api/modules/marketing/services/content-generator";
 import { prisma } from "@repo/database";
 
 export async function POST(request: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Generar contenido con IA
-    const result = await contentGenerator.generateContent(context as any, {
+    const result = await d2cContentGenerator.generateContent(context as any, {
       contentType,
       platform,
       productId,
