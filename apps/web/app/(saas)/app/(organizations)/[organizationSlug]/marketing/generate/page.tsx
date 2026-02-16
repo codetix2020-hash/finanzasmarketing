@@ -33,6 +33,8 @@ import {
   AlertCircle,
   Settings,
   Loader2,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -118,8 +120,19 @@ export default function GenerateContentPage() {
     hashtags: string[];
     suggestedCTA: string;
     imagePrompt?: string;
+    imageSearchQuery?: string;
     alternativeVersion?: string;
   } | null>(null);
+
+  // Estado para imágenes sugeridas
+  const [suggestedImages, setSuggestedImages] = useState<Array<{
+    id: string;
+    url: string;
+    thumbnailUrl: string;
+    photographerName: string;
+  }>>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Estado de configuración del negocio
   const [businessConfigured, setBusinessConfigured] = useState(false);
@@ -178,6 +191,29 @@ export default function GenerateContentPage() {
     loadData();
   }, [organizationId]);
 
+  const searchImages = async (imageSearchQuery?: string) => {
+    if (!imageSearchQuery) return;
+
+    setLoadingImages(true);
+    try {
+      const params = new URLSearchParams({
+        query: imageSearchQuery,
+        contentType,
+        count: "6",
+      });
+
+      const response = await fetch(`/api/marketing/images?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedImages(data.images || []);
+      }
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!organizationId) {
       toast.error("No se encontró la organización");
@@ -185,6 +221,8 @@ export default function GenerateContentPage() {
     }
 
     setIsGenerating(true);
+    setSuggestedImages([]);
+    setSelectedImage(null);
 
     try {
       const response = await fetch("/api/marketing/generate", {
@@ -204,6 +242,11 @@ export default function GenerateContentPage() {
         const data = await response.json();
         setGeneratedContent(data);
         toast.success("Contenido generado");
+
+        // Buscar imágenes sugeridas
+        if (data.imageSearchQuery) {
+          searchImages(data.imageSearchQuery);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Error al generar");
@@ -478,6 +521,91 @@ export default function GenerateContentPage() {
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
                       {generatedContent.imagePrompt}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Fotos sugeridas de Pexels */}
+              {(suggestedImages.length > 0 || loadingImages) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" /> Fotos sugeridas
+                    </CardTitle>
+                    <CardDescription>
+                      Selecciona una foto de Pexels para tu post
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingImages ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {suggestedImages.map((img) => (
+                          <button
+                            key={img.id}
+                            type="button"
+                            onClick={() => setSelectedImage(selectedImage === img.id ? null : img.id)}
+                            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                              selectedImage === img.id
+                                ? "border-primary ring-2 ring-primary"
+                                : "border-transparent hover:border-muted-foreground/50"
+                            }`}
+                          >
+                            <img
+                              src={img.thumbnailUrl}
+                              alt="Suggested"
+                              className="w-full h-full object-cover"
+                            />
+                            {selectedImage === img.id && (
+                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                <Check className="h-8 w-8 text-primary" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedImage && (
+                      <div className="mt-4 flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const img = suggestedImages.find(i => i.id === selectedImage);
+                            if (img) window.open(img.url, "_blank");
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" /> Ver original
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const img = suggestedImages.find(i => i.id === selectedImage);
+                            if (img) {
+                              navigator.clipboard.writeText(img.url);
+                              toast.success("URL copiada");
+                            }
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" /> Copiar URL
+                        </Button>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Fotos de{" "}
+                      <a href="https://pexels.com" target="_blank" rel="noopener noreferrer" className="underline">
+                        Pexels
+                      </a>.
+                      Recuerda dar crédito al fotógrafo si es requerido.
                     </p>
                   </CardContent>
                 </Card>
