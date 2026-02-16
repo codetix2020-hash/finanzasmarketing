@@ -2,104 +2,264 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@ui/components/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
 import { Button } from "@ui/components/button";
 import { Textarea } from "@ui/components/textarea";
 import { Label } from "@ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@ui/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui/components/select";
 import { Badge } from "@ui/components/badge";
-import {
-  Sparkles,
-  Copy,
-  RefreshCw,
-  Instagram,
+import { 
+  Sparkles, 
+  Copy, 
+  RefreshCw, 
+  Instagram, 
   Facebook,
   Send,
   Image as ImageIcon,
   Wand2,
-  CheckCircle,
+  Check,
   AlertCircle,
   Settings,
-  Loader2,
-  Check,
+  ShoppingBag,
+  MessageSquare,
+  Star,
+  Video,
+  Clock,
+  BookOpen,
+  Heart,
+  Tag,
   ExternalLink,
+  ChevronDown,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 
-// Tipos de contenido
-const contentTypes = [
-  {
-    value: "promocional",
-    label: "Promocional",
-    description: "Destaca tu negocio o producto",
+// Tipos de contenido D2C con iconos y colores
+const contentTypesD2C = [
+  { 
+    value: "producto", 
+    label: "Producto", 
+    description: "Destaca un producto específico",
+    icon: ShoppingBag,
+    color: "bg-blue-100 text-blue-700",
+    examples: ["New arrival", "Bestseller", "Producto estrella"]
   },
-  {
-    value: "educativo",
-    label: "Educativo",
-    description: "Tips y consejos de tu industria",
-  },
-  {
-    value: "engagement",
-    label: "Engagement",
+  { 
+    value: "engagement", 
+    label: "Engagement", 
     description: "Genera interacción y comentarios",
+    icon: MessageSquare,
+    color: "bg-purple-100 text-purple-700",
+    examples: ["Esto o esto", "Completa la frase", "Tu opinión"]
   },
-  {
-    value: "behind_scenes",
-    label: "Detrás de cámaras",
+  { 
+    value: "social_proof", 
+    label: "Social Proof", 
+    description: "Reviews y testimonios",
+    icon: Star,
+    color: "bg-yellow-100 text-yellow-700",
+    examples: ["Review de cliente", "Números", "Antes/después"]
+  },
+  { 
+    value: "behind_scenes", 
+    label: "Behind the Scenes", 
     description: "Muestra tu día a día",
+    icon: Video,
+    color: "bg-pink-100 text-pink-700",
+    examples: ["Packaging", "Proceso", "El equipo"]
   },
-  {
-    value: "testimonio",
-    label: "Testimonio",
-    description: "Comparte experiencias de clientes",
+  { 
+    value: "urgencia", 
+    label: "Urgencia", 
+    description: "Stock o tiempo limitado",
+    icon: Clock,
+    color: "bg-red-100 text-red-700",
+    examples: ["Últimas unidades", "Solo hoy", "Última oportunidad"]
   },
-  {
-    value: "sorteo",
-    label: "Sorteo",
-    description: "Anuncia un giveaway",
+  { 
+    value: "educativo", 
+    label: "Educativo", 
+    description: "Tips y consejos de valor",
+    icon: BookOpen,
+    color: "bg-green-100 text-green-700",
+    examples: ["Tips de uso", "Mitos vs realidad", "Cómo elegir"]
   },
-  {
-    value: "oferta",
-    label: "Oferta",
-    description: "Promociona un descuento",
-  },
-  {
-    value: "lanzamiento",
-    label: "Lanzamiento",
-    description: "Presenta algo nuevo",
-  },
-  {
-    value: "historia",
-    label: "Historia",
+  { 
+    value: "storytelling", 
+    label: "Storytelling", 
     description: "Cuenta tu historia",
+    icon: Heart,
+    color: "bg-rose-100 text-rose-700",
+    examples: ["Origen de marca", "Por qué hacemos esto", "Valores"]
   },
-  {
-    value: "equipo",
-    label: "Equipo",
-    description: "Presenta a tu equipo",
+  { 
+    value: "oferta", 
+    label: "Oferta", 
+    description: "Descuentos y promociones",
+    icon: Tag,
+    color: "bg-orange-100 text-orange-700",
+    examples: ["Flash sale", "Código descuento", "Bundle"]
   },
 ];
 
+// Plataformas
 const platforms = [
-  { value: "instagram", label: "Instagram", icon: Instagram },
-  { value: "facebook", label: "Facebook", icon: Facebook },
-  { value: "stories", label: "Stories", icon: Instagram },
+  { value: "instagram", label: "Instagram Feed", icon: Instagram, maxChars: 2200, hashtagsRecommended: "10-15" },
+  { value: "facebook", label: "Facebook", icon: Facebook, maxChars: 5000, hashtagsRecommended: "3-5" },
+  { value: "stories", label: "Stories", icon: Instagram, maxChars: 200, hashtagsRecommended: "0-3" },
 ];
 
+// Tipos de imagen sugerida
+interface SuggestedImage {
+  id: string;
+  url: string;
+  thumbnailUrl: string;
+  photographerName: string;
+  photographerUrl?: string;
+}
+
+// Componente de tipo de contenido
+function ContentTypeCard({ 
+  type, 
+  selected, 
+  onClick 
+}: { 
+  type: typeof contentTypesD2C[0]; 
+  selected: boolean; 
+  onClick: () => void;
+}) {
+  const Icon = type.icon;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`p-4 rounded-xl border-2 text-left transition-all w-full ${
+        selected
+          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+          : "border-transparent bg-secondary/50 hover:bg-secondary hover:border-muted-foreground/20"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-lg ${type.color}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold">{type.label}</p>
+          <p className="text-sm text-muted-foreground">{type.description}</p>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {type.examples.slice(0, 2).map((ex) => (
+              <Badge key={ex} variant="outline" className="text-xs">
+                {ex}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// Componente de galería de imágenes
+function ImageGallery({
+  images,
+  loading,
+  selectedId,
+  onSelect,
+}: {
+  images: SuggestedImage[];
+  loading: boolean;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (images.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">No se encontraron imágenes</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-2">
+        {images.map((img) => (
+          <button
+            key={img.id}
+            onClick={() => onSelect(selectedId === img.id ? null : img.id)}
+            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+              selectedId === img.id
+                ? "border-primary ring-2 ring-primary/30"
+                : "border-transparent hover:border-muted-foreground/30"
+            }`}
+          >
+            <img
+              src={img.thumbnailUrl}
+              alt="Suggested"
+              className="w-full h-full object-cover"
+            />
+            {selectedId === img.id && (
+              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                <Check className="h-8 w-8 text-white drop-shadow-lg" />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {selectedId && (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const img = images.find((i) => i.id === selectedId);
+              if (img) window.open(img.url, "_blank");
+            }}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" /> Ver original
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const img = images.find((i) => i.id === selectedId);
+              if (img) {
+                navigator.clipboard.writeText(img.url);
+                toast.success("URL copiada");
+              }
+            }}
+          >
+            <Copy className="h-4 w-4 mr-2" /> Copiar URL
+          </Button>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        Fotos de{" "}
+        <a href="https://pexels.com" target="_blank" rel="noopener noreferrer" className="underline">
+          Pexels
+        </a>
+        . Uso gratuito, atribución apreciada.
+      </p>
+    </div>
+  );
+}
+
+// Página principal
 export default function GenerateContentPage() {
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
@@ -107,11 +267,10 @@ export default function GenerateContentPage() {
   const organizationId = activeOrganization?.id;
 
   // Estado del formulario
-  const [contentType, setContentType] = useState("promocional");
+  const [contentType, setContentType] = useState("producto");
   const [platform, setPlatform] = useState("instagram");
   const [customPrompt, setCustomPrompt] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState("");
 
   // Estado del resultado
   const [isGenerating, setIsGenerating] = useState(false);
@@ -124,83 +283,68 @@ export default function GenerateContentPage() {
     alternativeVersion?: string;
   } | null>(null);
 
-  // Estado para imágenes sugeridas
-  const [suggestedImages, setSuggestedImages] = useState<Array<{
-    id: string;
-    url: string;
-    thumbnailUrl: string;
-    photographerName: string;
-  }>>([]);
+  // Estado de imágenes
+  const [suggestedImages, setSuggestedImages] = useState<SuggestedImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Estado de configuración del negocio
-  const [businessConfigured, setBusinessConfigured] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const [products, setProducts] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-  const [events, setEvents] = useState<
-    Array<{ id: string; title: string }>
-  >([]);
+  // Estado de configuración
+  const [isConfigured, setIsConfigured] = useState(true);
+  const [products, setProducts] = useState<Array<{ id: string; name: string }>>([]);
+  const [d2cProfile, setD2cProfile] = useState<any>(null);
 
-  // Cargar datos reales del negocio
+  // Cargar datos al montar
   useEffect(() => {
-    if (!organizationId) return;
-
-    const loadData = async () => {
-      setLoadingData(true);
-      try {
-        const [identityRes, productsRes, eventsRes] = await Promise.all([
-          fetch(`/api/marketing/business-identity?organizationId=${organizationId}`),
-          fetch(`/api/marketing/products-list?organizationId=${organizationId}`),
-          fetch(`/api/marketing/events-list?organizationId=${organizationId}`),
-        ]);
-
-        if (identityRes.ok) {
-          const identityData = await identityRes.json();
-          setBusinessConfigured(!!identityData?.data?.businessName);
-        }
-
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          setProducts(
-            (productsData?.data || []).map((p: any) => ({
-              id: p.id,
-              name: p.name,
-            }))
-          );
-        }
-
-        if (eventsRes.ok) {
-          const eventsData = await eventsRes.json();
-          setEvents(
-            (eventsData?.data || []).map((e: any) => ({
-              id: e.id,
-              title: e.title,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
-    loadData();
+    if (organizationId) {
+      loadBusinessData();
+    }
   }, [organizationId]);
+
+  const loadBusinessData = async () => {
+    try {
+      // Cargar perfil D2C
+      const profileRes = await fetch(
+        `/api/marketing/business-identity?organizationId=${organizationId}`
+      );
+      if (profileRes.ok) {
+        const data = await profileRes.json();
+        setD2cProfile(data);
+        setIsConfigured(!!data?.businessName);
+      }
+
+      // Cargar productos
+      const productsRes = await fetch(
+        `/api/marketing/products-list?organizationId=${organizationId}`
+      );
+      if (productsRes.ok) {
+        const data = await productsRes.json();
+        setProducts(data.products || []);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  };
 
   const searchImages = async (imageSearchQuery?: string) => {
     if (!imageSearchQuery) return;
 
     setLoadingImages(true);
+    setSuggestedImages([]);
+
     try {
       const params = new URLSearchParams({
         query: imageSearchQuery,
-        contentType,
+        category: d2cProfile?.productCategory || "moda_ropa",
+        contentType: contentType,
         count: "6",
       });
+
+      if (d2cProfile?.brandColors) {
+        params.append("colors", d2cProfile.brandColors.join(","));
+      }
+      if (d2cProfile?.photoStyle) {
+        params.append("photoStyle", d2cProfile.photoStyle);
+      }
 
       const response = await fetch(`/api/marketing/images?${params}`);
       if (response.ok) {
@@ -215,12 +359,8 @@ export default function GenerateContentPage() {
   };
 
   const handleGenerate = async () => {
-    if (!organizationId) {
-      toast.error("No se encontró la organización");
-      return;
-    }
-
     setIsGenerating(true);
+    setGeneratedContent(null);
     setSuggestedImages([]);
     setSelectedImage(null);
 
@@ -233,29 +373,26 @@ export default function GenerateContentPage() {
           contentType,
           platform,
           productId: selectedProduct || undefined,
-          eventId: selectedEvent || undefined,
           customPrompt: customPrompt || undefined,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setGeneratedContent(data);
-        toast.success("Contenido generado");
-
-        // Buscar imágenes sugeridas
-        if (data.imageSearchQuery) {
-          searchImages(data.imageSearchQuery);
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Error al generar");
+      if (!response.ok) {
+        throw new Error("Failed to generate");
       }
-    } catch (error: any) {
+
+      const result = await response.json();
+      setGeneratedContent(result);
+
+      // Buscar imágenes automáticamente
+      if (result.imageSearchQuery) {
+        searchImages(result.imageSearchQuery);
+      }
+
+      toast.success("¡Contenido generado!");
+    } catch (error) {
       console.error(error);
-      toast.error(
-        error.message || "Error al generar contenido. Verifica que tu perfil de negocio esté configurado."
-      );
+      toast.error("Error al generar. Verifica tu configuración.");
     } finally {
       setIsGenerating(false);
     }
@@ -263,7 +400,7 @@ export default function GenerateContentPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copiado al portapapeles");
+    toast.success("Copiado");
   };
 
   const copyFullPost = () => {
@@ -272,38 +409,52 @@ export default function GenerateContentPage() {
     copyToClipboard(fullText);
   };
 
+  const selectedPlatform = platforms.find((p) => p.value === platform);
+  const selectedContentType = contentTypesD2C.find((t) => t.value === contentType);
+
   return (
-    <div className="max-w-6xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Wand2 className="h-8 w-8" />
-          Generador de contenido
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Crea contenido ultra personalizado para tus redes sociales
-        </p>
+    <div className="container max-w-7xl py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl text-white">
+                <Wand2 className="h-7 w-7" />
+              </div>
+              Generador de Contenido
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Contenido que vende, creado para tu marca D2C
+            </p>
+          </div>
+          
+          {!isConfigured && (
+            <Link href={`/app/${organizationSlug}/settings/business-profile`}>
+              <Button variant="outline">
+                <Settings className="h-4 w-4 mr-2" /> Configurar marca
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Alerta si no está configurado */}
-      {!businessConfigured && (
-        <Card className="border-yellow-200 bg-yellow-50">
+      {!isConfigured && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
               <div>
-                <p className="font-medium text-yellow-800">
-                  Configura tu negocio primero
+                <p className="font-medium text-amber-800">
+                  Configura tu marca para mejores resultados
                 </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Para generar contenido ultra personalizado, necesitas
-                  configurar el perfil de tu negocio.
+                <p className="text-sm text-amber-700 mt-1">
+                  El generador funciona, pero el contenido será más genérico sin tu perfil D2C configurado.
                 </p>
-                <Link
-                  href={`/app/${organizationSlug}/settings/business-profile`}
-                >
-                  <Button variant="outline" size="sm" className="mt-2">
-                    <Settings className="h-4 w-4 mr-2" /> Configurar
-                    perfil
+                <Link href={`/app/${organizationSlug}/marketing/onboarding/d2c`}>
+                  <Button size="sm" className="mt-3">
+                    <Zap className="h-4 w-4 mr-2" /> Configurar en 5 minutos
                   </Button>
                 </Link>
               </div>
@@ -312,34 +463,23 @@ export default function GenerateContentPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Panel de configuración */}
-        <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Panel izquierdo - Configuración */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Tipo de contenido */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                ¿Qué quieres publicar?
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">¿Qué quieres publicar?</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
-                {contentTypes.map((type) => (
-                  <button
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-1 gap-2">
+                {contentTypesD2C.map((type) => (
+                  <ContentTypeCard
                     key={type.value}
-                    type="button"
+                    type={type}
+                    selected={contentType === type.value}
                     onClick={() => setContentType(type.value)}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      contentType === type.value
-                        ? "border-primary bg-primary/5 ring-2 ring-primary"
-                        : "hover:bg-secondary"
-                    }`}
-                  >
-                    <p className="font-medium text-sm">{type.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {type.description}
-                    </p>
-                  </button>
+                  />
                 ))}
               </div>
             </CardContent>
@@ -347,10 +487,8 @@ export default function GenerateContentPage() {
 
           {/* Plataforma */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                ¿Dónde lo publicarás?
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Plataforma</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
@@ -359,45 +497,45 @@ export default function GenerateContentPage() {
                   return (
                     <button
                       key={p.value}
-                      type="button"
                       onClick={() => setPlatform(p.value)}
-                      className={`flex-1 p-3 rounded-lg border flex flex-col items-center gap-2 transition-all ${
+                      className={`flex-1 p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
                         platform === p.value
-                          ? "border-primary bg-primary/5 ring-2 ring-primary"
-                          : "hover:bg-secondary"
+                          ? "border-primary bg-primary/5"
+                          : "border-transparent bg-secondary/50 hover:bg-secondary"
                       }`}
                     >
                       <Icon className="h-5 w-5" />
-                      <span className="text-sm">{p.label}</span>
+                      <span className="text-sm font-medium">{p.label}</span>
                     </button>
                   );
                 })}
               </div>
+              {selectedPlatform && (
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  Máx {selectedPlatform.maxChars} chars · {selectedPlatform.hashtagsRecommended} hashtags recomendados
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Producto específico (opcional) */}
+          {/* Producto específico */}
           {products.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  ¿Sobre qué producto? (opcional)
-                </CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Producto (opcional)</CardTitle>
+                <CardDescription>
+                  Selecciona si el post es sobre un producto específico
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Select
-                  value={selectedProduct}
-                  onValueChange={setSelectedProduct}
-                >
+                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un producto..." />
+                    <SelectValue placeholder="Ninguno en particular" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">
-                      Ninguno en particular
-                    </SelectItem>
+                    <SelectItem value="">Ninguno en particular</SelectItem>
                     {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem key={p.id} value={p.name}>
                         {p.name}
                       </SelectItem>
                     ))}
@@ -407,22 +545,21 @@ export default function GenerateContentPage() {
             </Card>
           )}
 
-          {/* Indicaciones adicionales */}
+          {/* Instrucciones adicionales */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Indicaciones adicionales (opcional)
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Indicaciones extra</CardTitle>
               <CardDescription>
-                ¿Algo específico que quieras mencionar?
+                ¿Algo específico que mencionar?
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Ej: Menciona que hoy es nuestro aniversario, incluye el nuevo horario de verano, destaca el ingrediente especial..."
+                placeholder="Ej: Es nuestro 2º aniversario, menciona el envío gratis en pedidos +50€, destaca que es edición limitada..."
                 rows={3}
+                className="resize-none"
               />
             </CardContent>
           </Card>
@@ -430,65 +567,67 @@ export default function GenerateContentPage() {
           {/* Botón generar */}
           <Button
             size="lg"
-            className="w-full"
+            className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             onClick={handleGenerate}
             disabled={isGenerating}
           >
             {isGenerating ? (
               <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
                 Generando...
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="h-5 w-5 mr-2" />
                 Generar contenido
               </>
             )}
           </Button>
         </div>
 
-        {/* Panel de resultado */}
-        <div className="space-y-6">
+        {/* Panel derecho - Resultado */}
+        <div className="lg:col-span-3 space-y-6">
           {generatedContent ? (
             <>
-              {/* Texto principal */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg">Tu post</CardTitle>
+              {/* Post generado */}
+              <Card className="border-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <div className="flex items-center gap-2">
+                    {selectedContentType && (
+                      <div className={`p-1.5 rounded-lg ${selectedContentType.color}`}>
+                        <selectedContentType.icon className="h-4 w-4" />
+                      </div>
+                    )}
+                    <CardTitle className="text-lg">Tu post</CardTitle>
+                  </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerate}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-1" /> Regenerar
+                    <Button variant="ghost" size="sm" onClick={handleGenerate}>
+                      <RefreshCw className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyFullPost}
-                    >
-                      <Copy className="h-4 w-4 mr-1" /> Copiar todo
+                    <Button variant="outline" size="sm" onClick={copyFullPost}>
+                      <Copy className="h-4 w-4 mr-2" /> Copiar todo
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="bg-secondary/50 rounded-lg p-4 whitespace-pre-wrap font-sans">
-                    {generatedContent.mainText}
+                <CardContent className="space-y-4">
+                  {/* Texto principal */}
+                  <div className="bg-gradient-to-br from-secondary/50 to-secondary rounded-xl p-5">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed">
+                      {generatedContent.mainText}
+                    </p>
                   </div>
 
                   {/* Hashtags */}
-                  <div className="mt-4">
-                    <Label className="text-sm text-muted-foreground">
-                      Hashtags
+                  <div>
+                    <Label className="text-sm text-muted-foreground mb-2 block">
+                      Hashtags ({generatedContent.hashtags.length})
                     </Label>
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {generatedContent.hashtags.map((tag) => (
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
                           onClick={() => copyToClipboard(`#${tag}`)}
                         >
                           #{tag}
@@ -497,116 +636,60 @@ export default function GenerateContentPage() {
                     </div>
                   </div>
 
-                  {/* CTA sugerido */}
-                  <div className="mt-4">
-                    <Label className="text-sm text-muted-foreground">
-                      CTA sugerido
-                    </Label>
-                    <p className="mt-1 text-sm">
-                      {generatedContent.suggestedCTA}
-                    </p>
-                  </div>
+                  {/* CTA */}
+                  {generatedContent.suggestedCTA && (
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
+                      <div>
+                        <p className="text-xs text-muted-foreground">CTA sugerido</p>
+                        <p className="font-medium">{generatedContent.suggestedCTA}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(generatedContent.suggestedCTA)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Sugerencia de imagen */}
+              {/* Imágenes sugeridas */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" /> Fotos sugeridas
+                  </CardTitle>
+                  <CardDescription>
+                    Fotos de lifestyle para complementar tu post
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImageGallery
+                    images={suggestedImages}
+                    loading={loadingImages}
+                    selectedId={selectedImage}
+                    onSelect={setSelectedImage}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Sugerencia de imagen propia */}
               {generatedContent.imagePrompt && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5" /> Sugerencia de
-                      imagen
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {generatedContent.imagePrompt}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Fotos sugeridas de Pexels */}
-              {(suggestedImages.length > 0 || loadingImages) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5" /> Fotos sugeridas
-                    </CardTitle>
-                    <CardDescription>
-                      Selecciona una foto de Pexels para tu post
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {loadingImages ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                          <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg" />
-                        ))}
+                <Card className="bg-secondary/30">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <TrendingUp className="h-4 w-4 text-primary" />
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-3 gap-2">
-                        {suggestedImages.map((img) => (
-                          <button
-                            key={img.id}
-                            type="button"
-                            onClick={() => setSelectedImage(selectedImage === img.id ? null : img.id)}
-                            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                              selectedImage === img.id
-                                ? "border-primary ring-2 ring-primary"
-                                : "border-transparent hover:border-muted-foreground/50"
-                            }`}
-                          >
-                            <img
-                              src={img.thumbnailUrl}
-                              alt="Suggested"
-                              className="w-full h-full object-cover"
-                            />
-                            {selectedImage === img.id && (
-                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                <Check className="h-8 w-8 text-primary" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
+                      <div>
+                        <p className="font-medium text-sm">Tip: Mejor con tu propia foto</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {generatedContent.imagePrompt}
+                        </p>
                       </div>
-                    )}
-
-                    {selectedImage && (
-                      <div className="mt-4 flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const img = suggestedImages.find(i => i.id === selectedImage);
-                            if (img) window.open(img.url, "_blank");
-                          }}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" /> Ver original
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const img = suggestedImages.find(i => i.id === selectedImage);
-                            if (img) {
-                              navigator.clipboard.writeText(img.url);
-                              toast.success("URL copiada");
-                            }
-                          }}
-                        >
-                          <Copy className="h-4 w-4 mr-2" /> Copiar URL
-                        </Button>
-                      </div>
-                    )}
-
-                    <p className="text-xs text-muted-foreground mt-4">
-                      Fotos de{" "}
-                      <a href="https://pexels.com" target="_blank" rel="noopener noreferrer" className="underline">
-                        Pexels
-                      </a>.
-                      Recuerda dar crédito al fotógrafo si es requerido.
-                    </p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -614,58 +697,69 @@ export default function GenerateContentPage() {
               {/* Versión alternativa */}
               {generatedContent.alternativeVersion && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Versión alternativa
-                    </CardTitle>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Versión alternativa</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-secondary/30 rounded-lg p-4 whitespace-pre-wrap text-sm">
-                      {generatedContent.alternativeVersion}
+                    <div className="bg-secondary/30 rounded-xl p-4">
+                      <p className="whitespace-pre-wrap text-sm">
+                        {generatedContent.alternativeVersion}
+                      </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="mt-2"
-                      onClick={() =>
-                        copyToClipboard(
-                          generatedContent.alternativeVersion!
-                        )
-                      }
+                      className="mt-3"
+                      onClick={() => copyToClipboard(generatedContent.alternativeVersion!)}
                     >
-                      <Copy className="h-4 w-4 mr-1" /> Copiar
+                      <Copy className="h-4 w-4 mr-2" /> Copiar
                     </Button>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Acciones */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex flex-col gap-2">
-                    <Button className="w-full" variant="default">
-                      <Send className="h-4 w-4 mr-2" /> Usar en nuevo
-                      post
-                    </Button>
-                    <Button className="w-full" variant="outline">
-                      <CheckCircle className="h-4 w-4 mr-2" /> Guardar
-                      como borrador
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Acciones finales */}
+              <div className="flex gap-3">
+                <Button className="flex-1" size="lg">
+                  <Send className="h-4 w-4 mr-2" /> Crear post con esto
+                </Button>
+                <Button variant="outline" size="lg">
+                  <Heart className="h-4 w-4 mr-2" /> Guardar
+                </Button>
+              </div>
             </>
           ) : (
-            <Card className="h-full min-h-[400px] flex items-center justify-center">
-              <CardContent className="text-center">
-                <Sparkles className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-medium mb-2">
-                  Tu contenido aparecerá aquí
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Selecciona las opciones y haz clic en &quot;Generar
-                  contenido&quot;
+            /* Estado vacío */
+            <Card className="h-full min-h-[600px] flex items-center justify-center border-dashed border-2">
+              <CardContent className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-purple-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Tu contenido aparecerá aquí</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Selecciona el tipo de contenido, la plataforma y haz clic en &quot;Generar contenido&quot;
                 </p>
+
+                <div className="mt-8 grid grid-cols-3 gap-4 max-w-md mx-auto">
+                  <div className="text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">1</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Elige tipo</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">2</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Personaliza</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 bg-pink-100 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">3</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Genera</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -674,4 +768,3 @@ export default function GenerateContentPage() {
     </div>
   );
 }
-
