@@ -363,6 +363,9 @@ export default function GenerateContentPage() {
   const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Estado de guardado
+  const [isSaving, setIsSaving] = useState(false);
+
   // Estado de configuración
   const [isConfigured, setIsConfigured] = useState(true);
   const [products, setProducts] = useState<Array<{ id: string; name: string }>>([]);
@@ -469,6 +472,44 @@ export default function GenerateContentPage() {
     if (!generatedContent) return;
     const fullText = `${generatedContent.mainText}\n\n${generatedContent.hashtags.map((h) => `#${h}`).join(" ")}`;
     copyToClipboard(fullText);
+  };
+
+  const savePost = async (asDraft = true) => {
+    if (!generatedContent || !organizationId) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/marketing/generated-posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationId,
+          mainText: generatedContent.mainText,
+          hashtags: generatedContent.hashtags,
+          suggestedCTA: generatedContent.suggestedCTA,
+          alternativeText: generatedContent.alternativeVersion,
+          contentType,
+          platform,
+          selectedImageUrl: selectedImage
+            ? suggestedImages.find((i) => i.id === selectedImage)?.url
+            : null,
+          imagePrompt: generatedContent.imagePrompt,
+          productId: selectedProduct || null,
+          status: asDraft ? "draft" : "scheduled",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to save");
+
+      const { post } = await response.json();
+      toast.success(asDraft ? "✅ Guardado como borrador" : "📅 Post programado");
+
+      return post;
+    } catch (error) {
+      toast.error("Error al guardar el post");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const selectedTypeData = contentTypesD2C.find((t) => t.value === contentType);
@@ -759,20 +800,23 @@ export default function GenerateContentPage() {
                 <div className="flex gap-4">
                   <Button 
                     className="flex-1 h-14 rounded-2xl text-lg font-semibold bg-gray-900 hover:bg-gray-800"
+                    onClick={() => savePost(false)}
+                    disabled={isSaving}
                   >
-                    <Send className="h-5 w-5 mr-2" /> Crear post
+                    {isSaving ? (
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5 mr-2" />
+                    )}
+                    Programar publicación
                   </Button>
                   <Button 
                     variant="outline" 
                     className="h-14 px-6 rounded-2xl border-2"
+                    onClick={() => savePost(true)}
+                    disabled={isSaving}
                   >
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-14 px-6 rounded-2xl border-2"
-                  >
-                    <Share2 className="h-5 w-5" />
+                    <Heart className="h-5 w-5 mr-2" /> Guardar borrador
                   </Button>
                 </div>
               </>

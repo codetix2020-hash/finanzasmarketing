@@ -1,6 +1,7 @@
 export * from "./ai-chats";
 export * from "./ai-conversations";
 export * from "./business-profile";
+export * from "./generated-posts";
 export * from "./marketing-posts";
 export * from "./organizations";
 export * from "./purchases";

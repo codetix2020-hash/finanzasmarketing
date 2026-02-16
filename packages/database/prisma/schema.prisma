@@ -173,6 +173,7 @@ model Organization {
   mediaAssets           MediaAsset[]
   contentStyle          ContentStyle?
   specialDates          SpecialDate[]
+  generatedPosts        GeneratedPost[]
 
   @@unique([slug])
   @@map("organization")
@@ -1454,4 +1455,51 @@ model SpecialDate {
   
   @@index([organizationId])
   @@map("special_date")
+}
+
+// ============================================
+// GENERATED POSTS - Posts generados por IA
+// ============================================
+model GeneratedPost {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Contenido
+  mainText        String   @db.Text
+  hashtags        String[] @default([])
+  suggestedCTA    String?
+  alternativeText String?  @db.Text
+
+  // Metadata
+  contentType     String   // producto, engagement, social_proof, etc.
+  platform        String   // instagram, facebook, stories
+
+  // Imagen
+  selectedImageUrl String?
+  imagePrompt      String?
+
+  // Estado
+  status          String   @default("draft") // draft, scheduled, published, failed
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+
+  // Producto/Evento relacionado (opcional)
+  productId       String?
+  eventId         String?
+
+  // Resultados (después de publicar)
+  externalPostId  String?  // ID del post en Instagram/Facebook
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  reach           Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("generated_post")
 }
