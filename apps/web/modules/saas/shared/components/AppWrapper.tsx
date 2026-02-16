@@ -1,9 +1,20 @@
+"use client";
+
 import { config } from "@repo/config";
 import { NavBar } from "@saas/shared/components/NavBar";
 import { cn } from "@ui/lib";
+import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
 export function AppWrapper({ children }: PropsWithChildren) {
+	const pathname = usePathname();
+	const isMarketingRoute = pathname.includes("/marketing");
+
+	// Las rutas de marketing usan su propio layout completo con sidebar propio
+	if (isMarketingRoute) {
+		return <>{children}</>;
+	}
+
 	return (
 		<div
 			className={cn(
