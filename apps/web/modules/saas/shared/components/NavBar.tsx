@@ -6,20 +6,21 @@ import { UserMenu } from "@saas/shared/components/UserMenu";
 import { Logo } from "@shared/components/Logo";
 import { cn } from "@ui/lib";
 import {
-	BotMessageSquareIcon,
 	ChevronRightIcon,
-	HomeIcon,
+	LayoutDashboardIcon,
+	PenSquareIcon,
+	WandIcon,
+	ImageIcon,
+	CalendarIcon,
+	BarChart3Icon,
 	SettingsIcon,
-	UserCog2Icon,
 	UserCogIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { OrganzationSelect } from "../../organizations/components/OrganizationSelect";
 
 export function NavBar() {
-	const t = useTranslations();
 	const pathname = usePathname();
 	const { user } = useSession();
 	const { activeOrganization, isOrganizationAdmin } = useActiveOrganization();
@@ -30,48 +31,72 @@ export function NavBar() {
 		? `/app/${activeOrganization.slug}`
 		: "/app";
 
-	const menuItems = [
-		{
-			label: t("app.menu.start"),
-			href: basePath,
-			icon: HomeIcon,
-			isActive: pathname === basePath,
-		},
-		{
-			label: t("app.menu.aiChatbot"),
-			href: activeOrganization
-				? `/app/${activeOrganization.slug}/chatbot`
-				: "/app/chatbot",
-			icon: BotMessageSquareIcon,
-			isActive: pathname.includes("/chatbot"),
-		},
-		...(activeOrganization && isOrganizationAdmin
-			? [
-					{
-						label: t("app.menu.organizationSettings"),
-						href: `${basePath}/settings`,
-						icon: SettingsIcon,
-						isActive: pathname.startsWith(`${basePath}/settings/`),
-					},
-				]
-			: []),
-		{
-			label: t("app.menu.accountSettings"),
-			href: "/app/settings",
-			icon: UserCog2Icon,
-			isActive: pathname.startsWith("/app/settings/"),
-		},
-		...(user?.role === "admin"
-			? [
-					{
-						label: t("app.menu.admin"),
-						href: "/app/admin",
-						icon: UserCogIcon,
-						isActive: pathname.startsWith("/app/admin/"),
-					},
-				]
-			: []),
-	];
+	// Menú MarketingOS cuando hay organización activa
+	const menuItems = activeOrganization
+		? [
+				{
+					label: "Dashboard",
+					href: `${basePath}/marketing/dashboard`,
+					icon: LayoutDashboardIcon,
+					isActive: pathname.includes("/marketing/dashboard"),
+				},
+				{
+					label: "Crear contenido",
+					href: `${basePath}/marketing/content/create`,
+					icon: PenSquareIcon,
+					isActive: pathname.includes("/marketing/content/create"),
+				},
+				{
+					label: "Generar con IA",
+					href: `${basePath}/marketing/generate`,
+					icon: WandIcon,
+					isActive: pathname.includes("/marketing/generate"),
+				},
+				{
+					label: "Media",
+					href: `${basePath}/marketing/media`,
+					icon: ImageIcon,
+					isActive: pathname.includes("/marketing/media"),
+				},
+				{
+					label: "Calendario",
+					href: `${basePath}/marketing/calendar`,
+					icon: CalendarIcon,
+					isActive: pathname.includes("/marketing/calendar"),
+				},
+				{
+					label: "Analytics",
+					href: `${basePath}/marketing/analytics`,
+					icon: BarChart3Icon,
+					isActive: pathname.includes("/marketing/analytics"),
+				},
+				...(isOrganizationAdmin
+					? [
+							{
+								label: "Configuración",
+								href: `${basePath}/settings`,
+								icon: SettingsIcon,
+								isActive: pathname.startsWith(
+									`${basePath}/settings/`,
+								),
+							},
+						]
+					: []),
+			]
+		: [
+				{
+					label: "Inicio",
+					href: "/app",
+					icon: LayoutDashboardIcon,
+					isActive: pathname === "/app",
+				},
+				{
+					label: "Cuenta",
+					href: "/app/settings",
+					icon: UserCogIcon,
+					isActive: pathname.startsWith("/app/settings/"),
+				},
+			];
 
 	return (
 		<nav

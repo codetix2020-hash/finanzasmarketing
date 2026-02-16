@@ -19,9 +19,7 @@ import {
 	DropdownMenuTrigger,
 } from "@ui/components/dropdown-menu";
 import {
-	BookIcon,
 	HardDriveIcon,
-	HomeIcon,
 	LogOutIcon,
 	MoonIcon,
 	MoreVerticalIcon,
@@ -147,20 +145,6 @@ export function UserMenu({ showUserName }: { showUserName?: boolean }) {
 					<Link href="/app/settings/general">
 						<SettingsIcon className="mr-2 size-4" />
 						{t("app.userMenu.accountSettings")}
-					</Link>
-				</DropdownMenuItem>
-
-				<DropdownMenuItem asChild>
-					<a href="https://supastarter.dev/docs/nextjs">
-						<BookIcon className="mr-2 size-4" />
-						{t("app.userMenu.documentation")}
-					</a>
-				</DropdownMenuItem>
-
-				<DropdownMenuItem asChild>
-					<Link href="/">
-						<HomeIcon className="mr-2 size-4" />
-						{t("app.userMenu.home")}
 					</Link>
 				</DropdownMenuItem>
 

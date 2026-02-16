@@ -59,6 +59,43 @@ export const auth = betterAuth({
 			trustedProviders: ["google", "github"],
 		},
 	},
+	databaseHooks: {
+		user: {
+			create: {
+				after: async (user) => {
+					// Auto-crear organización para cada nuevo usuario (una cuenta = una marca)
+					try {
+						const defaultOrgName = user.name || user.email?.split("@")[0] || "Mi Marca";
+						const baseSlug = defaultOrgName
+							.toLowerCase()
+							.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+							.replace(/[^a-z0-9]+/g, "-")
+							.replace(/^-+|-+$/g, "")
+							.substring(0, 30);
+						const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+
+						await db.organization.create({
+							data: {
+								name: defaultOrgName,
+								slug,
+								createdAt: new Date(),
+								members: {
+									create: {
+										userId: user.id,
+										role: "owner",
+										createdAt: new Date(),
+									},
+								},
+							},
+						});
+						logger.info(`Auto-created organization "${defaultOrgName}" for user ${user.id}`);
+					} catch (error) {
+						logger.error("Error auto-creating organization for new user:", { error, userId: user.id });
+					}
+				},
+			},
+		},
+	},
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			if (ctx.path.startsWith("/organization/accept-invitation")) {

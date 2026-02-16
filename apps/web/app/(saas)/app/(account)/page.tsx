@@ -1,45 +1,32 @@
-import { config } from "@repo/config";
 import { getOrganizationList, getSession } from "@saas/auth/lib/server";
-import { PageHeader } from "@saas/shared/components/PageHeader";
-import UserStart from "@saas/start/UserStart";
 import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 
 export default async function AppStartPage() {
-	// AUTENTICACIÓN DESHABILITADA
-	// const session = await getSession();
-	// if (!session) {
-	// 	redirect("/auth/login");
-	// }
-	const session = null; // Mock para compatibilidad
-	const organizations: any[] = []; // Mock para compatibilidad
-	// const organizations = await getOrganizationList();
+	// Obtener sesión del usuario
+	let session = null;
+	try {
+		session = await getSession();
+	} catch (error) {
+		console.warn("No se pudo obtener sesión:", error);
+	}
 
-	// Sin validación de organizaciones - acceso directo permitido
-	// if (
-	// 	config.organizations.enable &&
-	// 	config.organizations.requireOrganization
-	// ) {
-	// 	const organization =
-	// 		organizations.find(
-	// 			(org) => org.id === session?.session.activeOrganizationId,
-	// 		) || organizations[0];
-	// 	if (!organization) {
-	// 		redirect("/new-organization");
-	// 	}
-	// 	redirect(`/app/${organization.slug}`);
-	// }
+	if (!session?.user) {
+		redirect("/auth/login");
+		return null;
+	}
 
-	const t = await getTranslations();
+	// Buscar la primera organización del usuario y redirigir al dashboard
+	try {
+		const organizations = await getOrganizationList();
 
-	return (
-		<div className="">
-			<PageHeader
-				title={t("start.welcome", { name: "Usuario" })}
-				subtitle={t("start.subtitle")}
-			/>
+		if (organizations && organizations.length > 0) {
+			const org = organizations[0];
+			redirect(`/app/${org.slug}/marketing/dashboard`);
+		}
+	} catch (error) {
+		console.warn("No se pudieron obtener organizaciones:", error);
+	}
 
-			<UserStart />
-		</div>
-	);
+	// Si no tiene organización, ir a crear una
+	redirect("/new-organization");
 }
