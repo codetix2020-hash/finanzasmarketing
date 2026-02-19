@@ -175,6 +175,7 @@ model Organization {
   specialDates          SpecialDate[]
   generatedPosts        GeneratedPost[]
   socialConnections     SocialConnection[]
+  mediaFiles            MediaFile[]
 
   @@unique([slug])
   @@map("organization")
@@ -1539,4 +1540,43 @@ model SocialConnection {
   @@index([organizationId])
   @@index([platform])
   @@map("social_connection")
+}
+
+// ============================================
+// MEDIA FILES - Banco de fotos
+// ============================================
+model MediaFile {
+  id              String   @id @default(cuid())
+  organizationId  String
+
+  // Archivo
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int      // bytes
+
+  // URLs
+  url             String   @db.Text
+  thumbnailUrl    String?  @db.Text
+
+  // Metadata
+  width           Int?
+  height          Int?
+
+  // Organización
+  folder          String?  // carpeta virtual
+  tags            String[] @default([])
+  altText         String?
+
+  // Estado
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, folder])
+  @@map("media_file")
 }

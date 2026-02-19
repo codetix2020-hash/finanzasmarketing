@@ -11,6 +11,7 @@ import {
 	PenSquareIcon,
 	WandIcon,
 	ImageIcon,
+	CameraIcon,
 	CalendarIcon,
 	BarChart3Icon,
 	SettingsIcon,
@@ -57,6 +58,12 @@ export function NavBar() {
 					href: `${basePath}/marketing/media`,
 					icon: ImageIcon,
 					isActive: pathname.includes("/marketing/media"),
+				},
+				{
+					label: "Banco de Fotos",
+					href: `${basePath}/marketing/photos`,
+					icon: CameraIcon,
+					isActive: pathname.includes("/marketing/photos"),
 				},
 				{
 					label: "Calendario",
