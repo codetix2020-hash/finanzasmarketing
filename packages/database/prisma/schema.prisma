@@ -1498,8 +1498,9 @@ model GeneratedPost {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([organizationId])
-  @@index([status])
-  @@index([scheduledAt])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, scheduledAt])
+  @@index([status, scheduledAt])
   @@map("generated_post")
 }

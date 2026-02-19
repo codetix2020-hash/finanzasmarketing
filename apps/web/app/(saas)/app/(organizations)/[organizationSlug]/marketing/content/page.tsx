@@ -1,308 +1,527 @@
 "use client";
 
-import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, CardContent } from "@ui/components/card";
 import { Button } from "@ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
-import { Input } from "@ui/components/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@ui/components/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/components/tabs";
 import { Badge } from "@ui/components/badge";
-import { Calendar, Edit, Loader2, Plus, Search, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/components/tabs";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@ui/components/dropdown-menu";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@ui/components/alert-dialog";
+import {
+	FileText,
+	Clock,
+	CheckCircle,
+	XCircle,
+	MoreVertical,
+	Edit,
+	Trash2,
+	Send,
+	Calendar,
+	Instagram,
+	Facebook,
+	Copy,
+	Plus,
+	ShoppingBag,
+	MessageSquare,
+	Star,
+	Camera,
+	BookOpen,
+	Heart,
+	Tag,
+	Loader2,
+	Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
+import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { formatDistanceToNow, format } from "date-fns";
+import { es } from "date-fns/locale";
 
-interface MarketingPost {
+// Tipos
+interface GeneratedPost {
 	id: string;
-	content: string;
+	mainText: string;
+	hashtags: string[];
+	suggestedCTA?: string;
+	contentType: string;
 	platform: string;
-	postType: string;
-	status: string;
+	selectedImageUrl?: string;
+	status: "draft" | "scheduled" | "published" | "failed";
 	scheduledAt?: string;
 	publishedAt?: string;
-	mediaUrls: string[];
-	hashtags: string[];
-	impressions: number;
-	likes: number;
-	comments: number;
-	shares: number;
+	createdAt: string;
+	likes?: number;
+	comments?: number;
 }
 
-const PLATFORM_ICONS: Record<string, string> = {
-	instagram: "📸",
-	facebook: "📘",
-	tiktok: "🎵",
-	linkedin: "💼",
-	twitter: "🐦",
+// Iconos por tipo de contenido
+const contentTypeIcons: Record<string, any> = {
+	producto: ShoppingBag,
+	engagement: MessageSquare,
+	social_proof: Star,
+	behind_scenes: Camera,
+	urgencia: Clock,
+	educativo: BookOpen,
+	storytelling: Heart,
+	oferta: Tag,
 };
 
-const STATUS_COLORS: Record<string, string> = {
-	draft: "bg-gray-500",
-	scheduled: "bg-blue-500",
-	publishing: "bg-yellow-500",
-	published: "bg-green-500",
-	failed: "bg-red-500",
+// Colores por tipo de contenido
+const contentTypeColors: Record<string, string> = {
+	producto: "from-blue-500 to-cyan-400",
+	engagement: "from-purple-500 to-pink-400",
+	social_proof: "from-amber-500 to-orange-400",
+	behind_scenes: "from-pink-500 to-rose-400",
+	urgencia: "from-red-500 to-orange-400",
+	educativo: "from-emerald-500 to-teal-400",
+	storytelling: "from-rose-500 to-pink-400",
+	oferta: "from-orange-500 to-yellow-400",
 };
 
-export default function MarketingContentPage() {
+// Badges de estado
+const statusConfig: Record<
+	string,
+	{ label: string; color: string; icon: any }
+> = {
+	draft: {
+		label: "Borrador",
+		color: "bg-gray-100 text-gray-700",
+		icon: FileText,
+	},
+	scheduled: {
+		label: "Programado",
+		color: "bg-blue-100 text-blue-700",
+		icon: Clock,
+	},
+	published: {
+		label: "Publicado",
+		color: "bg-green-100 text-green-700",
+		icon: CheckCircle,
+	},
+	failed: {
+		label: "Error",
+		color: "bg-red-100 text-red-700",
+		icon: XCircle,
+	},
+};
+
+// Componente de tarjeta de post
+function PostCard({
+	post,
+	onEdit,
+	onDelete,
+	onSchedule,
+	onPublish,
+}: {
+	post: GeneratedPost;
+	onEdit: () => void;
+	onDelete: () => void;
+	onSchedule: () => void;
+	onPublish: () => void;
+}) {
+	const ContentIcon = contentTypeIcons[post.contentType] || FileText;
+	const gradient =
+		contentTypeColors[post.contentType] || "from-gray-500 to-gray-400";
+	const status = statusConfig[post.status] || statusConfig.draft;
+	const StatusIcon = status.icon;
+
+	const truncatedText =
+		post.mainText.length > 150
+			? `${post.mainText.substring(0, 150)}...`
+			: post.mainText;
+
+	const copyToClipboard = () => {
+		const fullText = `${post.mainText}\n\n${post.hashtags.map((h) => `#${h}`).join(" ")}`;
+		navigator.clipboard.writeText(fullText);
+		toast.success("Copiado al portapapeles");
+	};
+
+	return (
+		<Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+			<CardContent className="p-0">
+				{/* Header con gradiente */}
+				<div className={`h-2 bg-gradient-to-r ${gradient}`} />
+
+				<div className="p-4">
+					{/* Top row: tipo, plataforma, estado, menú */}
+					<div className="flex items-center justify-between mb-3">
+						<div className="flex items-center gap-2">
+							{/* Tipo de contenido */}
+							<div
+								className={`p-1.5 rounded-lg bg-gradient-to-br ${gradient}`}
+							>
+								<ContentIcon className="h-3.5 w-3.5 text-white" />
+							</div>
+
+							{/* Plataforma */}
+							{post.platform === "instagram" && (
+								<Instagram className="h-4 w-4 text-pink-500" />
+							)}
+							{post.platform === "facebook" && (
+								<Facebook className="h-4 w-4 text-blue-600" />
+							)}
+
+							{/* Estado */}
+							<Badge
+								className={`${status.color} text-xs font-medium`}
+							>
+								<StatusIcon className="h-3 w-3 mr-1" />
+								{status.label}
+							</Badge>
+						</div>
+
+						{/* Menú de acciones */}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+								>
+									<MoreVertical className="h-4 w-4" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-48">
+								<DropdownMenuItem onClick={onEdit}>
+									<Edit className="h-4 w-4 mr-2" /> Editar
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={copyToClipboard}>
+									<Copy className="h-4 w-4 mr-2" /> Copiar
+									texto
+								</DropdownMenuItem>
+								{post.status === "draft" && (
+									<>
+										<DropdownMenuSeparator />
+										<DropdownMenuItem onClick={onSchedule}>
+											<Calendar className="h-4 w-4 mr-2" />{" "}
+											Programar
+										</DropdownMenuItem>
+										<DropdownMenuItem onClick={onPublish}>
+											<Send className="h-4 w-4 mr-2" />{" "}
+											Publicar ahora
+										</DropdownMenuItem>
+									</>
+								)}
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={onDelete}
+									className="text-red-600"
+								>
+									<Trash2 className="h-4 w-4 mr-2" />{" "}
+									Eliminar
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+
+					{/* Contenido del post */}
+					<div className="flex gap-3">
+						{/* Imagen si existe */}
+						{post.selectedImageUrl && (
+							<div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+								<img
+									src={post.selectedImageUrl}
+									alt=""
+									className="w-full h-full object-cover"
+								/>
+							</div>
+						)}
+
+						{/* Texto */}
+						<div className="flex-1 min-w-0">
+							<p className="text-sm text-gray-700 line-clamp-3">
+								{truncatedText}
+							</p>
+
+							{/* Hashtags preview */}
+							{post.hashtags.length > 0 && (
+								<div className="mt-2 flex flex-wrap gap-1">
+									{post.hashtags.slice(0, 3).map((tag) => (
+										<span
+											key={tag}
+											className="text-xs text-blue-600"
+										>
+											#{tag}
+										</span>
+									))}
+									{post.hashtags.length > 3 && (
+										<span className="text-xs text-gray-400">
+											+{post.hashtags.length - 3} más
+										</span>
+									)}
+								</div>
+							)}
+						</div>
+					</div>
+
+					{/* Footer: fecha y métricas */}
+					<div className="mt-4 pt-3 border-t flex items-center justify-between text-xs text-gray-500">
+						<span>
+							{post.scheduledAt
+								? `Programado: ${format(new Date(post.scheduledAt), "d MMM, HH:mm", { locale: es })}`
+								: `Creado ${formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: es })}`}
+						</span>
+
+						{post.status === "published" && (
+							<div className="flex items-center gap-3">
+								{post.likes !== undefined && (
+									<span>❤️ {post.likes}</span>
+								)}
+								{post.comments !== undefined && (
+									<span>💬 {post.comments}</span>
+								)}
+							</div>
+						)}
+					</div>
+				</div>
+			</CardContent>
+		</Card>
+	);
+}
+
+// Página principal
+export default function ContentPage() {
 	const params = useParams();
+	const router = useRouter();
 	const organizationSlug = params.organizationSlug as string;
+	const { activeOrganization } = useActiveOrganization();
+	const organizationId = activeOrganization?.id;
 
-	const { activeOrganization, loaded } = useActiveOrganization();
-
-	const [posts, setPosts] = useState<MarketingPost[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const [posts, setPosts] = useState<GeneratedPost[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState("all");
-	const [searchQuery, setSearchQuery] = useState("");
-	const [platformFilter, setPlatformFilter] = useState<string>("all");
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
+	// Cargar posts
 	useEffect(() => {
-		if (!loaded || !activeOrganization?.id) return;
-
-		async function loadPosts() {
-			setIsLoading(true);
-			try {
-				const statusFilter = activeTab === "all" ? undefined : activeTab;
-				const res = await fetch(
-					`/api/marketing/posts?organizationId=${activeOrganization.id}${
-						statusFilter ? `&status=${statusFilter}` : ""
-					}${platformFilter !== "all" ? `&platform=${platformFilter}` : ""}`,
-				);
-				const data = await res.json();
-				if (res.ok && data.posts) {
-					setPosts(data.posts);
-				}
-			} catch (error) {
-				console.error("Error loading posts:", error);
-				toast.error("Error al cargar posts");
-			} finally {
-				setIsLoading(false);
-			}
+		if (organizationId) {
+			loadPosts();
 		}
+	}, [organizationId]);
 
-		loadPosts();
-	}, [loaded, activeOrganization?.id, activeTab, platformFilter]);
-
-	const filteredPosts = useMemo(() => {
-		if (!searchQuery.trim()) return posts;
-
-		const query = searchQuery.toLowerCase();
-		return posts.filter(
-			(post) =>
-				post.content.toLowerCase().includes(query) ||
-				post.platform.toLowerCase().includes(query) ||
-				post.hashtags.some((h) => h.toLowerCase().includes(query)),
-		);
-	}, [posts, searchQuery]);
-
-	const handleDelete = async (postId: string) => {
-		if (!confirm("¿Estás seguro de eliminar este post?")) return;
-
+	const loadPosts = async () => {
 		try {
-			const res = await fetch(`/api/marketing/posts/${postId}`, {
-				method: "DELETE",
-			});
-
-			if (!res.ok) {
-				throw new Error("Error al eliminar");
+			setLoading(true);
+			const response = await fetch(
+				`/api/marketing/generated-posts?organizationId=${organizationId}`,
+			);
+			if (response.ok) {
+				const data = await response.json();
+				setPosts(data.posts || []);
 			}
-
-			setPosts((prev) => prev.filter((p) => p.id !== postId));
-			toast.success("Post eliminado");
 		} catch (error) {
-			console.error(error);
-			toast.error("Error al eliminar post");
+			console.error("Error loading posts:", error);
+			toast.error("Error al cargar el contenido");
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	if (!loaded) {
-		return (
-			<div className="flex items-center justify-center min-h-[400px]">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
-	}
+	const handleDelete = async () => {
+		if (!postToDelete) return;
+
+		try {
+			const response = await fetch(
+				`/api/marketing/generated-posts/${postToDelete}`,
+				{
+					method: "DELETE",
+				},
+			);
+
+			if (response.ok) {
+				setPosts(posts.filter((p) => p.id !== postToDelete));
+				toast.success("Post eliminado");
+			} else {
+				throw new Error("Failed to delete");
+			}
+		} catch (error) {
+			toast.error("Error al eliminar");
+		} finally {
+			setDeleteDialogOpen(false);
+			setPostToDelete(null);
+		}
+	};
+
+	const confirmDelete = (postId: string) => {
+		setPostToDelete(postId);
+		setDeleteDialogOpen(true);
+	};
+
+	// Filtrar posts por tab
+	const filteredPosts = posts.filter((post) => {
+		if (activeTab === "all") return true;
+		return post.status === activeTab;
+	});
+
+	// Contar por estado
+	const counts = {
+		all: posts.length,
+		draft: posts.filter((p) => p.status === "draft").length,
+		scheduled: posts.filter((p) => p.status === "scheduled").length,
+		published: posts.filter((p) => p.status === "published").length,
+	};
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-start justify-between gap-4">
-				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Contenido</h1>
-					<p className="text-muted-foreground mt-2">
-						Gestiona todos tus posts, borradores y programaciones
-					</p>
-				</div>
-				<Button asChild>
-					<Link href={`/app/${organizationSlug}/marketing/content/create`}>
-						<Plus className="mr-2 h-4 w-4" />
-						Crear contenido
+		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30">
+			<div className="container max-w-6xl py-8 px-4">
+				{/* Header */}
+				<div className="flex items-center justify-between mb-8">
+					<div>
+						<h1 className="text-3xl font-bold text-gray-900">
+							Tu Contenido
+						</h1>
+						<p className="text-gray-500 mt-1">
+							Gestiona tus posts generados, borradores y
+							programados
+						</p>
+					</div>
+
+					<Link
+						href={`/app/${organizationSlug}/marketing/generate`}
+					>
+						<Button className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+							<Plus className="h-4 w-4 mr-2" /> Crear nuevo
+						</Button>
 					</Link>
-				</Button>
+				</div>
+
+				{/* Tabs */}
+				<Tabs
+					value={activeTab}
+					onValueChange={setActiveTab}
+					className="space-y-6"
+				>
+					<TabsList className="bg-white border rounded-2xl p-1 h-auto">
+						<TabsTrigger
+							value="all"
+							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
+						>
+							Todos ({counts.all})
+						</TabsTrigger>
+						<TabsTrigger
+							value="draft"
+							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
+						>
+							<FileText className="h-4 w-4 mr-2" />
+							Borradores ({counts.draft})
+						</TabsTrigger>
+						<TabsTrigger
+							value="scheduled"
+							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
+						>
+							<Clock className="h-4 w-4 mr-2" />
+							Programados ({counts.scheduled})
+						</TabsTrigger>
+						<TabsTrigger
+							value="published"
+							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
+						>
+							<CheckCircle className="h-4 w-4 mr-2" />
+							Publicados ({counts.published})
+						</TabsTrigger>
+					</TabsList>
+
+					<TabsContent value={activeTab} className="mt-6">
+						{loading ? (
+							<div className="flex items-center justify-center py-20">
+								<Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+							</div>
+						) : filteredPosts.length === 0 ? (
+							<div className="text-center py-20">
+								<div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+									<FileText className="h-10 w-10 text-gray-400" />
+								</div>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">
+									{activeTab === "all"
+										? "No tienes contenido todavía"
+										: `No tienes ${statusConfig[activeTab]?.label.toLowerCase() || "posts"}`}
+								</h3>
+								<p className="text-gray-500 mb-6">
+									Genera tu primer post con IA y empieza a
+									crear contenido increíble
+								</p>
+								<Link
+									href={`/app/${organizationSlug}/marketing/generate`}
+								>
+									<Button className="rounded-xl">
+										<Sparkles className="h-4 w-4 mr-2" />{" "}
+										Generar contenido
+									</Button>
+								</Link>
+							</div>
+						) : (
+							<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+								{filteredPosts.map((post) => (
+									<PostCard
+										key={post.id}
+										post={post}
+										onEdit={() =>
+											router.push(
+												`/app/${organizationSlug}/marketing/content/${post.id}/edit`,
+											)
+										}
+										onDelete={() =>
+											confirmDelete(post.id)
+										}
+										onSchedule={() =>
+											router.push(
+												`/app/${organizationSlug}/marketing/content/${post.id}/schedule`,
+											)
+										}
+										onPublish={() => {
+											/* TODO: implementar publicación directa */
+										}}
+									/>
+								))}
+							</div>
+						)}
+					</TabsContent>
+				</Tabs>
 			</div>
 
-			{/* Filtros */}
-			<Card>
-				<CardContent className="pt-6">
-					<div className="flex flex-col md:flex-row gap-4">
-						<div className="flex-1">
-							<div className="relative">
-								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-								<Input
-									placeholder="Buscar por texto, plataforma o hashtag..."
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="pl-10"
-								/>
-							</div>
-						</div>
-						<div className="w-full md:w-[200px]">
-							<Select value={platformFilter} onValueChange={setPlatformFilter}>
-								<SelectTrigger>
-									<SelectValue placeholder="Todas las plataformas" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">Todas las plataformas</SelectItem>
-									<SelectItem value="instagram">Instagram</SelectItem>
-									<SelectItem value="facebook">Facebook</SelectItem>
-									<SelectItem value="tiktok">TikTok</SelectItem>
-									<SelectItem value="linkedin">LinkedIn</SelectItem>
-									<SelectItem value="twitter">Twitter</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* Tabs y lista */}
-			<Tabs value={activeTab} onValueChange={setActiveTab}>
-				<TabsList>
-					<TabsTrigger value="all">Todos</TabsTrigger>
-					<TabsTrigger value="draft">Borradores</TabsTrigger>
-					<TabsTrigger value="scheduled">Programados</TabsTrigger>
-					<TabsTrigger value="published">Publicados</TabsTrigger>
-				</TabsList>
-
-				<TabsContent value={activeTab} className="mt-4">
-					{isLoading ? (
-						<div className="flex items-center justify-center py-8">
-							<Loader2 className="h-6 w-6 animate-spin" />
-						</div>
-					) : filteredPosts.length === 0 ? (
-						<Card>
-							<CardContent className="py-12 text-center">
-								<p className="text-muted-foreground">
-									No hay posts {activeTab !== "all" ? `en ${activeTab}` : ""}
-								</p>
-								<Button asChild className="mt-4">
-									<Link href={`/app/${organizationSlug}/marketing/content/create`}>
-										<Plus className="mr-2 h-4 w-4" />
-										Crear primer post
-									</Link>
-								</Button>
-							</CardContent>
-						</Card>
-					) : (
-						<div className="space-y-4">
-							{filteredPosts.map((post) => (
-								<Card key={post.id}>
-									<CardContent className="pt-6">
-										<div className="flex gap-4">
-											{/* Thumbnail */}
-											{post.mediaUrls && post.mediaUrls.length > 0 && (
-												<div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-													<img
-														src={post.mediaUrls[0]}
-														alt="Post thumbnail"
-														className="w-full h-full object-cover"
-													/>
-												</div>
-											)}
-
-											{/* Contenido */}
-											<div className="flex-1 min-w-0">
-												<div className="flex items-start justify-between gap-4 mb-2">
-													<div className="flex items-center gap-2 flex-wrap">
-														<span className="text-2xl">
-															{PLATFORM_ICONS[post.platform] || "📱"}
-														</span>
-														<Badge
-															className={STATUS_COLORS[post.status] || "bg-gray-500"}
-														>
-															{post.status}
-														</Badge>
-														<span className="text-sm text-muted-foreground">
-															{post.platform} • {post.postType}
-														</span>
-													</div>
-													<div className="flex gap-2">
-														<Button variant="ghost" size="icon">
-															<Edit className="h-4 w-4" />
-														</Button>
-														<Button
-															variant="ghost"
-															size="icon"
-															onClick={() => handleDelete(post.id)}
-														>
-															<Trash2 className="h-4 w-4" />
-														</Button>
-													</div>
-												</div>
-
-												<p className="text-sm line-clamp-2 mb-2">
-													{post.content}
-												</p>
-
-												{post.hashtags.length > 0 && (
-													<div className="flex flex-wrap gap-1 mb-2">
-														{post.hashtags.slice(0, 5).map((tag, idx) => (
-															<span
-																key={idx}
-																className="text-xs text-muted-foreground"
-															>
-																{tag}
-															</span>
-														))}
-													</div>
-												)}
-
-												<div className="flex items-center gap-4 text-xs text-muted-foreground">
-													{post.scheduledAt && (
-														<div className="flex items-center gap-1">
-															<Calendar className="h-3 w-3" />
-															Programado: {new Date(post.scheduledAt).toLocaleString()}
-														</div>
-													)}
-													{post.publishedAt && (
-														<div>
-															Publicado: {new Date(post.publishedAt).toLocaleString()}
-														</div>
-													)}
-													{post.status === "published" && (
-														<div className="flex gap-4">
-															<span>👁️ {post.impressions}</span>
-															<span>❤️ {post.likes}</span>
-															<span>💬 {post.comments}</span>
-															<span>🔁 {post.shares}</span>
-														</div>
-													)}
-												</div>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-							))}
-						</div>
-					)}
-				</TabsContent>
-			</Tabs>
+			{/* Dialog de confirmación de eliminación */}
+			<AlertDialog
+				open={deleteDialogOpen}
+				onOpenChange={setDeleteDialogOpen}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							¿Eliminar este post?
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. El post será
+							eliminado permanentemente.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDelete}
+							className="bg-red-600 hover:bg-red-700"
+						>
+							Eliminar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
