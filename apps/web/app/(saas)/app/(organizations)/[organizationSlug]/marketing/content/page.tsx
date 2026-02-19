@@ -52,6 +52,7 @@ import Link from "next/link";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { ScheduleModal } from "../components/schedule-modal";
 
 // Tipos
 interface GeneratedPost {
@@ -308,6 +309,10 @@ export default function ContentPage() {
 	const [activeTab, setActiveTab] = useState("all");
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [postToDelete, setPostToDelete] = useState<string | null>(null);
+	const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+	const [postToSchedule, setPostToSchedule] = useState<GeneratedPost | null>(
+		null,
+	);
 
 	// Cargar posts
 	useEffect(() => {
@@ -362,6 +367,26 @@ export default function ContentPage() {
 	const confirmDelete = (postId: string) => {
 		setPostToDelete(postId);
 		setDeleteDialogOpen(true);
+	};
+
+	const openScheduleModal = (post: GeneratedPost) => {
+		setPostToSchedule(post);
+		setScheduleModalOpen(true);
+	};
+
+	const handleScheduled = (scheduledAt: Date) => {
+		setPosts(
+			posts.map((p) =>
+				p.id === postToSchedule?.id
+					? {
+							...p,
+							status: "scheduled" as const,
+							scheduledAt: scheduledAt.toISOString(),
+						}
+					: p,
+			),
+		);
+		setPostToSchedule(null);
 	};
 
 	// Filtrar posts por tab
@@ -481,9 +506,7 @@ export default function ContentPage() {
 											confirmDelete(post.id)
 										}
 										onSchedule={() =>
-											router.push(
-												`/app/${organizationSlug}/marketing/content/${post.id}/schedule`,
-											)
+											openScheduleModal(post)
 										}
 										onPublish={() => {
 											/* TODO: implementar publicación directa */
@@ -522,6 +545,17 @@ export default function ContentPage() {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			{/* Modal de programación */}
+			{postToSchedule && (
+				<ScheduleModal
+					open={scheduleModalOpen}
+					onOpenChange={setScheduleModalOpen}
+					postId={postToSchedule.id}
+					platform={postToSchedule.platform}
+					onScheduled={handleScheduled}
+				/>
+			)}
 		</div>
 	);
 }

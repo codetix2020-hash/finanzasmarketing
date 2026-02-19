@@ -39,6 +39,9 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { ScheduleModal } from "../components/schedule-modal";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 // Tipos de contenido D2C con gradientes y estilos premium
 const contentTypesD2C = [
@@ -365,6 +368,8 @@ export default function GenerateContentPage() {
 
   // Estado de guardado
   const [isSaving, setIsSaving] = useState(false);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [savedPostId, setSavedPostId] = useState<string | null>(null);
 
   // Estado de configuración
   const [isConfigured, setIsConfigured] = useState(true);
@@ -502,7 +507,14 @@ export default function GenerateContentPage() {
       if (!response.ok) throw new Error("Failed to save");
 
       const { post } = await response.json();
-      toast.success(asDraft ? "✅ Guardado como borrador" : "📅 Post programado");
+
+      if (asDraft) {
+        toast.success("✅ Guardado como borrador");
+      } else {
+        // Abrir modal de programación
+        setSavedPostId(post.id);
+        setScheduleModalOpen(true);
+      }
 
       return post;
     } catch (error) {
@@ -804,11 +816,16 @@ export default function GenerateContentPage() {
                     disabled={isSaving}
                   >
                     {isSaving ? (
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Guardando...
+                      </>
                     ) : (
-                      <Send className="h-5 w-5 mr-2" />
+                      <>
+                        <Clock className="h-5 w-5 mr-2" />
+                        Programar publicación
+                      </>
                     )}
-                    Programar publicación
                   </Button>
                   <Button 
                     variant="outline" 
@@ -860,6 +877,22 @@ export default function GenerateContentPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de programación */}
+      <ScheduleModal
+        open={scheduleModalOpen}
+        onOpenChange={setScheduleModalOpen}
+        postId={savedPostId || undefined}
+        platform={platform}
+        onScheduled={(date) => {
+          toast.success(
+            `📅 Programado para ${format(date, "d MMM HH:mm", { locale: es })}`,
+          );
+          // Limpiar contenido generado
+          setGeneratedContent(null);
+          setSuggestedImages([]);
+        }}
+      />
     </div>
   );
 }
