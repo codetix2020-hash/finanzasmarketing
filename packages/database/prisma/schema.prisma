@@ -177,6 +177,7 @@ model Organization {
   socialConnections     SocialConnection[]
   mediaFiles            MediaFile[]
   d2cProfile            D2CProfile?
+  d2cSubscription       D2CSubscription?
 
   @@unique([slug])
   @@map("organization")
@@ -1636,4 +1637,40 @@ model D2CProfile {
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("d2c_profile")
+}
+
+model D2CSubscription {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique
+
+  // Stripe
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+
+  // Plan
+  plan            String   @default("free") // free, starter, pro, business
+  status          String   @default("active") // active, canceled, past_due, trialing
+
+  // Período
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean  @default(false)
+
+  // Trial
+  trialStart      DateTime?
+  trialEnd        DateTime?
+
+  // Límites del plan
+  postsLimit      Int      @default(5)  // posts por mes
+  brandsLimit     Int      @default(1)  // organizaciones/marcas
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@map("d2c_subscription")
 }
