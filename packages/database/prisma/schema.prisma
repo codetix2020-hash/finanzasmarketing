@@ -176,6 +176,7 @@ model Organization {
   generatedPosts        GeneratedPost[]
   socialConnections     SocialConnection[]
   mediaFiles            MediaFile[]
+  d2cProfile            D2CProfile?
 
   @@unique([slug])
   @@map("organization")
@@ -1579,4 +1580,60 @@ model MediaFile {
   @@index([organizationId])
   @@index([organizationId, folder])
   @@map("media_file")
+}
+
+model D2CProfile {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique
+
+  // PASO 1: Tu Marca
+  brandName       String
+  tagline         String?
+  productCategory String   // moda_ropa, skincare, joyeria, etc.
+  brandStory      String?  @db.Text
+  yearFounded     Int?
+
+  // PASO 2: Tu Producto
+  priceRange      String   // economico, medio, premium, lujo
+  avgPrice        Float?
+  bestSellers     String[] @default([])
+  uniqueSellingPoints String[] @default([]) // handmade, sustainable, limited_edition
+  materials       String?
+  certifications  String[] @default([])
+  madeIn          String?
+
+  // PASO 3: Tu Cliente
+  targetAgeMin    Int?
+  targetAgeMax    Int?
+  targetGender    String?  // all, female, male
+  targetLocation  String?
+  customerPains   String[] @default([])
+  customerDesires String[] @default([])
+  competitors     String[] @default([])
+
+  // PASO 4: Tu Voz
+  brandPersonality String?  // minimal_elegante, fun_colorful, eco_conscious, etc.
+  toneFormality   Int?     // 1-5 (muy informal a muy formal)
+  useEmojis       Boolean  @default(true)
+  favoriteEmojis  String[] @default([])
+  wordsToUse      String[] @default([])
+  wordsToAvoid    String[] @default([])
+  sampleCaption   String?  @db.Text
+
+  // PASO 5: Tus Fotos
+  hasProPhotos    Boolean  @default(false)
+  photoStyle      String?  // minimal, lifestyle, flatlay, editorial, ugc, mixed
+  needStockPhotos Boolean  @default(true)
+  brandColors     String[] @default([])
+
+  // Estado
+  isComplete      Boolean  @default(false)
+  completedSteps  Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("d2c_profile")
 }
