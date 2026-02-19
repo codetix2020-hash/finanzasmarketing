@@ -1,60 +1,45 @@
 export const PLANS = {
   free: {
     id: "free",
-    name: "Free",
-    description: "Para probar",
+    name: "Free Trial",
+    description: "14 días de prueba",
     price: 0,
     priceId: null,
     limits: {
-      postsPerMonth: 5,
-      brands: 1,
-      scheduledPosts: false,
-      autoPublish: false,
-      analytics: false,
-    },
-  },
-  starter: {
-    id: "starter",
-    name: "Starter",
-    description: "Para empezar a crecer",
-    price: 29,
-    priceId: process.env.STRIPE_PRICE_STARTER || null,
-    limits: {
-      postsPerMonth: 30,
+      postsPerMonth: 10,
       brands: 1,
       scheduledPosts: true,
-      autoPublish: false,
+      autoPublish: true,
       analytics: false,
     },
   },
   pro: {
     id: "pro",
     name: "Pro",
-    description: "Para marcas en crecimiento",
-    price: 79,
-    priceId: process.env.STRIPE_PRICE_PRO || null,
+    description: "Para tu marca",
+    price: 29,
+    priceId: process.env.STRIPE_PRICE_PRO,
     limits: {
-      postsPerMonth: 100,
-      brands: 3,
+      postsPerMonth: 60,
+      brands: 1,
       scheduledPosts: true,
       autoPublish: true,
       analytics: true,
     },
   },
-  business: {
-    id: "business",
-    name: "Business",
-    description: "Para agencias y equipos",
-    price: 199,
-    priceId: process.env.STRIPE_PRICE_BUSINESS || null,
+  agency: {
+    id: "agency",
+    name: "Agency",
+    description: "Para gestionar clientes",
+    price: 79,
+    priceId: process.env.STRIPE_PRICE_AGENCY,
     limits: {
       postsPerMonth: -1, // ilimitado
-      brands: 10,
+      brands: 5,
       scheduledPosts: true,
       autoPublish: true,
       analytics: true,
-      whiteLabel: true,
-      apiAccess: true,
+      prioritySupport: true,
     },
   },
 } as const;
@@ -71,4 +56,3 @@ export function getPlanByPriceId(priceId: string): PlanId {
   }
   return "free";
 }
-

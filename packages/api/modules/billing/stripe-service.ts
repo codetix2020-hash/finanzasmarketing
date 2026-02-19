@@ -177,7 +177,7 @@ export class StripeService {
     const organizationId = session.metadata?.organizationId;
     if (!organizationId) return;
 
-    const planId = (session.metadata?.planId as PlanId) || "starter";
+    const planId = (session.metadata?.planId as PlanId) || "pro";
     const limits = PLANS[planId].limits;
 
     await prisma.d2CSubscription.update({

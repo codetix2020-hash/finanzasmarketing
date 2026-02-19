@@ -32,52 +32,37 @@ import { es } from "date-fns/locale";
 // Planes
 const plans = [
   {
-    id: "starter",
-    name: "Starter",
+    id: "pro",
+    name: "Pro",
     price: 29,
-    description: "Para empezar a crecer",
+    description: "Para tu marca",
     icon: Zap,
-    color: "from-blue-500 to-cyan-500",
+    color: "from-purple-500 to-pink-500",
+    popular: true,
     features: [
+      "60 posts/mes",
       "1 marca",
-      "30 posts/mes",
+      "Instagram + Facebook",
       "Programacion de posts",
-      "Templates basicos",
+      "Publicacion automatica",
+      "Calendario visual",
+      "Banco de fotos",
       "Soporte por email",
     ],
   },
   {
-    id: "pro",
-    name: "Pro",
+    id: "agency",
+    name: "Agency",
     price: 79,
-    description: "Para marcas en crecimiento",
-    icon: Crown,
-    color: "from-purple-500 to-pink-500",
-    popular: true,
-    features: [
-      "3 marcas",
-      "100 posts/mes",
-      "Publicacion automatica",
-      "Todos los templates",
-      "Calendario visual",
-      "Analiticas basicas",
-      "Soporte prioritario",
-    ],
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: 199,
-    description: "Para agencias y equipos",
+    description: "Para gestionar clientes",
     icon: Building2,
     color: "from-orange-500 to-red-500",
     features: [
-      "10 marcas",
       "Posts ilimitados",
+      "5 marcas",
       "Todo de Pro",
-      "White-label",
-      "API access",
-      "Account manager",
+      "Soporte prioritario",
+      "Reportes (proximamente)",
     ],
   },
 ];
@@ -240,13 +225,11 @@ export default function BillingPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div
                   className={`p-3 rounded-xl bg-gradient-to-br ${
-                    currentPlan === "business"
+                    currentPlan === "agency"
                       ? "from-orange-500 to-red-500"
                       : currentPlan === "pro"
                         ? "from-purple-500 to-pink-500"
-                        : currentPlan === "starter"
-                          ? "from-blue-500 to-cyan-500"
-                          : "from-gray-400 to-gray-500"
+                        : "from-gray-400 to-gray-500"
                   }`}
                 >
                   <Crown className="h-6 w-6 text-white" />
@@ -257,8 +240,8 @@ export default function BillingPage() {
                   </p>
                   <p className="text-gray-500">
                     {currentPlan === "free"
-                      ? "Plan gratuito"
-                      : `${plans.find((p) => p.id === currentPlan)?.price || 0}/mes`}
+                      ? "Trial gratuito - 14 dias"
+                      : `${plans.find((p) => p.id === currentPlan)?.price || 0}€/mes`}
                   </p>
                 </div>
               </div>
@@ -338,7 +321,7 @@ export default function BillingPage() {
           {currentPlan === "free" ? "Elige tu plan" : "Cambiar plan"}
         </h2>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {plans.map((plan) => {
             const Icon = plan.icon;
             const isCurrent = currentPlan === plan.id;

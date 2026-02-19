@@ -646,7 +646,7 @@ export default function D2CLandingPage() {
 			{/* Pricing */}
 			<section id="pricing" className="py-20 px-4">
 				<div className="container max-w-5xl mx-auto">
-					<div className="text-center mb-16">
+					<div className="text-center mb-8">
 						<Badge className="mb-4">Precios</Badge>
 						<h2 className="text-4xl font-bold mb-4">
 							Simple y transparente
@@ -656,14 +656,32 @@ export default function D2CLandingPage() {
 						</p>
 					</div>
 
-					<div className="grid md:grid-cols-3 gap-8">
-						{/* Starter */}
-						<div className="rounded-2xl border p-8 bg-white">
+					{/* Trial badge */}
+					<div className="text-center mb-12">
+						<div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-200">
+							<Sparkles className="h-5 w-5 text-purple-600" />
+							<span className="font-semibold text-purple-900">
+								14 días gratis en todos los planes
+							</span>
+							<span className="text-purple-600">
+								— Sin tarjeta de crédito
+							</span>
+						</div>
+					</div>
+
+					<div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+						{/* Pro - Destacado */}
+						<div className="rounded-2xl border-2 border-purple-500 p-8 bg-white relative shadow-xl">
+							<div className="absolute -top-3 left-1/2 -translate-x-1/2">
+								<Badge className="bg-purple-600 text-white">
+									Más popular
+								</Badge>
+							</div>
 							<h3 className="text-xl font-semibold mb-2">
-								Starter
+								Pro
 							</h3>
 							<p className="text-gray-500 mb-4">
-								Para empezar a crecer
+								Para tu marca
 							</p>
 							<div className="mb-6">
 								<span className="text-4xl font-bold">
@@ -675,11 +693,55 @@ export default function D2CLandingPage() {
 							</div>
 							<ul className="space-y-3 mb-8">
 								{[
+									"60 posts/mes",
 									"1 marca",
-									"30 posts/mes",
-									"Publicación manual",
-									"Templates básicos",
+									"Instagram + Facebook",
+									"Programación de posts",
+									"Publicación automática",
+									"Calendario visual",
+									"Banco de fotos",
+									"Analíticas",
 									"Soporte por email",
+								].map((f) => (
+									<li
+										key={f}
+										className="flex items-center gap-2 text-gray-600"
+									>
+										<CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+										{f}
+									</li>
+								))}
+							</ul>
+							<Link href="/auth/signup">
+								<Button className="w-full rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+									Empezar gratis
+								</Button>
+							</Link>
+						</div>
+
+						{/* Agency */}
+						<div className="rounded-2xl border p-8 bg-white">
+							<h3 className="text-xl font-semibold mb-2">
+								Agency
+							</h3>
+							<p className="text-gray-500 mb-4">
+								Para gestionar clientes
+							</p>
+							<div className="mb-6">
+								<span className="text-4xl font-bold">
+									79€
+								</span>
+								<span className="text-gray-500">
+									/mes
+								</span>
+							</div>
+							<ul className="space-y-3 mb-8">
+								{[
+									"Posts ilimitados",
+									"5 marcas",
+									"Todo de Pro",
+									"Soporte prioritario",
+									"Reportes (próximamente)",
 								].map((f) => (
 									<li
 										key={f}
@@ -698,95 +760,6 @@ export default function D2CLandingPage() {
 									Empezar gratis
 								</Button>
 							</Link>
-						</div>
-
-						{/* Pro - Destacado */}
-						<div className="rounded-2xl border-2 border-purple-500 p-8 bg-white relative shadow-xl">
-							<div className="absolute -top-3 left-1/2 -translate-x-1/2">
-								<Badge className="bg-purple-600 text-white">
-									Más popular
-								</Badge>
-							</div>
-							<h3 className="text-xl font-semibold mb-2">
-								Pro
-							</h3>
-							<p className="text-gray-500 mb-4">
-								Para marcas en crecimiento
-							</p>
-							<div className="mb-6">
-								<span className="text-4xl font-bold">
-									79€
-								</span>
-								<span className="text-gray-500">
-									/mes
-								</span>
-							</div>
-							<ul className="space-y-3 mb-8">
-								{[
-									"3 marcas",
-									"100 posts/mes",
-									"Publicación automática",
-									"Todos los templates",
-									"Calendario visual",
-									"Analíticas básicas",
-									"Soporte prioritario",
-								].map((f) => (
-									<li
-										key={f}
-										className="flex items-center gap-2 text-gray-600"
-									>
-										<CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-										{f}
-									</li>
-								))}
-							</ul>
-							<Link href="/auth/signup">
-								<Button className="w-full rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-									Empezar gratis
-								</Button>
-							</Link>
-						</div>
-
-						{/* Business */}
-						<div className="rounded-2xl border p-8 bg-white">
-							<h3 className="text-xl font-semibold mb-2">
-								Business
-							</h3>
-							<p className="text-gray-500 mb-4">
-								Para agencias y equipos
-							</p>
-							<div className="mb-6">
-								<span className="text-4xl font-bold">
-									199€
-								</span>
-								<span className="text-gray-500">
-									/mes
-								</span>
-							</div>
-							<ul className="space-y-3 mb-8">
-								{[
-									"10 marcas",
-									"Posts ilimitados",
-									"Todo de Pro",
-									"White-label",
-									"API access",
-									"Account manager",
-								].map((f) => (
-									<li
-										key={f}
-										className="flex items-center gap-2 text-gray-600"
-									>
-										<CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-										{f}
-									</li>
-								))}
-							</ul>
-							<Button
-								variant="outline"
-								className="w-full rounded-full"
-							>
-								Contactar ventas
-							</Button>
 						</div>
 					</div>
 				</div>

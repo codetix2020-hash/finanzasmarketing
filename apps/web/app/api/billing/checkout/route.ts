@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar planId
-    const validPlans: PlanId[] = ["starter", "pro", "business"];
+    const validPlans: PlanId[] = ["pro", "agency"];
     if (!validPlans.includes(planId)) {
       return NextResponse.json(
         { error: "Invalid plan" },
