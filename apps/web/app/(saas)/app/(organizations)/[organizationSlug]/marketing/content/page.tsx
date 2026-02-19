@@ -46,6 +46,7 @@ import {
 	Tag,
 	Loader2,
 	Sparkles,
+	RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -129,12 +130,14 @@ function PostCard({
 	onDelete,
 	onSchedule,
 	onPublish,
+	onRetry,
 }: {
 	post: GeneratedPost;
 	onEdit: () => void;
 	onDelete: () => void;
 	onSchedule: () => void;
 	onPublish: () => void;
+	onRetry: () => void;
 }) {
 	const ContentIcon = contentTypeIcons[post.contentType] || FileText;
 	const gradient =
@@ -206,20 +209,29 @@ function PostCard({
 									<Copy className="h-4 w-4 mr-2" /> Copiar
 									texto
 								</DropdownMenuItem>
-								{post.status === "draft" && (
-									<>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem onClick={onSchedule}>
-											<Calendar className="h-4 w-4 mr-2" />{" "}
-											Programar
-										</DropdownMenuItem>
-										<DropdownMenuItem onClick={onPublish}>
-											<Send className="h-4 w-4 mr-2" />{" "}
-											Publicar ahora
-										</DropdownMenuItem>
-									</>
-								)}
-								<DropdownMenuSeparator />
+							{post.status === "draft" && (
+								<>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem onClick={onSchedule}>
+										<Calendar className="h-4 w-4 mr-2" />{" "}
+										Programar
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={onPublish}>
+										<Send className="h-4 w-4 mr-2" />{" "}
+										Publicar ahora
+									</DropdownMenuItem>
+								</>
+							)}
+							{post.status === "failed" && (
+								<>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem onClick={onRetry}>
+										<RefreshCw className="h-4 w-4 mr-2" />{" "}
+										Reintentar publicación
+									</DropdownMenuItem>
+								</>
+							)}
+							<DropdownMenuSeparator />
 								<DropdownMenuItem
 									onClick={onDelete}
 									className="text-red-600"
@@ -374,6 +386,39 @@ export default function ContentPage() {
 		setScheduleModalOpen(true);
 	};
 
+	const handleRetry = async (postId: string) => {
+		try {
+			const response = await fetch(
+				`/api/marketing/generated-posts/${postId}/retry`,
+				{
+					method: "POST",
+				},
+			);
+
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || "Failed to retry");
+			}
+
+			// Actualizar estado local
+			setPosts(
+				posts.map((p) =>
+					p.id === postId
+						? { ...p, status: "published" as const }
+						: p,
+				),
+			);
+
+			toast.success("¡Publicado correctamente!");
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Error al reintentar",
+			);
+		}
+	};
+
 	const handleScheduled = (scheduledAt: Date) => {
 		setPosts(
 			posts.map((p) =>
@@ -508,10 +553,13 @@ export default function ContentPage() {
 										onSchedule={() =>
 											openScheduleModal(post)
 										}
-										onPublish={() => {
-											/* TODO: implementar publicación directa */
-										}}
-									/>
+									onPublish={() => {
+										/* TODO: implementar publicación directa */
+									}}
+									onRetry={() =>
+										handleRetry(post.id)
+									}
+								/>
 								))}
 							</div>
 						)}
