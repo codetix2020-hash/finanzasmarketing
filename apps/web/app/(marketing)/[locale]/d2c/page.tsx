@@ -159,57 +159,9 @@ const comparison = [
 
 export default function D2CLandingPage() {
 	return (
-		<div className="min-h-screen bg-white">
-			{/* Navbar */}
-			<nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
-				<div className="container max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<div className="p-2 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600">
-							<Sparkles className="h-5 w-5 text-white" />
-						</div>
-						<span className="font-bold text-xl">
-							MarketingOS
-						</span>
-					</div>
-
-					<div className="hidden md:flex items-center gap-8">
-						<a
-							href="#features"
-							className="text-gray-600 hover:text-gray-900 transition-colors"
-						>
-							Funciones
-						</a>
-						<a
-							href="#pricing"
-							className="text-gray-600 hover:text-gray-900 transition-colors"
-						>
-							Precios
-						</a>
-						<a
-							href="#testimonials"
-							className="text-gray-600 hover:text-gray-900 transition-colors"
-						>
-							Testimonios
-						</a>
-					</div>
-
-					<div className="flex items-center gap-4">
-						<Link href="/auth/login">
-							<Button variant="ghost">
-								Iniciar sesión
-							</Button>
-						</Link>
-						<Link href="/auth/signup">
-							<Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full px-6">
-								Empezar gratis
-							</Button>
-						</Link>
-					</div>
-				</div>
-			</nav>
-
+		<div className="bg-white">
 			{/* Hero */}
-			<section className="pt-32 pb-20 px-4 overflow-hidden">
+			<section className="pt-12 pb-20 px-4 overflow-hidden">
 				<div className="container max-w-6xl mx-auto">
 					<div className="text-center max-w-4xl mx-auto">
 						{/* Badge */}
@@ -863,46 +815,6 @@ export default function D2CLandingPage() {
 					</div>
 				</div>
 			</section>
-
-			{/* Footer */}
-			<footer className="py-12 px-4 border-t">
-				<div className="container max-w-6xl mx-auto">
-					<div className="flex flex-col md:flex-row items-center justify-between gap-4">
-						<div className="flex items-center gap-2">
-							<div className="p-2 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600">
-								<Sparkles className="h-4 w-4 text-white" />
-							</div>
-							<span className="font-bold">
-								MarketingOS
-							</span>
-						</div>
-						<p className="text-sm text-gray-500">
-							© 2025 MarketingOS. Hecho con ❤️ para
-							marcas D2C.
-						</p>
-						<div className="flex items-center gap-6 text-sm text-gray-500">
-							<a
-								href="#"
-								className="hover:text-gray-900 transition-colors"
-							>
-								Privacidad
-							</a>
-							<a
-								href="#"
-								className="hover:text-gray-900 transition-colors"
-							>
-								Términos
-							</a>
-							<a
-								href="#"
-								className="hover:text-gray-900 transition-colors"
-							>
-								Contacto
-							</a>
-						</div>
-					</div>
-				</div>
-			</footer>
 		</div>
 	);
 }
