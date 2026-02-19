@@ -4,6 +4,7 @@ import {
 	getAuthContext,
 	unauthorizedResponse,
 } from "@repo/api/lib/auth-guard";
+import { StripeService } from "@repo/api/modules/billing/stripe-service";
 
 // Límites para evitar abuse
 const MAX_POSTS_PER_PAGE = 100;
@@ -114,7 +115,23 @@ export async function POST(request: NextRequest) {
 			return unauthorizedResponse();
 		}
 
-		// ✅ VERIFICAR LÍMITE DE POSTS POR ORG (anti-abuse)
+		// ✅ VERIFICAR LÍMITE DE POSTS DEL PLAN
+		const { allowed, used, limit } = await StripeService.canCreatePost(
+			authCtx.organizationId,
+		);
+
+		if (!allowed) {
+			return NextResponse.json(
+				{
+					error: "Límite de posts alcanzado. Actualiza tu plan para continuar.",
+					code: "LIMIT_EXCEEDED",
+					usage: { used, limit },
+				},
+				{ status: 402 },
+			);
+		}
+
+		// ✅ VERIFICAR LÍMITE TOTAL DE POSTS POR ORG (anti-abuse)
 		const postCount = await prisma.generatedPost.count({
 			where: { organizationId: authCtx.organizationId },
 		});
@@ -122,7 +139,7 @@ export async function POST(request: NextRequest) {
 		if (postCount >= MAX_POSTS_PER_ORG) {
 			return NextResponse.json(
 				{
-					error: "Límite de posts alcanzado. Elimina algunos posts antiguos.",
+					error: "Límite total de posts alcanzado. Elimina algunos posts antiguos.",
 				},
 				{ status: 429 },
 			);

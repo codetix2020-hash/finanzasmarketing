@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { d2cContentGenerator } from "@repo/api/modules/marketing/services/content-generator";
 import { prisma } from "@repo/database";
+import { StripeService } from "@repo/api/modules/billing/stripe-service";
+import { getAuthContext } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +11,26 @@ export async function POST(request: NextRequest) {
 
     if (!organizationId) {
       return NextResponse.json({ error: "organizationId required" }, { status: 400 });
+    }
+
+    // Verificar autorización
+    const authCtx = await getAuthContext(organizationId);
+    if (!authCtx) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verificar límite de posts del plan
+    const { allowed, used, limit } = await StripeService.canCreatePost(authCtx.organizationId);
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: "Límite de posts alcanzado",
+          code: "LIMIT_EXCEEDED",
+          usage: { used, limit },
+        },
+        { status: 402 }
+      );
     }
 
     // Cargar todo el contexto del negocio en paralelo

@@ -34,12 +34,17 @@ import {
   ArrowRight,
   Loader2,
   Download,
-  Share2
+  Share2,
+  Crown,
+  Lock,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { ScheduleModal } from "../components/schedule-modal";
+import { useSubscription } from "../hooks/use-subscription";
+import { Progress } from "@ui/components/progress";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -376,6 +381,17 @@ export default function GenerateContentPage() {
   const [products, setProducts] = useState<Array<{ id: string; name: string }>>([]);
   const [d2cProfile, setD2cProfile] = useState<any>(null);
 
+  // Suscripción y límites
+  const {
+    plan,
+    postsUsed,
+    postsLimit,
+    canCreatePost,
+    features,
+    isLoading: subscriptionLoading,
+    refresh: refreshSubscription,
+  } = useSubscription();
+
   // Cargar datos
   useEffect(() => {
     if (organizationId) {
@@ -459,10 +475,19 @@ export default function GenerateContentPage() {
         searchImages(result.imageSearchQuery);
       }
 
-      toast.success("¡Contenido generado!");
-    } catch (error) {
+      toast.success("Contenido generado!");
+
+      // Refrescar contador de uso
+      refreshSubscription();
+    } catch (error: any) {
       console.error(error);
-      toast.error("Error al generar contenido");
+      // Verificar si es error de límite
+      if (error?.code === "LIMIT_EXCEEDED") {
+        toast.error("Has alcanzado el limite de posts de tu plan.");
+        refreshSubscription();
+      } else {
+        toast.error("Error al generar contenido");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -571,6 +596,55 @@ export default function GenerateContentPage() {
           </div>
         )}
 
+        {/* Uso del plan */}
+        {!subscriptionLoading && (
+          <div className="mb-8">
+            <Card className={`rounded-3xl ${!canCreatePost ? "border-red-200 bg-red-50" : ""}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Crown className={`h-4 w-4 ${plan === "free" ? "text-gray-400" : "text-purple-600"}`} />
+                    <span className="font-medium capitalize">{plan}</span>
+                    {plan === "free" && (
+                      <Badge variant="secondary" className="text-xs">Gratis</Badge>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {postsUsed} / {postsLimit === -1 ? "ilimitados" : postsLimit} posts este mes
+                  </span>
+                </div>
+
+                {postsLimit !== -1 && (
+                  <Progress
+                    value={(postsUsed / postsLimit) * 100}
+                    className="h-2"
+                  />
+                )}
+
+                {!canCreatePost && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-sm text-red-600">
+                      Has alcanzado el limite de posts de tu plan.
+                    </p>
+                    <Link href={`/app/${organizationSlug}/marketing/settings/billing`}>
+                      <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
+                        <Crown className="h-4 w-4 mr-1" />
+                        Upgrade
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
+                {canCreatePost && postsLimit !== -1 && postsUsed >= postsLimit * 0.8 && (
+                  <p className="mt-2 text-sm text-amber-600">
+                    Te quedan {postsLimit - postsUsed} posts. Considera actualizar tu plan.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-12">
           {/* Panel izquierdo - Configuración */}
           <div className="lg:col-span-5 space-y-6">
@@ -643,10 +717,19 @@ export default function GenerateContentPage() {
             <Button
               size="lg"
               onClick={handleGenerate}
-              disabled={isGenerating}
-              className="w-full h-16 rounded-2xl text-lg font-semibold bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 hover:from-purple-700 hover:via-pink-600 hover:to-orange-600 shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-[1.02]"
+              disabled={isGenerating || !canCreatePost}
+              className={`w-full h-16 rounded-2xl text-lg font-semibold transition-all duration-300 ${
+                canCreatePost
+                  ? "bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 hover:from-purple-700 hover:via-pink-600 hover:to-orange-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-[1.02]"
+                  : "bg-gray-300 cursor-not-allowed"
+              }`}
             >
-              {isGenerating ? (
+              {!canCreatePost ? (
+                <>
+                  <Lock className="h-5 w-5 mr-3" />
+                  Limite alcanzado
+                </>
+              ) : isGenerating ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-3 animate-spin" />
                   Creando magia...
@@ -810,28 +893,47 @@ export default function GenerateContentPage() {
 
                 {/* Acciones finales */}
                 <div className="flex gap-4">
-                  <Button 
-                    className="flex-1 h-14 rounded-2xl text-lg font-semibold bg-gray-900 hover:bg-gray-800"
-                    onClick={() => savePost(false)}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="h-5 w-5 mr-2" />
-                        Programar publicación
-                      </>
-                    )}
-                  </Button>
+                  {features.scheduledPosts ? (
+                    <Button
+                      className="flex-1 h-14 rounded-2xl text-lg font-semibold bg-gray-900 hover:bg-gray-800"
+                      onClick={() => savePost(false)}
+                      disabled={isSaving || !canCreatePost}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="h-5 w-5 mr-2" />
+                          Programar publicacion
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="flex-1 relative">
+                      <Button
+                        className="w-full h-14 rounded-2xl bg-gray-100 text-gray-400 cursor-not-allowed"
+                        disabled
+                      >
+                        <Lock className="h-5 w-5 mr-2" /> Programar publicacion
+                      </Button>
+                      <Link
+                        href={`/app/${organizationSlug}/marketing/settings/billing`}
+                        className="absolute -top-2 -right-2"
+                      >
+                        <Badge className="bg-purple-600 text-white text-xs">
+                          Pro
+                        </Badge>
+                      </Link>
+                    </div>
+                  )}
                   <Button 
                     variant="outline" 
                     className="h-14 px-6 rounded-2xl border-2"
                     onClick={() => savePost(true)}
-                    disabled={isSaving}
+                    disabled={isSaving || !canCreatePost}
                   >
                     <Heart className="h-5 w-5 mr-2" /> Guardar borrador
                   </Button>
