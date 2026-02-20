@@ -4,6 +4,7 @@ import { StripeService } from "@repo/api/modules/billing/stripe-service";
 import { type PlanId } from "@repo/api/modules/billing/plans";
 import { auth } from "@repo/auth";
 import { headers } from "next/headers";
+import { prisma } from "@repo/database";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,9 +43,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No email found" }, { status: 400 });
     }
 
+    // Obtener slug de la organización para la URL de redirect
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { slug: true },
+    });
+
+    if (!org?.slug) {
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 }
+      );
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const successUrl = `${baseUrl}/app/${organizationId}/marketing/settings/billing?success=true`;
-    const cancelUrl = `${baseUrl}/app/${organizationId}/marketing/settings/billing?canceled=true`;
+    const successUrl = `${baseUrl}/app/${org.slug}/marketing/settings/billing?success=true`;
+    const cancelUrl = `${baseUrl}/app/${org.slug}/marketing/settings/billing?canceled=true`;
 
     const checkoutUrl = await StripeService.createCheckoutSession(
       authCtx.organizationId,

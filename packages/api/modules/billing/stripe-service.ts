@@ -216,10 +216,12 @@ export class StripeService {
               : subscription.status === "past_due"
                 ? "past_due"
                 : "canceled",
-        currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
-        ),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: subscription.current_period_start
+          ? new Date(subscription.current_period_start * 1000)
+          : new Date(),
+        currentPeriodEnd: subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : new Date(),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         trialStart: subscription.trial_start
           ? new Date(subscription.trial_start * 1000)
