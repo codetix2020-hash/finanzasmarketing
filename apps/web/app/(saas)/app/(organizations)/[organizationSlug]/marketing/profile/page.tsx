@@ -26,7 +26,6 @@ export default function ProfilePage() {
       const res = await fetch(`/api/marketing/profile?organizationSlug=${orgSlug}`);
       if (res.ok) {
         const data = await res.json();
-        console.log('Loaded profile:', data); // DEBUG
         if (data.profile) {
           setProfile(data.profile);
           setFormData(data.profile);

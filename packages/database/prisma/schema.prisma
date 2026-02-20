@@ -1541,6 +1541,7 @@ model SocialConnection {
   @@unique([organizationId, platform, platformUserId])
   @@index([organizationId])
   @@index([platform])
+  @@index([organizationId, platform, isActive])
   @@map("social_connection")
 }
 

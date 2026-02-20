@@ -3,6 +3,7 @@ import { d2cContentGenerator } from "@repo/api/modules/marketing/services/conten
 import { prisma } from "@repo/database";
 import { StripeService } from "@repo/api/modules/billing/stripe-service";
 import { getAuthContext } from "@repo/api/lib/auth-guard";
+import { checkRateLimit } from "@repo/api/lib/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "organizationId required" }, { status: 400 });
     }
 
-    // Verificar autorización
     const authCtx = await getAuthContext(organizationId);
     if (!authCtx) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verificar límite de posts del plan
+    // Rate limit: max 10 generations per org per minute
+    const rl = checkRateLimit(`generate:${authCtx.organizationId}`, 10, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before generating more content.", retryAfter: Math.ceil((rl.resetAt - Date.now()) / 1000) },
+        { status: 429 }
+      );
+    }
+
     const { allowed, used, limit } = await StripeService.canCreatePost(authCtx.organizationId);
 
     if (!allowed) {

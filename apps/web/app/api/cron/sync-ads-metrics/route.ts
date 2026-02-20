@@ -2,28 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { GoogleAdsClient } from "@repo/api/modules/marketing/services/google-ads-client";
 import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook-ads-client";
+import { verifyCronAuth, unauthorizedCronResponse } from "@repo/api/lib/cron-auth";
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Cron Job: Sync Ads Metrics
- * 
- * Ejecutar cada 6 horas para sincronizar métricas de todas las campañas activas
- * 
- * Railway/Vercel Cron: 0 (star)/6 * * * (replace star with asterisk)
- * 
- * Autenticación: Bearer token con CRON_SECRET
- */
 export async function GET(request: NextRequest) {
-  console.log("⏰ CRON: Sincronizando métricas de campañas...");
-
-  // Verificar autorización
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    console.log("❌ No autorizado");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!verifyCronAuth(request)) {
+    return unauthorizedCronResponse();
   }
 
   const googleClient = new GoogleAdsClient();

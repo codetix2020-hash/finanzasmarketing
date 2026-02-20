@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
+import { verifyCronAuth, unauthorizedCronResponse } from "@repo/api/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const GRAPH_BASE = "https://graph.facebook.com/v18.0";
 
-function verifyCronSecret(request: NextRequest): boolean {
-	const authHeader = request.headers.get("authorization");
-	const secret = process.env.CRON_SECRET;
-	if (!secret) return false;
-	return authHeader === `Bearer ${secret}`;
-}
-
 export async function GET(request: NextRequest) {
 	const startedAt = Date.now();
 
-	if (!verifyCronSecret(request)) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	if (!verifyCronAuth(request)) {
+		return unauthorizedCronResponse();
 	}
 
 	const results = {

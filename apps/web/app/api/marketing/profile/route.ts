@@ -64,8 +64,6 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		console.log('Saving profile with isComplete:', isComplete); // DEBUG
-
 		// Si isComplete se pasa explícitamente, usarlo; si no, calcularlo
 		let finalIsComplete: boolean;
 		if (isComplete !== undefined) {
@@ -100,8 +98,6 @@ export async function POST(request: NextRequest) {
 				isComplete: finalIsComplete,
 			},
 		});
-
-		console.log('Saved profile:', profile); // DEBUG
 
 		return NextResponse.json({ profile, success: true });
 	} catch (error: any) {

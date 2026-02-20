@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { InstagramService } from "@repo/api/modules/social/instagram-service";
-
-// Verificar que la request viene del cron (seguridad)
-const CRON_SECRET = process.env.CRON_SECRET;
+import { verifyCronAuth, unauthorizedCronResponse } from "@repo/api/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
 	try {
-		// Verificar autorización del cron
-		const authHeader = request.headers.get("authorization");
-		if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-			return NextResponse.json(
-				{ error: "Unauthorized" },
-				{ status: 401 },
-			);
+		if (!verifyCronAuth(request)) {
+			return unauthorizedCronResponse();
 		}
 
 		const now = new Date();
@@ -189,8 +182,6 @@ export async function GET(request: NextRequest) {
 				);
 			}
 		}
-
-		console.log(`Cron completed: ${JSON.stringify(results)}`);
 
 		return NextResponse.json({
 			message: "Cron completed",

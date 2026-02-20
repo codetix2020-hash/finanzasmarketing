@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { getSession } from "@saas/auth/lib/server";
+import { encryptToken } from "@repo/api/lib/token-encryption";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -83,7 +84,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Guardar en base de datos
+    const encryptedPageToken = encryptToken(pageAccessToken);
+
     await prisma.socialAccount.upsert({
       where: {
         organizationId_platform: {
@@ -92,7 +94,7 @@ export async function GET(request: NextRequest) {
         },
       },
       update: {
-        accessToken: pageAccessToken,
+        accessToken: encryptedPageToken,
         accountId: pageId,
         accountName: pageName,
         updatedAt: new Date(),
@@ -100,13 +102,11 @@ export async function GET(request: NextRequest) {
       create: {
         organizationId: member.organizationId,
         platform: 'facebook',
-        accessToken: pageAccessToken,
+        accessToken: encryptedPageToken,
         accountId: pageId,
         accountName: pageName,
       },
     });
-
-    console.log('Facebook Page connected:', pageName);
 
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/app/${member.organization.slug}/marketing/integrations?success=facebook`

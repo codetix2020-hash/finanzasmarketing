@@ -3,14 +3,22 @@ import { prisma } from "@repo/database";
 
 export const dynamic = 'force-dynamic';
 
-const ORGANIZATION_ID = "8uu4-W6mScG8IQtY";
-
 export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const organizationId = searchParams.get("organizationId");
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "Missing organizationId query parameter" },
+        { status: 400 },
+      );
+    }
+
     // Obtener contenido listo para publicar
     const content = await prisma.marketingContent.findMany({
       where: {
-        organizationId: ORGANIZATION_ID,
+        organizationId,
         type: "SOCIAL",
         status: "READY"
       },
@@ -28,7 +36,7 @@ export async function GET(request: NextRequest) {
       const metadata = item.metadata as any;
       return {
         id: item.id,
-        producto: item.product?.name || "ReservasPro",
+        producto: item.product?.name || "N/A",
         tipo: metadata?.tipo || "general",
         fecha: item.createdAt,
         instagram: {
@@ -52,7 +60,6 @@ export async function GET(request: NextRequest) {
       content: formattedContent
     });
   } catch (error: any) {
-    console.error("❌ Error:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -65,6 +72,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { contentId, platform } = body;
+
+    if (!contentId) {
+      return NextResponse.json(
+        { error: "Missing contentId" },
+        { status: 400 },
+      );
+    }
 
     const existing = await prisma.marketingContent.findUnique({ where: { id: contentId } });
     const existingMetadata = (existing?.metadata as any) || {};
@@ -86,4 +100,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
-

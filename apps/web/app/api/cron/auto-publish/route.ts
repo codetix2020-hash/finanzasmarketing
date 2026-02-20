@@ -1,32 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { verifyCronAuth, unauthorizedCronResponse } from "@repo/api/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutos para procesar múltiples orgs
-
-// Verificar secret del CRON
-function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  
-  if (!cronSecret) return true; // Si no hay secret, permitir (dev)
-  return authHeader === `Bearer ${cronSecret}`;
-}
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
-  // Verificar autenticación
-  if (!verifyCronSecret(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!verifyCronAuth(request)) {
+    return unauthorizedCronResponse();
   }
 
-  console.log('🤖 CRON: Starting auto-publish job...');
-  
   const results: any[] = [];
 
   try {
-    // Obtener todas las organizaciones con:
-    // 1. Perfil de empresa completo
-    // 2. Instagram conectado
     const organizations = await prisma.organization.findMany({
       where: {
         businessProfile: { isNot: null },
@@ -45,13 +31,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log(`Found ${organizations.length} organizations to process`);
-
     for (const org of organizations) {
       try {
-        console.log(`\n📱 Processing: ${org.name} (${org.slug})`);
-        
-        // Generar contenido
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080';
         const generateResponse = await fetch(
           `${baseUrl}/api/marketing/content/generate`,
@@ -60,7 +41,7 @@ export async function GET(request: NextRequest) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               organizationSlug: org.slug,
-              contentType: 'auto', // IA decide
+              contentType: 'auto',
               platform: 'instagram',
             }),
           }
@@ -76,16 +57,12 @@ export async function GET(request: NextRequest) {
           throw new Error('No variations generated');
         }
 
-        // Seleccionar la mejor variación (primera por ahora, podría ser random)
         const selectedVariation = variations[0];
-        
-        // Construir caption con hashtags
         const hashtags = selectedVariation.hashtags?.map((h: string) => 
           h.startsWith('#') ? h : `#${h}`
         ).join(' ') || '';
         const caption = `${selectedVariation.text}\n\n${hashtags}`;
 
-        // Publicar en Instagram
         const publishResponse = await fetch(
           `${baseUrl}/api/marketing/posts/publish`,
           {
@@ -103,7 +80,6 @@ export async function GET(request: NextRequest) {
         const publishResult = await publishResponse.json();
         
         if (publishResponse.ok) {
-          console.log(`✅ Published to ${org.name}`);
           results.push({
             organization: org.name,
             status: 'success',
@@ -114,7 +90,7 @@ export async function GET(request: NextRequest) {
         }
 
       } catch (orgError: any) {
-        console.error(`❌ Failed for ${org.name}:`, orgError.message);
+        console.error(`Auto-publish failed for ${org.name}:`, orgError.message);
         results.push({
           organization: org.name,
           status: 'error',
@@ -122,12 +98,9 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Delay entre organizaciones para no saturar APIs
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
-    console.log('\n🏁 CRON completed');
-    
     return NextResponse.json({
       success: true,
       processed: results.length,
@@ -136,16 +109,10 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('CRON error:', error);
+    console.error('Auto-publish cron error:', error);
     return NextResponse.json({ 
       success: false, 
       error: error.message 
     }, { status: 500 });
   }
 }
-
-
-
-
-
-

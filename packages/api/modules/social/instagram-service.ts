@@ -1,4 +1,5 @@
 import { prisma } from "@repo/database";
+import { encryptToken, decryptToken } from "../../lib/token-encryption";
 
 const GRAPH_API_VERSION = "v18.0";
 const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
@@ -104,6 +105,37 @@ export class InstagramService {
 	}
 
 	/**
+	 * Refrescar token de larga duración (debe tener al menos 24h de vida restante)
+	 * Facebook permite refrescar tokens long-lived una vez al día.
+	 * El token resultante es otro long-lived token válido por ~60 días.
+	 */
+	static async refreshLongLivedToken(currentToken: string): Promise<{
+		accessToken: string;
+		expiresIn: number;
+	}> {
+		const response = await fetch(
+			`${GRAPH_API_BASE}/oauth/access_token?` +
+				`grant_type=fb_exchange_token` +
+				`&client_id=${process.env.FACEBOOK_APP_ID}` +
+				`&client_secret=${process.env.FACEBOOK_APP_SECRET}` +
+				`&fb_exchange_token=${currentToken}`,
+		);
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(
+				(errorData as any)?.error?.message || "Failed to refresh long-lived token",
+			);
+		}
+
+		const data = await response.json();
+		return {
+			accessToken: data.access_token,
+			expiresIn: data.expires_in || 5184000,
+		};
+	}
+
+	/**
 	 * Obtener páginas de Facebook del usuario
 	 */
 	static async getFacebookPages(
@@ -174,6 +206,7 @@ export class InstagramService {
 		expiresIn: number,
 	): Promise<void> {
 		const expiresAt = new Date(Date.now() + expiresIn * 1000);
+		const encryptedToken = encryptToken(accessToken);
 
 		await prisma.socialConnection.upsert({
 			where: {
@@ -184,7 +217,7 @@ export class InstagramService {
 				},
 			},
 			update: {
-				accessToken,
+				accessToken: encryptedToken,
 				tokenExpiresAt: expiresAt,
 				platformUsername: instagramAccount.username,
 				profilePictureUrl: instagramAccount.profile_picture_url,
@@ -197,7 +230,7 @@ export class InstagramService {
 				platform: "instagram",
 				platformUserId: instagramAccount.id,
 				platformUsername: instagramAccount.username,
-				accessToken,
+				accessToken: encryptedToken,
 				tokenExpiresAt: expiresAt,
 				profilePictureUrl: instagramAccount.profile_picture_url,
 				followersCount: instagramAccount.followers_count,
@@ -289,6 +322,7 @@ export class InstagramService {
 
 	/**
 	 * Obtener conexión activa de una organización
+	 * Incluye auto-refresh del token si está próximo a expirar (< 7 días)
 	 */
 	static async getConnection(
 		organizationId: string,
@@ -317,12 +351,11 @@ export class InstagramService {
 
 		if (!connection) return null;
 
-		// Verificar si el token ha expirado
-		if (
-			connection.tokenExpiresAt &&
-			connection.tokenExpiresAt < new Date()
-		) {
-			// TODO: Implementar refresh del token
+		const decryptedToken = decryptToken(connection.accessToken);
+		const now = new Date();
+		const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+		if (connection.tokenExpiresAt && connection.tokenExpiresAt < now) {
 			await prisma.socialConnection.update({
 				where: { id: connection.id },
 				data: { isActive: false },
@@ -330,7 +363,33 @@ export class InstagramService {
 			return null;
 		}
 
-		return connection;
+		if (connection.tokenExpiresAt && connection.tokenExpiresAt < sevenDaysFromNow) {
+			try {
+				const refreshed = await InstagramService.refreshLongLivedToken(decryptedToken);
+				const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000);
+				const newEncryptedToken = encryptToken(refreshed.accessToken);
+
+				await prisma.socialConnection.update({
+					where: { id: connection.id },
+					data: {
+						accessToken: newEncryptedToken,
+						tokenExpiresAt: newExpiresAt,
+						updatedAt: new Date(),
+					},
+				});
+
+				return {
+					...connection,
+					accessToken: refreshed.accessToken,
+				};
+			} catch {
+				// If refresh fails, return current token (still valid)
+			}
+		}
+
+		return {
+			...connection,
+			accessToken: decryptedToken,
+		};
 	}
 }
-

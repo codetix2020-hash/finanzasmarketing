@@ -9,8 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/c
 import { toast } from "sonner";
 
 export default function OnboardingPage() {
-  console.log("=== ONBOARDING PAGE LOADED (CLIENT) ===");
-  
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,8 +74,6 @@ export default function OnboardingPage() {
       if (!newOrg) {
         throw new Error("No se pudo crear la organización");
       }
-
-      console.log("Organization created:", newOrg);
 
       // Set as active organization
       await authClient.organization.setActive({

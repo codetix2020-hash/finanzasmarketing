@@ -15,25 +15,18 @@ import { getLocale, getMessages } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 
 export default async function SaaSLayout({ children }: PropsWithChildren) {
-	console.log("=== SAAS LAYOUT START ===");
-	
 	const locale = await getLocale();
 	const messages = await getMessages();
 	
-	// Intentar obtener sesión real (funciona en producción, puede fallar en desarrollo)
 	let session = null;
 	try {
 		session = await getSession();
-		console.log("SAAS LAYOUT - session:", session ? "EXISTS" : "NULL");
 	} catch (error) {
-		// En desarrollo sin DB configurada, session será null
-		console.warn("No se pudo obtener sesión (desarrollo sin DB?):", error);
-		console.log("SAAS LAYOUT - session after error: NULL");
+		console.warn("Could not get session:", error);
 	}
 
 	const queryClient = getServerQueryClient();
 
-	// Prefetch queries con sesión real o null
 	await queryClient.prefetchQuery({
 		queryKey: sessionQueryKey,
 		queryFn: () => session,
@@ -46,8 +39,7 @@ export default async function SaaSLayout({ children }: PropsWithChildren) {
 				queryFn: getOrganizationList,
 			});
 		} catch (error) {
-			// En desarrollo sin DB, esto puede fallar - está bien
-			console.warn("No se pudieron obtener organizaciones (desarrollo sin DB?):", error);
+			console.warn("Could not get organizations:", error);
 		}
 	}
 
@@ -58,8 +50,6 @@ export default async function SaaSLayout({ children }: PropsWithChildren) {
 			}),
 		);
 	}
-
-	console.log("=== SAAS LAYOUT RENDERING ===");
 
 	return (
 		<Document locale={locale}>
