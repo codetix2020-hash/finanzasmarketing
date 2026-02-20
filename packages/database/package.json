@@ -1,14 +1,14 @@
 {
 	"dependencies": {
-		"@paralleldrive/cuid2": "^3.1.0",
-		"@prisma/adapter-pg": "^6.19.0",
-		"@prisma/client": "6.19.0",
+		"@paralleldrive/cuid2": "^3.3.0",
+		"@prisma/adapter-pg": "^7.4.1",
+		"@prisma/client": "7.4.1",
 		"@repo/config": "workspace:*",
 		"decimal.js": "^10.6.0",
-		"drizzle-orm": "^0.44.7",
+		"drizzle-orm": "^0.45.1",
 		"drizzle-zod": "0.8.3",
-		"pg": "^8.16.0",
-		"zod": "^4.1.12"
+		"pg": "^8.18.0",
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.5",
