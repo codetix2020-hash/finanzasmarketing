@@ -5,7 +5,6 @@ import { AppWrapper } from "@saas/shared/components/AppWrapper";
 import { orpc } from "@shared/lib/orpc-query-utils";
 import { getServerQueryClient } from "@shared/lib/server";
 import { notFound, redirect } from "next/navigation";
-import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
 import Link from "next/link";
 import { prisma } from "@repo/database";
@@ -55,47 +54,35 @@ export default async function OrganizationLayout({
 		return notFound();
 	}
 
-	const headersList = await headers();
-	const pathname =
-		headersList.get("x-pathname") ||
-		headersList.get("x-invoke-path") ||
-		"";
-	const isBillingExceptionRoute =
-		pathname.includes("/settings/billing") ||
-		pathname.includes("/marketing/settings/billing") ||
-		pathname.includes("/billing/");
-
 	let daysLeft = 0;
 	let showTrialBanner = false;
 
-	if (!isBillingExceptionRoute) {
-		const subscription = await prisma.d2CSubscription.findUnique({
-			where: { organizationId: organization.id },
-		});
+	const subscription = await prisma.d2CSubscription.findUnique({
+		where: { organizationId: organization.id },
+	});
 
-		let hasAccess = false;
+	let hasAccess = false;
 
-		if (subscription) {
-			if (subscription.status === "active") {
+	if (subscription) {
+		if (subscription.status === "active") {
+			hasAccess = true;
+		} else if (subscription.status === "trialing") {
+			const endDate = subscription.trialEndsAt ?? subscription.currentPeriodEnd;
+			if (endDate && new Date() < endDate) {
 				hasAccess = true;
-			} else if (subscription.status === "trialing") {
-				const endDate = subscription.trialEndsAt ?? subscription.currentPeriodEnd;
-				if (endDate && new Date() < endDate) {
-					hasAccess = true;
-					daysLeft = Math.max(
-						0,
-						Math.ceil(
-							(endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-						),
-					);
-					showTrialBanner = true;
-				}
+				daysLeft = Math.max(
+					0,
+					Math.ceil(
+						(endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+					),
+				);
+				showTrialBanner = true;
 			}
 		}
+	}
 
-		if (!hasAccess) {
-			redirect("/billing/choose-plan");
-		}
+	if (!hasAccess) {
+		redirect("/billing/choose-plan");
 	}
 
 	const queryClient = getServerQueryClient();
