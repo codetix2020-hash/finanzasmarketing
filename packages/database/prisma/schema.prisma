@@ -1650,8 +1650,8 @@ model D2CSubscription {
   stripePriceId        String?
 
   // Plan
-  plan            String   @default("free") // free, starter, pro, business
-  status          String   @default("active") // active, canceled, past_due, trialing
+  plan            String   @default("pro") // pro, agency
+  status          String   @default("trialing") // trialing, active, past_due, canceled, expired
 
   // Período
   currentPeriodStart DateTime?
@@ -1661,9 +1661,10 @@ model D2CSubscription {
   // Trial
   trialStart      DateTime?
   trialEnd        DateTime?
+  trialEndsAt     DateTime?
 
   // Límites del plan
-  postsLimit      Int      @default(5)  // posts por mes
+  postsLimit      Int      @default(60)  // posts por mes (-1 = unlimited)
   brandsLimit     Int      @default(1)  // organizaciones/marcas
 
   createdAt       DateTime @default(now())
@@ -1673,5 +1674,7 @@ model D2CSubscription {
 
   @@index([stripeCustomerId])
   @@index([stripeSubscriptionId])
+  @@index([status])
+  @@index([organizationId])
   @@map("d2c_subscription")
 }

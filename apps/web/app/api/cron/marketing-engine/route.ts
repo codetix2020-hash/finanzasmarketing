@@ -37,6 +37,20 @@ export async function GET(request: NextRequest) {
 		});
 		cronLogId = created.id;
 
+		const expiredTrials = await prisma.d2CSubscription.updateMany({
+			where: {
+				status: "trialing",
+				OR: [
+					{ trialEndsAt: { lt: new Date() } },
+					{ trialEndsAt: null, trialEnd: { lt: new Date() } },
+				],
+			},
+			data: { status: "expired" },
+		});
+		if (expiredTrials.count > 0) {
+			results.errors.push(`Expired trials updated: ${expiredTrials.count}`);
+		}
+
 		const organizations = await prisma.organization.findMany({
 			include: {
 				businessProfile: true,

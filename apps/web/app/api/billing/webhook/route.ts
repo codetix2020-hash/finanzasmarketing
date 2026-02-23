@@ -1,27 +1,172 @@
 import { NextRequest, NextResponse } from "next/server";
-import { StripeService } from "@repo/api/modules/billing/stripe-service";
+import { prisma } from "@repo/database";
+import Stripe from "stripe";
+import {
+	PLAN_LIMITS,
+	getPlanFromPriceId,
+	type BillingPlan,
+} from "@repo/api/lib/stripe-config";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+	apiVersion: "2025-10-29.clover",
+});
+
+const webhookSecret =
+	process.env.STRIPE_BILLING_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || "";
 
 export async function POST(request: NextRequest) {
-  try {
-    const payload = await request.text();
-    const signature = request.headers.get("stripe-signature");
+	try {
+		const payload = await request.text();
+		const signature = request.headers.get("stripe-signature");
 
-    if (!signature) {
-      return NextResponse.json(
-        { error: "No signature" },
-        { status: 400 }
-      );
-    }
+		if (!signature || !webhookSecret) {
+			return NextResponse.json({ error: "Invalid webhook setup" }, { status: 400 });
+		}
 
-    await StripeService.handleWebhook(payload, signature);
+		let event: Stripe.Event;
+		try {
+			event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+		} catch (error) {
+			console.error("Webhook signature verification failed:", error);
+			return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+		}
 
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error("Webhook error:", error);
-    return NextResponse.json(
-      { error: "Webhook failed" },
-      { status: 400 }
-    );
-  }
+		switch (event.type) {
+			case "checkout.session.completed": {
+				const session = event.data.object as Stripe.Checkout.Session;
+				const organizationId = session.metadata?.organizationId;
+				const plan = (session.metadata?.plan as BillingPlan | undefined) || "pro";
+
+				if (!organizationId) break;
+
+				const stripeSubscription = await stripe.subscriptions.retrieve(
+					session.subscription as string,
+				);
+				const stripeSubscriptionAny = stripeSubscription as any;
+				const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.pro;
+
+				await prisma.d2CSubscription.upsert({
+					where: { organizationId },
+					update: {
+						status: "active",
+						plan,
+						stripeCustomerId: session.customer as string,
+						stripeSubscriptionId: stripeSubscription.id,
+						stripePriceId: stripeSubscription.items.data[0]?.price.id || null,
+						postsLimit: limits.postsLimit,
+						brandsLimit: limits.brandsLimit,
+						currentPeriodStart: stripeSubscriptionAny.current_period_start
+							? new Date(stripeSubscriptionAny.current_period_start * 1000)
+							: new Date(),
+						currentPeriodEnd: stripeSubscriptionAny.current_period_end
+							? new Date(stripeSubscriptionAny.current_period_end * 1000)
+							: null,
+						trialEnd: null,
+						trialEndsAt: null,
+					},
+					create: {
+						organizationId,
+						status: "active",
+						plan,
+						stripeCustomerId: session.customer as string,
+						stripeSubscriptionId: stripeSubscription.id,
+						stripePriceId: stripeSubscription.items.data[0]?.price.id || null,
+						postsLimit: limits.postsLimit,
+						brandsLimit: limits.brandsLimit,
+						currentPeriodStart: stripeSubscriptionAny.current_period_start
+							? new Date(stripeSubscriptionAny.current_period_start * 1000)
+							: new Date(),
+						currentPeriodEnd: stripeSubscriptionAny.current_period_end
+							? new Date(stripeSubscriptionAny.current_period_end * 1000)
+							: null,
+					},
+				});
+				break;
+			}
+
+			case "customer.subscription.updated": {
+				const subscription = event.data.object as Stripe.Subscription;
+				const organizationId = subscription.metadata?.organizationId;
+				if (!organizationId) break;
+
+				const priceId = subscription.items.data[0]?.price.id;
+				const plan = priceId ? getPlanFromPriceId(priceId) : "pro";
+				const limits = PLAN_LIMITS[plan];
+
+				await prisma.d2CSubscription.update({
+					where: { organizationId },
+					data: {
+						status:
+							subscription.status === "active"
+								? "active"
+								: subscription.status === "trialing"
+									? "trialing"
+									: subscription.status === "past_due"
+										? "past_due"
+										: "canceled",
+						plan,
+						stripePriceId: priceId || null,
+						postsLimit: limits.postsLimit,
+						brandsLimit: limits.brandsLimit,
+						currentPeriodStart: (subscription as any).current_period_start
+							? new Date((subscription as any).current_period_start * 1000)
+							: new Date(),
+						currentPeriodEnd: (subscription as any).current_period_end
+							? new Date((subscription as any).current_period_end * 1000)
+							: null,
+						cancelAtPeriodEnd: subscription.cancel_at_period_end,
+						trialStart: subscription.trial_start
+							? new Date(subscription.trial_start * 1000)
+							: null,
+						trialEnd: subscription.trial_end
+							? new Date(subscription.trial_end * 1000)
+							: null,
+						trialEndsAt: subscription.trial_end
+							? new Date(subscription.trial_end * 1000)
+							: null,
+					},
+				});
+				break;
+			}
+
+			case "customer.subscription.deleted": {
+				const subscription = event.data.object as Stripe.Subscription;
+				const organizationId = subscription.metadata?.organizationId;
+				if (!organizationId) break;
+
+				await prisma.d2CSubscription.update({
+					where: { organizationId },
+					data: {
+						status: "canceled",
+						stripeSubscriptionId: null,
+						stripePriceId: null,
+					},
+				});
+				break;
+			}
+
+			case "invoice.payment_failed": {
+				const invoice = event.data.object as Stripe.Invoice;
+				const subscriptionId = (invoice as any).subscription as string;
+				if (!subscriptionId) break;
+
+				const sub = await prisma.d2CSubscription.findFirst({
+					where: { stripeSubscriptionId: subscriptionId },
+				});
+				if (sub) {
+					await prisma.d2CSubscription.update({
+						where: { id: sub.id },
+						data: { status: "past_due" },
+					});
+				}
+				break;
+			}
+		}
+
+		return NextResponse.json({ received: true });
+	} catch (error) {
+		console.error("Webhook error:", error);
+		return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+	}
 }
 

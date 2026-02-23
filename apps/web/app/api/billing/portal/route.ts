@@ -1,39 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthContext } from "@repo/api/lib/auth-guard";
-import { StripeService } from "@repo/api/modules/billing/stripe-service";
+import { auth } from "@repo/auth";
+import { prisma } from "@repo/database";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+	apiVersion: "2025-10-29.clover",
+});
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { organizationId } = body;
+	try {
+		const session = await auth.api.getSession({ headers: request.headers });
+		const organizationId = session?.session?.activeOrganizationId;
 
-    if (!organizationId) {
-      return NextResponse.json(
-        { error: "organizationId required" },
-        { status: 400 }
-      );
-    }
+		if (!organizationId) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 
-    const authCtx = await getAuthContext(organizationId);
-    if (!authCtx) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+		const sub = await prisma.d2CSubscription.findUnique({
+			where: { organizationId },
+		});
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const returnUrl = `${baseUrl}/app/${organizationId}/marketing/settings/billing`;
+		if (!sub?.stripeCustomerId) {
+			return NextResponse.json({ error: "No subscription found" }, { status: 404 });
+		}
 
-    const portalUrl = await StripeService.createBillingPortalSession(
-      authCtx.organizationId,
-      returnUrl
-    );
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL;
+		const portalSession = await stripe.billingPortal.sessions.create({
+			customer: sub.stripeCustomerId,
+			return_url: `${baseUrl}/app`,
+		});
 
-    return NextResponse.json({ url: portalUrl });
-  } catch (error) {
-    console.error("Portal error:", error);
-    return NextResponse.json(
-      { error: "Failed to create portal session" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json({ url: portalSession.url });
+	} catch (error) {
+		console.error("Portal error:", error);
+		return NextResponse.json(
+			{ error: "Failed to create portal session" },
+			{ status: 500 },
+		);
+	}
 }
 

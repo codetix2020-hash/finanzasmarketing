@@ -74,7 +74,7 @@ export const auth = betterAuth({
 							.substring(0, 30);
 						const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
 
-						await db.organization.create({
+						const organization = await db.organization.create({
 							data: {
 								name: defaultOrgName,
 								slug,
@@ -86,6 +86,27 @@ export const auth = betterAuth({
 										createdAt: new Date(),
 									},
 								},
+							},
+						});
+
+						const trialStart = new Date();
+						const trialEnd = new Date(trialStart);
+						trialEnd.setDate(trialEnd.getDate() + 14);
+
+						await db.d2CSubscription.upsert({
+							where: { organizationId: organization.id },
+							update: {},
+							create: {
+								organizationId: organization.id,
+								status: "trialing",
+								plan: "pro",
+								postsLimit: 60,
+								brandsLimit: 1,
+								trialStart,
+								trialEnd,
+								trialEndsAt: trialEnd,
+								currentPeriodStart: trialStart,
+								currentPeriodEnd: trialEnd,
 							},
 						});
 						logger.info(`Auto-created organization "${defaultOrgName}" for user ${user.id}`);

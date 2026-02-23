@@ -9,6 +9,7 @@ import { getServerQueryClient } from "@shared/lib/server";
 import { attemptAsync } from "es-toolkit";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { ManageSubscriptionButton } from "./manage-subscription-button";
 
 export async function generateMetadata() {
 	const t = await getTranslations();
@@ -56,6 +57,7 @@ export default async function BillingSettingsPage({
 
 	return (
 		<SettingsList>
+			<ManageSubscriptionButton />
 			{activePlan && <ActivePlan organizationId={organization.id} />}
 			<ChangePlan
 				organizationId={organization.id}
