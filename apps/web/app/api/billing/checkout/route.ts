@@ -3,12 +3,10 @@ import { auth } from "@repo/auth";
 import { prisma } from "@repo/database";
 import Stripe from "stripe";
 import {
-	PLAN_LIMITS,
 	STRIPE_PRICES,
 	type BillingCycle,
 	type BillingPlan,
 } from "@repo/api/lib/stripe-config";
-import { ensureTrialSubscription } from "@repo/api/lib/trial-subscription";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 	apiVersion: "2025-10-29.clover",
@@ -51,8 +49,11 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Organization not found" }, { status: 404 });
 		}
 
-		const sub = await ensureTrialSubscription(organizationId);
-		let customerId = sub.stripeCustomerId;
+		const existingSub = await prisma.d2CSubscription.findUnique({
+			where: { organizationId },
+			select: { stripeCustomerId: true },
+		});
+		let customerId = existingSub?.stripeCustomerId || null;
 
 		if (!customerId) {
 			const customer = await stripe.customers.create({
@@ -65,15 +66,11 @@ export async function POST(request: NextRequest) {
 			});
 
 			customerId = customer.id;
-			await prisma.d2CSubscription.update({
-				where: { organizationId },
-				data: { stripeCustomerId: customerId },
-			});
 		}
 
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL;
 		const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
-		const cancelUrl = `${baseUrl}/billing/upgrade`;
+		const cancelUrl = `${baseUrl}/billing/choose-plan`;
 
 		const checkoutSession = await stripe.checkout.sessions.create({
 			customer: customerId,
@@ -88,23 +85,13 @@ export async function POST(request: NextRequest) {
 				billing,
 			},
 			subscription_data: {
+				trial_period_days: 14,
 				metadata: {
 					organizationId,
 					plan,
 				},
 			},
 			allow_promotion_codes: true,
-		});
-
-		// Persist the chosen limits early for better UX until webhook confirms activation.
-		const limits = PLAN_LIMITS[plan];
-		await prisma.d2CSubscription.update({
-			where: { organizationId },
-			data: {
-				plan,
-				postsLimit: limits.postsLimit,
-				brandsLimit: limits.brandsLimit,
-			},
 		});
 
 		return NextResponse.json({ url: checkoutSession.url });

@@ -44,41 +44,49 @@ export async function POST(request: NextRequest) {
 				);
 				const stripeSubscriptionAny = stripeSubscription as any;
 				const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.pro;
+				const status =
+					stripeSubscription.status === "trialing" ? "trialing" : "active";
+				const trialEndsAt =
+					stripeSubscription.trial_end
+						? new Date(stripeSubscription.trial_end * 1000)
+						: null;
 
 				await prisma.d2CSubscription.upsert({
 					where: { organizationId },
 					update: {
-						status: "active",
+						status,
 						plan,
 						stripeCustomerId: session.customer as string,
 						stripeSubscriptionId: stripeSubscription.id,
 						stripePriceId: stripeSubscription.items.data[0]?.price.id || null,
 						postsLimit: limits.postsLimit,
 						brandsLimit: limits.brandsLimit,
+						trialEndsAt,
 						currentPeriodStart: stripeSubscriptionAny.current_period_start
 							? new Date(stripeSubscriptionAny.current_period_start * 1000)
 							: new Date(),
 						currentPeriodEnd: stripeSubscriptionAny.current_period_end
 							? new Date(stripeSubscriptionAny.current_period_end * 1000)
 							: null,
-						trialEnd: null,
-						trialEndsAt: null,
+						trialEnd: trialEndsAt,
 					},
 					create: {
 						organizationId,
-						status: "active",
+						status,
 						plan,
 						stripeCustomerId: session.customer as string,
 						stripeSubscriptionId: stripeSubscription.id,
 						stripePriceId: stripeSubscription.items.data[0]?.price.id || null,
 						postsLimit: limits.postsLimit,
 						brandsLimit: limits.brandsLimit,
+						trialEndsAt,
 						currentPeriodStart: stripeSubscriptionAny.current_period_start
 							? new Date(stripeSubscriptionAny.current_period_start * 1000)
 							: new Date(),
 						currentPeriodEnd: stripeSubscriptionAny.current_period_end
 							? new Date(stripeSubscriptionAny.current_period_end * 1000)
 							: null,
+						trialEnd: trialEndsAt,
 					},
 				});
 				break;
@@ -92,22 +100,39 @@ export async function POST(request: NextRequest) {
 				const priceId = subscription.items.data[0]?.price.id;
 				const plan = priceId ? getPlanFromPriceId(priceId) : "pro";
 				const limits = PLAN_LIMITS[plan];
+				let status: string;
+				let trialEndsAt: Date | null = null;
+
+				switch (subscription.status) {
+					case "active":
+						status = "active";
+						break;
+					case "trialing":
+						status = "trialing";
+						if (subscription.trial_end) {
+							trialEndsAt = new Date(subscription.trial_end * 1000);
+						}
+						break;
+					case "past_due":
+						status = "past_due";
+						break;
+					case "canceled":
+					case "unpaid":
+						status = "canceled";
+						break;
+					default:
+						status = "canceled";
+				}
 
 				await prisma.d2CSubscription.update({
 					where: { organizationId },
 					data: {
-						status:
-							subscription.status === "active"
-								? "active"
-								: subscription.status === "trialing"
-									? "trialing"
-									: subscription.status === "past_due"
-										? "past_due"
-										: "canceled",
+						status,
 						plan,
 						stripePriceId: priceId || null,
 						postsLimit: limits.postsLimit,
 						brandsLimit: limits.brandsLimit,
+						trialEndsAt,
 						currentPeriodStart: (subscription as any).current_period_start
 							? new Date((subscription as any).current_period_start * 1000)
 							: new Date(),
@@ -119,9 +144,6 @@ export async function POST(request: NextRequest) {
 							? new Date(subscription.trial_start * 1000)
 							: null,
 						trialEnd: subscription.trial_end
-							? new Date(subscription.trial_end * 1000)
-							: null,
-						trialEndsAt: subscription.trial_end
 							? new Date(subscription.trial_end * 1000)
 							: null,
 					},

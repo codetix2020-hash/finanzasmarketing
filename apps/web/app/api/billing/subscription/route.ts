@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { getAuthContext } from "@repo/api/lib/auth-guard";
 import { PLANS } from "@repo/api/modules/billing/plans";
-import { ensureTrialSubscription } from "@repo/api/lib/trial-subscription";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -21,7 +20,9 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const subscription = await ensureTrialSubscription(authCtx.organizationId);
+		const subscription = await prisma.d2CSubscription.findUnique({
+			where: { organizationId: authCtx.organizationId },
+		});
 
 		// Contar posts del mes
 		const startOfMonth = new Date();
@@ -35,14 +36,14 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
-		const plan = subscription.plan || "pro";
+		const plan = subscription?.plan || "pro";
 		const planInfo = PLANS[plan as keyof typeof PLANS] || PLANS.pro;
 
 		return NextResponse.json({
 			subscription,
 			usage: {
 				postsUsed,
-				postsLimit: subscription.postsLimit || PLANS.pro.limits.postsPerMonth,
+				postsLimit: subscription?.postsLimit || PLANS.pro.limits.postsPerMonth,
 			},
 			planInfo,
 		});

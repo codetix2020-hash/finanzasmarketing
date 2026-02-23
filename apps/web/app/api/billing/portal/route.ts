@@ -24,10 +24,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "No subscription found" }, { status: 404 });
 		}
 
+		const org = await prisma.organization.findUnique({
+			where: { id: organizationId },
+			select: { slug: true },
+		});
+
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL;
 		const portalSession = await stripe.billingPortal.sessions.create({
 			customer: sub.stripeCustomerId,
-			return_url: `${baseUrl}/app`,
+			return_url: org?.slug
+				? `${baseUrl}/app/${org.slug}/settings/billing`
+				: `${baseUrl}/app`,
 		});
 
 		return NextResponse.json({ url: portalSession.url });
