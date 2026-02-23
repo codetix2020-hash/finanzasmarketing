@@ -17,6 +17,7 @@ import {
 	ShoppingBag,
 	Users,
 	Building2,
+	ChevronRight,
 } from "lucide-react";
 
 /* ──────────────────────────────────────────── */
@@ -181,17 +182,17 @@ function D2CNavbar() {
 function FAQItem({ question, answer }: { question: string; answer: string }) {
 	const [open, setOpen] = useState(false);
 	return (
-		<div className="border-b border-zinc-800">
+		<div>
 			<button
 				onClick={() => setOpen(!open)}
-				className="w-full flex items-center justify-between py-5 text-left text-white font-medium hover:text-purple-400 transition-colors"
+				className="w-full flex items-center justify-between py-4 px-5 text-left text-zinc-200 font-medium hover:text-white transition-colors"
 			>
-				{question}
-				<span className={`text-xl transition-transform duration-200 ${open ? "rotate-45" : ""}`}>
-					+
-				</span>
+				<span className="pr-4">{question}</span>
+				<ChevronRight className={`w-4 h-4 text-zinc-500 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
 			</button>
-			{open && <p className="pb-5 text-zinc-400 leading-relaxed">{answer}</p>}
+			<div className={`overflow-hidden transition-all duration-300 ${open ? "max-h-48 opacity-100 pb-4 px-5" : "max-h-0 opacity-0"}`}>
+				<p className="text-zinc-400 text-sm leading-relaxed">{answer}</p>
+			</div>
 		</div>
 	);
 }
@@ -535,10 +536,10 @@ export default function D2CLandingPage() {
 						</p>
 					</FadeIn>
 
-					<div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+					<div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch">
 						{/* PRO */}
-						<FadeIn delay={0}>
-							<div className="relative rounded-2xl border-2 border-purple-500/60 bg-zinc-900/60 p-8 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full">
+						<FadeIn delay={0} className="h-full">
+							<div className="relative flex flex-col rounded-2xl border-2 border-purple-500/60 bg-zinc-900/60 p-8 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 h-full">
 								<div className="absolute -top-3 left-1/2 -translate-x-1/2">
 									<span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-xs font-bold uppercase tracking-wider">
 										Most Popular
@@ -552,7 +553,7 @@ export default function D2CLandingPage() {
 									<span className="text-zinc-500">/mo</span>
 								</div>
 
-								<ul className="space-y-3 mb-8">
+								<ul className="space-y-3 flex-1">
 									{[
 										"60 posts/month",
 										"1 brand",
@@ -572,7 +573,7 @@ export default function D2CLandingPage() {
 
 								<Link
 									href="/auth/signup"
-									className="block w-full text-center py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 font-semibold transition-all duration-200 shadow-lg shadow-purple-600/20"
+									className="block w-full text-center py-3 mt-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 font-semibold transition-all duration-200 shadow-lg shadow-purple-600/20"
 								>
 									Start free trial →
 								</Link>
@@ -580,8 +581,8 @@ export default function D2CLandingPage() {
 						</FadeIn>
 
 						{/* AGENCY */}
-						<FadeIn delay={150}>
-							<div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 hover:border-zinc-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 h-full">
+						<FadeIn delay={150} className="h-full">
+							<div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 hover:border-zinc-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 h-full">
 								<h3 className="text-xl font-semibold mb-1">Agency</h3>
 								<p className="text-zinc-500 text-sm mb-5">For teams & agencies</p>
 								<div className="mb-6">
@@ -589,13 +590,13 @@ export default function D2CLandingPage() {
 									<span className="text-zinc-500">/mo</span>
 								</div>
 
-								<ul className="space-y-3 mb-8">
+								<ul className="space-y-3 flex-1">
 									{[
 										"Unlimited posts",
 										"5 brands",
 										"Everything in Pro",
 										"Priority support",
-										"Reports (coming soon)",
+										"Analytics dashboard",
 									].map((f) => (
 										<li key={f} className="flex items-center gap-2.5 text-zinc-300 text-sm">
 											<Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
@@ -606,7 +607,7 @@ export default function D2CLandingPage() {
 
 								<Link
 									href="/auth/signup"
-									className="block w-full text-center py-3 rounded-full border border-zinc-700 text-zinc-300 font-semibold hover:border-zinc-500 hover:text-white transition-all duration-200"
+									className="block w-full text-center py-3 mt-8 rounded-full border border-zinc-700 text-zinc-300 font-semibold hover:border-zinc-500 hover:text-white transition-all duration-200"
 								>
 									Start free trial →
 								</Link>
@@ -639,37 +640,48 @@ export default function D2CLandingPage() {
 			{/* ════════ SECTION 6: FAQ ════════ */}
 			<section id="faq" className="py-24 px-6">
 				<div className="max-w-3xl mx-auto">
-					<FadeIn>
-						<h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+					<FadeIn className="text-center mb-12">
+						<h2 className="text-4xl md:text-5xl font-bold mb-3">
 							Questions? Answers.
 						</h2>
+						<p className="text-zinc-400 text-lg">
+							Everything you need to know before getting started.
+						</p>
 					</FadeIn>
 
 					<FadeIn delay={100}>
-						<div>
+						<div className="border border-zinc-800 rounded-xl overflow-hidden divide-y divide-zinc-800">
 							<FAQItem
 								question="What happens after the 14-day trial?"
-								answer="Your account converts to a paid plan. Cancel anytime before — no charge."
+								answer="You'll get a reminder 3 days before your trial ends. If you love it, you'll automatically move to your chosen plan. If not, just cancel — no charge, no questions asked. Your content stays saved either way."
 							/>
 							<FAQItem
-								question="Do I need to connect my Instagram/Facebook?"
-								answer="Yes, you connect them in 2 clicks via OAuth. We never post without your approval unless you enable autopilot."
+								question="How does the AI know my brand voice?"
+								answer="During setup, you tell us about your brand — your industry, tone, audience, and products. The AI uses this to generate content that sounds like you wrote it. The more you use it, the better it gets. You can also define words to avoid, favorite emojis, and signature phrases."
 							/>
 							<FAQItem
-								question="Can I edit the AI-generated content?"
-								answer="Absolutely. Every post is editable before publishing. The AI gives you a starting point, you make it perfect."
+								question="Do I need to connect my social accounts?"
+								answer="Yes, and it takes about 30 seconds per platform. We use official OAuth — the same secure method used by Buffer, Hootsuite, and every major tool. We never store your password and you can disconnect anytime."
 							/>
 							<FAQItem
-								question="What kind of content does it generate?"
-								answer="Posts, carousel ideas, captions, hashtags, and stories — all tailored to your brand voice and industry."
+								question="Can I edit posts before they go live?"
+								answer="Always. Every post starts as a draft that you can edit, rewrite, or trash. Auto-publish only kicks in if you explicitly turn it on. You're always in control."
 							/>
 							<FAQItem
-								question="Is my data safe?"
-								answer="Yes. We use encrypted connections, never share your data, and you can delete your account at any time."
+								question="What if I manage multiple brands?"
+								answer="The Agency plan supports up to 5 brands, each with their own voice, photos, and social accounts. Switch between them from one dashboard — no logging in and out."
 							/>
 							<FAQItem
-								question="Can I switch plans later?"
-								answer="Yes, upgrade or downgrade anytime from your billing settings."
+								question="Is there a contract or commitment?"
+								answer="None. Pay month to month. Cancel anytime from your settings — takes 10 seconds. We don't do annual lock-ins or hidden fees."
+							/>
+							<FAQItem
+								question="What platforms do you support?"
+								answer="Instagram and Facebook right now, with full auto-publishing. TikTok support is coming soon. We're focused on doing fewer platforms really well rather than half-supporting everything."
+							/>
+							<FAQItem
+								question="How is this different from just using ChatGPT?"
+								answer="ChatGPT generates generic text. It doesn't know your brand, can't schedule posts, can't publish to your accounts, and forgets everything between sessions. MarketingOS learns your brand once and handles the entire workflow — from content creation to publishing — on autopilot."
 							/>
 						</div>
 					</FadeIn>
