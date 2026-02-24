@@ -218,7 +218,7 @@ export default function IntegratedDashboard() {
           INTEGRACIÓN COMPLETADA
         </div>
         <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-          MarketingOS + FinanceOS conectados
+          PilotSocials + FinanceOS conectados
         </div>
       </div>
     </div>

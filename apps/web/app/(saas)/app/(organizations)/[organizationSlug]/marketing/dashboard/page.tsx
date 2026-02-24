@@ -27,7 +27,7 @@ export default function MarketingDashboard() {
 
   useEffect(() => {
     // Actualizar título de la página
-    document.title = "Dashboard | MarketingOS";
+    document.title = "Dashboard | PilotSocials";
     
     if (loaded && activeOrganization?.id) {
       fetchDashboardData();

@@ -85,9 +85,9 @@ async function createUser() {
 	console.log("🆔 User ID:  ", user.id);
 	console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 	console.log("\n🚀 Ahora puedes hacer login en:");
-	console.log("   https://finanzas-production-8433.up.railway.app/auth/login");
+	console.log("   https://app.pilotsocials.com/auth/login");
 	console.log("\n💡 Después del login, ve a:");
-	console.log("   https://finanzas-production-8433.up.railway.app/app/finance");
+	console.log("   https://app.pilotsocials.com/app/finance");
 }
 
 createUser()

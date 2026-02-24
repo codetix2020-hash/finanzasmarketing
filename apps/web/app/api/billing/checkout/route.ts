@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL;
-		const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
-		const cancelUrl = `${baseUrl}/billing/choose-plan`;
+		const successUrl = `${baseUrl}/en/billing/success?session_id={CHECKOUT_SESSION_ID}`;
+		const cancelUrl = `${baseUrl}/en/billing/choose-plan`;
 
 		const checkoutSession = await stripe.checkout.sessions.create({
 			customer: customerId,

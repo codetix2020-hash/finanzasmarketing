@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     const result = await communityManagerAI.autoReply(commentId, text, {
       platform,
-      productName: productName || 'MarketingOS',
+      productName: productName || 'PilotSocials',
       postTopic: undefined
     });
 

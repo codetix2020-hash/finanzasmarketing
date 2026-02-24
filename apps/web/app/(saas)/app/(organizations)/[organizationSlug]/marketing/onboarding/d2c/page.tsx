@@ -738,7 +738,7 @@ export default function D2COnboardingPage() {
                     <div>
                       <p className="font-medium">¡Ya casi estás!</p>
                       <p className="text-sm text-muted-foreground">
-                        Con esta información, MarketingOS generará contenido que suena 100% como tu marca. 
+                        Con esta información, PilotSocials generará contenido que suena 100% como tu marca. 
                         Podrás subir tus fotos de producto después y la IA escribirá los captions perfectos.
                       </p>
                     </div>

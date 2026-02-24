@@ -103,7 +103,7 @@ export default function OnboardingPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
-            {step === 1 ? "Bienvenido a MarketingOS" : "Crea tu organización"}
+            {step === 1 ? "Bienvenido a PilotSocials" : "Crea tu organización"}
           </CardTitle>
           <CardDescription>
             {step === 1 

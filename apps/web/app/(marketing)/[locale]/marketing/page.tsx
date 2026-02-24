@@ -216,7 +216,7 @@ export default function MarketingDashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-                  MarketingOS
+                  PilotSocials
                 </h1>
                 <p className="text-sm text-gray-500">Sistema autónomo de marketing con IA</p>
               </div>

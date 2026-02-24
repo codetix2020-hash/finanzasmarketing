@@ -344,7 +344,7 @@ export default function HomePage() {
 				<div className="container mx-auto px-4 py-12">
 					<div className="grid gap-8 md:grid-cols-4">
 						<div>
-							<h3 className="mb-4 font-bold text-lg">MarketingOS</h3>
+							<h3 className="mb-4 font-bold text-lg">PilotSocials</h3>
 							<p className="text-sm text-muted-foreground">
 								Automatización de marketing con IA para empresas modernas
 							</p>
@@ -401,7 +401,7 @@ export default function HomePage() {
 						</div>
 					</div>
 					<div className="mt-12 border-t pt-8 text-center text-sm text-muted-foreground">
-						<p>© 2026 MarketingOS by CodeTix. Todos los derechos reservados.</p>
+						<p>© 2026 PilotSocials by CodeTix. Todos los derechos reservados.</p>
 					</div>
 				</div>
 			</footer>

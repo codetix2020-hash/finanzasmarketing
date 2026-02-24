@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || 'marketingos_instagram_webhook_2025_secure_token';
+const VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || 'pilotsocials_instagram_webhook_2025_secure_token';
 
 // GET: Verificación inicial de Facebook
 export async function GET(request: NextRequest) {

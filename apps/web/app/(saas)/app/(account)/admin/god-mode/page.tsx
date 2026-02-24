@@ -128,7 +128,7 @@ export default function GodModeDashboard() {
           GOD MODE
         </h1>
         <p style={{ fontSize: '1rem', color: '#9ca3af' }}>
-          Control total de MarketingOS
+          Control total de PilotSocials
         </p>
       </div>
 

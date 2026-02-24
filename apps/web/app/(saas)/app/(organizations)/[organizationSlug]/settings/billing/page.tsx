@@ -105,7 +105,7 @@ export default async function BillingSettingsPage({
 						<div>
 							<p className="text-zinc-500 mb-4">No active plan</p>
 							<a
-								href="/billing/choose-plan"
+								href="/en/billing/choose-plan"
 								className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 transition-colors"
 							>
 								Choose a plan →

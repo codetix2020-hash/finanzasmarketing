@@ -5,6 +5,7 @@ import { AppWrapper } from "@saas/shared/components/AppWrapper";
 import { orpc } from "@shared/lib/orpc-query-utils";
 import { getServerQueryClient } from "@shared/lib/server";
 import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
 import Link from "next/link";
 import { prisma } from "@repo/database";
@@ -56,6 +57,14 @@ export default async function OrganizationLayout({
 
 	let daysLeft = 0;
 	let showTrialBanner = false;
+	const requestHeaders = await headers();
+	const invokePath =
+		requestHeaders.get("x-invoke-path") ||
+		requestHeaders.get("x-matched-path") ||
+		"";
+	const isBillingSettingsRoute =
+		invokePath.includes("/settings/billing") ||
+		invokePath.includes("/marketing/settings/billing");
 
 	const subscription = await prisma.d2CSubscription.findUnique({
 		where: { organizationId: organization.id },
@@ -81,8 +90,8 @@ export default async function OrganizationLayout({
 		}
 	}
 
-	if (!hasAccess) {
-		redirect("/billing/choose-plan");
+	if (!hasAccess && !isBillingSettingsRoute) {
+		redirect("/en/billing/choose-plan");
 	}
 
 	const queryClient = getServerQueryClient();

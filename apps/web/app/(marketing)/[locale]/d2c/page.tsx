@@ -144,7 +144,7 @@ function D2CNavbar() {
 		>
 			<div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
 				<Link href="/" className="text-lg font-bold text-white tracking-tight">
-					MarketingOS
+					PilotSocials
 				</Link>
 
 				<div className="hidden md:flex items-center gap-8">
@@ -630,7 +630,7 @@ export default function D2CLandingPage() {
 						</p>
 						<p className="text-xl md:text-2xl leading-relaxed">
 							<span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold">
-								MarketingOS does both. For €29/month.
+								PilotSocials does both. For €29/month.
 							</span>
 						</p>
 					</div>
@@ -681,7 +681,7 @@ export default function D2CLandingPage() {
 							/>
 							<FAQItem
 								question="How is this different from just using ChatGPT?"
-								answer="ChatGPT generates generic text. It doesn't know your brand, can't schedule posts, can't publish to your accounts, and forgets everything between sessions. MarketingOS learns your brand once and handles the entire workflow — from content creation to publishing — on autopilot."
+								answer="ChatGPT generates generic text. It doesn't know your brand, can't schedule posts, can't publish to your accounts, and forgets everything between sessions. PilotSocials learns your brand once and handles the entire workflow — from content creation to publishing — on autopilot."
 							/>
 						</div>
 					</FadeIn>

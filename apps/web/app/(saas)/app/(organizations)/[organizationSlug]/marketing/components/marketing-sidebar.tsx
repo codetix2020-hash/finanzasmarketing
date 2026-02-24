@@ -116,7 +116,7 @@ export function MarketingSidebar({
 						<Wand2 className="h-5 w-5 text-white" />
 					</div>
 					<span className="font-bold text-lg text-gray-900 dark:text-white">
-						MarketingOS
+						PilotSocials
 					</span>
 				</Link>
 			</div>

@@ -6,7 +6,7 @@ export default function BillingSuccessPage() {
 			<div className="max-w-md text-center">
 				<div className="text-5xl mb-6">🎉</div>
 				<h1 className="text-2xl font-bold text-white mb-3">
-					Welcome to MarketingOS!
+					Welcome to PilotSocials!
 				</h1>
 				<p className="text-zinc-400 mb-8">
 					Your subscription is active. Let&apos;s start creating content that converts.

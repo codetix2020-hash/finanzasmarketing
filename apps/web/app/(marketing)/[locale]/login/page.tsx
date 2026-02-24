@@ -143,7 +143,7 @@ export default function LoginPage() {
         <div>
           <div className="mb-12">
             <Logo />
-            <h1 className="text-2xl font-bold mt-4 text-foreground">MarketingOS</h1>
+            <h1 className="text-2xl font-bold mt-4 text-foreground">PilotSocials</h1>
           </div>
 
           <div className="space-y-6">
@@ -180,13 +180,13 @@ export default function LoginPage() {
           {/* Logo Mobile */}
           <div className="lg:hidden text-center mb-8">
             <Logo />
-            <h1 className="text-2xl font-bold mt-4">MarketingOS</h1>
+            <h1 className="text-2xl font-bold mt-4">PilotSocials</h1>
           </div>
 
           <Card className="border-2">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-              <CardDescription>Sign in to continue to MarketingOS</CardDescription>
+              <CardDescription>Sign in to continue to PilotSocials</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">

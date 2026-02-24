@@ -88,7 +88,7 @@ export default function BillingPage() {
     const canceled = searchParams.get("canceled");
 
     if (success === "true") {
-      toast.success("Suscripcion activada! Bienvenido a MarketingOS Pro");
+      toast.success("Suscripcion activada! Bienvenido a PilotSocials Pro");
       window.history.replaceState({}, "", window.location.pathname);
     }
     if (canceled === "true") {
@@ -411,7 +411,7 @@ export default function BillingPage() {
 
         {/* FAQ */}
         <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Preguntas? Escribenos a billing@marketingos.com</p>
+          <p>Preguntas? Escribenos a billing@pilotsocials.com</p>
           <p className="mt-1">
             14 dias de prueba gratis - Cancela cuando quieras - Sin permanencia
           </p>
