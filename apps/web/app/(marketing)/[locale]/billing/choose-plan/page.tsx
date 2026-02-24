@@ -12,6 +12,7 @@ export default function ChoosePlanPage() {
 			const res = await fetch("/api/billing/checkout", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
+				credentials: "include",
 				body: JSON.stringify({ plan, billing }),
 			});
 			const data = await res.json();
