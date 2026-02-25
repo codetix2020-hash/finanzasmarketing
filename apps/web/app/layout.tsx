@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 		default: config.appName,
 		template: `%s | ${config.appName}`,
 	},
+	description:
+		"AI-powered social media autopilot. Create, schedule and publish content automatically.",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {

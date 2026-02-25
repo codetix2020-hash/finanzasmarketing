@@ -63,30 +63,6 @@ export function NavBar() {
 			label: t("common.menu.pricing"),
 			href: "/#pricing",
 		},
-		{
-			label: t("common.menu.faq"),
-			href: "/#faq",
-		},
-		{
-			label: t("common.menu.blog"),
-			href: "/blog",
-		},
-		{
-			label: t("common.menu.changelog"),
-			href: "/changelog",
-		},
-		...(config.contactForm.enabled
-			? [
-					{
-						label: t("common.menu.contact"),
-						href: "/contact",
-					},
-				]
-			: []),
-		{
-			label: t("common.menu.docs"),
-			href: "/docs",
-		},
 	];
 
 	const isMenuItemActive = (href: string) => localePathname.startsWith(href);

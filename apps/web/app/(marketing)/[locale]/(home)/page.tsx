@@ -24,18 +24,18 @@ export default function HomePage() {
 						<div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-background/50 px-4 py-2 text-sm backdrop-blur-sm">
 							<Sparkles className="h-4 w-4 text-primary" />
 							<span className="text-muted-foreground">
-								Powered by IA • Automatización Inteligente
+								PilotSocials • AI Social Media Autopilot
 							</span>
 						</div>
 						<h1 className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-							Automatiza tu marketing con{" "}
+							PilotSocials{" "}
 							<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-								IA
+								Your AI Social Media Autopilot
 							</span>
 						</h1>
 						<p className="mb-8 text-xl text-muted-foreground sm:text-2xl">
-							Gestiona todas tus redes sociales, crea contenido y analiza métricas
-							desde un solo lugar
+							AI-powered social media autopilot. Create, schedule and publish
+							content automatically.
 						</p>
 						<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
 							<Button asChild size="lg" variant="primary" className="w-full sm:w-auto">
@@ -47,7 +47,7 @@ export default function HomePage() {
 								variant="outline"
 								className="w-full sm:w-auto"
 							>
-								<Link href="#features">Ver demo</Link>
+								<Link href="/auth/login">Login</Link>
 							</Button>
 						</div>
 						{/* Dashboard Mockup Placeholder */}
@@ -140,7 +140,7 @@ export default function HomePage() {
 			</section>
 
 			{/* Pricing Section */}
-			<section className="border-t bg-muted/30">
+			<section id="pricing" className="border-t bg-muted/30">
 				<div className="container mx-auto px-4 py-24">
 					<div className="mx-auto max-w-6xl">
 						<div className="mb-16 text-center">
