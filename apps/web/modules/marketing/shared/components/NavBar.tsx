@@ -1,11 +1,6 @@
 "use client";
 
 import { LocaleLink, useLocalePathname } from "@i18n/routing";
-import { config } from "@repo/config";
-import { useSession } from "@saas/auth/hooks/use-session";
-import { ColorModeToggle } from "@shared/components/ColorModeToggle";
-import { LocaleSwitch } from "@shared/components/LocaleSwitch";
-import { Logo } from "@shared/components/Logo";
 import { Button } from "@ui/components/button";
 import {
 	Sheet,
@@ -16,13 +11,10 @@ import {
 import { cn } from "@ui/lib";
 import { MenuIcon } from "lucide-react";
 import NextLink from "next/link";
-import { useTranslations } from "next-intl";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
 export function NavBar() {
-	const t = useTranslations();
-	const { user } = useSession();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const localePathname = useLocalePathname();
 	const [isTop, setIsTop] = useState(true);
@@ -60,8 +52,16 @@ export function NavBar() {
 		href: string;
 	}[] = [
 		{
-			label: t("common.menu.pricing"),
+			label: "Features",
+			href: "/#features",
+		},
+		{
+			label: "Pricing",
 			href: "/#pricing",
+		},
+		{
+			label: "Login",
+			href: "/auth/login",
 		},
 	];
 
@@ -70,10 +70,8 @@ export function NavBar() {
 	return (
 		<nav
 			className={cn(
-				"fixed top-0 left-0 z-50 w-full transition-shadow duration-200",
-				!isTop || isDocsPage
-					? "bg-card/80 shadow-sm backdrop-blur-lg"
-					: "shadow-none",
+				"fixed top-0 left-0 z-50 w-full border-zinc-800/50 border-b backdrop-blur-xl transition-shadow duration-200",
+				!isTop || isDocsPage ? "bg-zinc-950/90 shadow-lg shadow-black/30" : "bg-zinc-950/80",
 			)}
 			data-test="navigation"
 		>
@@ -81,7 +79,7 @@ export function NavBar() {
 				<div
 					className={cn(
 						"flex items-center justify-stretch gap-6 transition-[padding] duration-200",
-						!isTop || isDocsPage ? "py-4" : "py-6",
+						!isTop || isDocsPage ? "py-4" : "py-5",
 					)}
 				>
 					<div className="flex flex-1 justify-start">
@@ -89,7 +87,7 @@ export function NavBar() {
 							href="/"
 							className="block hover:no-underline active:no-underline"
 						>
-							<Logo />
+							<span className="font-semibold text-white text-xl">✦ PilotSocials</span>
 						</LocaleLink>
 					</div>
 
@@ -99,9 +97,9 @@ export function NavBar() {
 								key={menuItem.href}
 								href={menuItem.href}
 								className={cn(
-									"block px-3 py-2 font-medium text-foreground/80 text-sm",
+									"block px-3 py-2 font-medium text-sm text-zinc-400 hover:text-white",
 									isMenuItemActive(menuItem.href)
-										? "font-bold text-foreground"
+										? "text-white"
 										: "",
 								)}
 								prefetch
@@ -112,13 +110,6 @@ export function NavBar() {
 					</div>
 
 					<div className="flex flex-1 items-center justify-end gap-3">
-						<ColorModeToggle />
-						{config.i18n.enabled && (
-							<Suspense>
-								<LocaleSwitch />
-							</Suspense>
-						)}
-
 						<Sheet
 							open={mobileMenuOpen}
 							onOpenChange={(open) => setMobileMenuOpen(open)}
@@ -127,13 +118,13 @@ export function NavBar() {
 								<Button
 									className="lg:hidden"
 									size="icon"
-									variant="light"
+									variant="ghost"
 									aria-label="Menu"
 								>
-									<MenuIcon className="size-4" />
+									<MenuIcon className="size-4 text-white" />
 								</Button>
 							</SheetTrigger>
-							<SheetContent className="w-[280px]" side="right">
+							<SheetContent className="w-[280px] border-zinc-800 bg-zinc-950 text-white" side="right">
 								<SheetTitle />
 								<div className="flex flex-col items-start justify-center">
 									{menuItems.map((menuItem) => (
@@ -142,9 +133,9 @@ export function NavBar() {
 											href={menuItem.href}
 											onClick={handleMobileMenuClose}
 											className={cn(
-												"block px-3 py-2 font-medium text-base text-foreground/80",
+												"block px-3 py-2 font-medium text-base text-zinc-300 hover:text-white",
 												isMenuItemActive(menuItem.href)
-													? "font-bold text-foreground"
+													? "text-white"
 													: "",
 											)}
 											prefetch
@@ -154,44 +145,22 @@ export function NavBar() {
 									))}
 
 									<NextLink
-										key={user ? "start" : "login"}
-										href={user ? "/app" : "/auth/login"}
-										className="block px-3 py-2 text-base"
+										href="/auth/signup"
+										className="mt-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white"
 										onClick={handleMobileMenuClose}
-										prefetch={!user}
 									>
-										{user
-											? t("common.menu.dashboard")
-											: t("common.menu.login")}
+										Start free trial →
 									</NextLink>
 								</div>
 							</SheetContent>
 						</Sheet>
 
-						{config.ui.saas.enabled &&
-							(user ? (
-								<Button
-									key="dashboard"
-									className="hidden lg:flex"
-									asChild
-									variant="secondary"
-								>
-									<NextLink href="/app">
-										{t("common.menu.dashboard")}
-									</NextLink>
-								</Button>
-							) : (
-								<Button
-									key="login"
-									className="hidden lg:flex"
-									asChild
-									variant="secondary"
-								>
-									<NextLink href="/auth/login" prefetch>
-										{t("common.menu.login")}
-									</NextLink>
-								</Button>
-							))}
+						<Button
+							className="hidden border-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white lg:flex"
+							asChild
+						>
+							<NextLink href="/auth/signup">Start free trial →</NextLink>
+						</Button>
 					</div>
 				</div>
 			</div>

@@ -1,40 +1,25 @@
 import { LocaleLink } from "@i18n/routing";
-import { config } from "@repo/config";
-import { Logo } from "@shared/components/Logo";
 
 export function Footer() {
 	return (
-		<footer className="border-t py-8 text-foreground/60 text-sm">
-			<div className="container grid grid-cols-1 gap-6 lg:grid-cols-3">
+		<footer className="border-zinc-800 border-t bg-zinc-950 py-10 text-sm text-zinc-500">
+			<div className="container flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 				<div>
-					<Logo className="opacity-70 grayscale" />
-					<p className="mt-3 text-sm opacity-70">
-						© {new Date().getFullYear()} {config.appName}. All rights reserved.
-					</p>
+					<p className="font-semibold text-white text-xl">✦ PilotSocials</p>
+					<p className="mt-2">© 2026 PilotSocials. All rights reserved.</p>
+					<p className="mt-1">Made with ❤️ in Barcelona</p>
 				</div>
 
-				<div className="flex flex-col gap-2">
-					<LocaleLink href="/blog" className="block">
-						Blog
+				<div className="flex items-center gap-5 text-zinc-400">
+					<LocaleLink href="/legal/privacy-policy" className="hover:text-white">
+						Privacy
 					</LocaleLink>
-
-					<a href="#features" className="block">
-						Features
+					<LocaleLink href="/legal/terms" className="hover:text-white">
+						Terms
+					</LocaleLink>
+					<a href="#" className="hover:text-white">
+						Contact
 					</a>
-
-					<a href="/#pricing" className="block">
-						Pricing
-					</a>
-				</div>
-
-				<div className="flex flex-col gap-2">
-					<LocaleLink href="/legal/privacy-policy" className="block">
-						Privacy policy
-					</LocaleLink>
-
-					<LocaleLink href="/legal/terms" className="block">
-						Terms and conditions
-					</LocaleLink>
 				</div>
 			</div>
 		</footer>
