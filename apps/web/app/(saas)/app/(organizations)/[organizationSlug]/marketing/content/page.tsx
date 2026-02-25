@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@ui/components/card";
 import { Button } from "@ui/components/button";
 import { Badge } from "@ui/components/badge";
@@ -312,6 +312,7 @@ function PostCard({
 export default function ContentPage() {
 	const params = useParams();
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const organizationSlug = params.organizationSlug as string;
 	const { activeOrganization } = useActiveOrganization();
 	const organizationId = activeOrganization?.id;
@@ -332,6 +333,13 @@ export default function ContentPage() {
 			loadPosts();
 		}
 	}, [organizationId]);
+
+	useEffect(() => {
+		const tab = searchParams.get("tab");
+		if (tab && ["all", "draft", "scheduled", "published", "failed"].includes(tab)) {
+			setActiveTab(tab);
+		}
+	}, [searchParams]);
 
 	const loadPosts = async () => {
 		try {
@@ -475,7 +483,14 @@ export default function ContentPage() {
 				{/* Tabs */}
 				<Tabs
 					value={activeTab}
-					onValueChange={setActiveTab}
+					onValueChange={(value) => {
+						setActiveTab(value);
+						const url =
+							value === "all"
+								? `/app/${organizationSlug}/marketing/content`
+								: `/app/${organizationSlug}/marketing/content?tab=${value}`;
+						router.replace(url);
+					}}
 					className="space-y-6"
 				>
 					<TabsList className="bg-white border rounded-2xl p-1 h-auto">
@@ -530,7 +545,7 @@ export default function ContentPage() {
 								<Link
 									href={`/app/${organizationSlug}/marketing/generate`}
 								>
-									<Button className="rounded-xl">
+									<Button className="rounded-xl bg-violet-500 text-white hover:bg-violet-600">
 										<Sparkles className="h-4 w-4 mr-2" />{" "}
 										Generar contenido
 									</Button>

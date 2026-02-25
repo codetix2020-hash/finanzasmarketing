@@ -95,7 +95,7 @@ export default function MarketingDashboard() {
   return (
     <div className="space-y-6 pb-8">
       {/* HEADER CON SALUDO Y ESTADO */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 rounded-2xl p-6 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -154,18 +154,18 @@ export default function MarketingDashboard() {
 
       {/* BARRA DE PROGRESO DE SETUP (si no está completo) */}
       {!isFullySetup && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
+        <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Rocket className="w-5 h-5 text-amber-600" />
-              <span className="font-semibold text-amber-900">Completa tu configuración</span>
+              <Rocket className="w-5 h-5 text-violet-600" />
+              <span className="font-semibold text-violet-900">Completa tu configuración</span>
             </div>
-            <span className="text-2xl font-bold text-amber-600">{setupProgress}%</span>
+            <span className="text-2xl font-bold text-violet-600">{setupProgress}%</span>
           </div>
           
-          <div className="w-full bg-amber-200 rounded-full h-2 mb-4">
+          <div className="w-full bg-violet-200 rounded-full h-2 mb-4">
             <div 
-              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-500"
+              className="bg-violet-500 h-2 rounded-full transition-all duration-500"
               style={{ width: `${setupProgress}%` }}
             />
           </div>
@@ -176,13 +176,13 @@ export default function MarketingDashboard() {
                 {step.done ? (
                   <CheckCircle className="w-5 h-5 text-green-500" />
                 ) : (
-                  <Circle className="w-5 h-5 text-amber-300" />
+                  <Circle className="w-5 h-5 text-violet-300" />
                 )}
-                <span className={`text-sm ${step.done ? 'text-green-700' : 'text-amber-600'}`}>
+                <span className={`text-sm ${step.done ? 'text-green-700' : 'text-violet-600'}`}>
                   {step.label}
                 </span>
                 {i < setupSteps.length - 1 && (
-                  <ChevronRight className="w-4 h-4 text-amber-300 ml-2" />
+                  <ChevronRight className="w-4 h-4 text-violet-300 ml-2" />
                 )}
               </div>
             ))}
@@ -192,7 +192,7 @@ export default function MarketingDashboard() {
           <div className="mt-4">
             {!setupSteps[1].done && (
               <Link href={`/app/${orgSlug}/settings/integrations`}>
-                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <button className="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                   Conectar Instagram
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -200,7 +200,7 @@ export default function MarketingDashboard() {
             )}
             {setupSteps[1].done && !setupSteps[2].done && (
               <Link href={`/app/${orgSlug}/marketing/profile`}>
-                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <button className="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                   Completar perfil de empresa
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -208,7 +208,7 @@ export default function MarketingDashboard() {
             )}
             {setupSteps[2].done && !setupSteps[3].done && (
               <Link href={`/app/${orgSlug}/marketing/media`}>
-                <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <button className="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                   Subir fotos de tu negocio
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -352,7 +352,7 @@ export default function MarketingDashboard() {
                   Cuando publiques contenido, verás la actividad aquí
                 </p>
                 <Link href={`/app/${orgSlug}/marketing/content/create`}>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500 text-white rounded-lg text-sm font-medium hover:bg-violet-600 transition-colors">
                     <Sparkles className="w-4 h-4" />
                     Crear primer post
                   </button>
@@ -499,15 +499,15 @@ function ActivityItem({ type, message, time, platform }: any) {
 
 function QuickAction({ href, icon: Icon, label, color }: any) {
   const colors: Record<string, string> = {
-    purple: 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
-    blue: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
-    green: 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600',
-    orange: 'from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600',
+    purple: 'bg-violet-50 border-violet-100 text-violet-700 hover:bg-violet-100',
+    blue: 'bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100',
+    green: 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100',
+    orange: 'bg-violet-50 border-violet-100 text-violet-700 hover:bg-violet-100',
   };
 
   return (
     <Link href={href}>
-      <div className={`bg-gradient-to-r ${colors[color]} rounded-xl p-4 text-white cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg`}>
+      <div className={`${colors[color]} border rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02]`}>
         <Icon className="w-6 h-6 mb-2" />
         <div className="text-sm font-medium">{label}</div>
       </div>

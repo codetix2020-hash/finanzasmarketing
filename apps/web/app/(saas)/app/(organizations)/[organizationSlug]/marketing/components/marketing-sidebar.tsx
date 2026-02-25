@@ -22,7 +22,6 @@ import {
 	Send,
 	Settings,
 	Sparkles,
-	Wand2,
 	Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -55,8 +54,8 @@ function NavItem({
 			className={cn(
 				"flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
 				isActive
-					? "bg-primary/10 text-primary font-medium"
-					: "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+					? "bg-violet-50 text-violet-700 font-medium border-l-2 border-l-violet-500"
+					: "text-gray-600 hover:bg-gray-50",
 			)}
 		>
 			<Icon className="h-4 w-4 shrink-0" />
@@ -69,7 +68,7 @@ function NavItem({
 function SectionLabel({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="pt-5 pb-2 px-3">
-			<span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+			<span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
 				{children}
 			</span>
 		</div>
@@ -108,28 +107,23 @@ export function MarketingSidebar({
 	};
 
 	return (
-		<aside className="w-64 h-screen bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col fixed left-0 top-0 z-40">
+		<aside className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col fixed left-0 top-0 z-40">
 			{/* Logo MarketingOS */}
-			<div className="p-4 border-b border-gray-100 dark:border-gray-800">
+			<div className="p-4 border-b border-gray-100">
 				<Link href={`${basePath}/dashboard`} className="flex items-center gap-2.5">
-					<div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg shadow-purple-500/20">
-						<Wand2 className="h-5 w-5 text-white" />
-					</div>
-					<span className="font-bold text-lg text-gray-900 dark:text-white">
-						PilotSocials
-					</span>
+					<span className="font-bold text-lg text-gray-900">✦ PilotSocials</span>
 				</Link>
 			</div>
 
 			{/* Selector de organización */}
-			<div className="p-3 border-b border-gray-100 dark:border-gray-800">
-				<div className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 dark:bg-gray-900">
+			<div className="p-3 border-b border-gray-100">
+				<div className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50">
 					<OrganizationLogo
 						name={orgName}
 						logoUrl={orgLogo}
 						className="size-8"
 					/>
-					<span className="font-medium text-sm text-gray-900 dark:text-white truncate">
+					<span className="font-medium text-sm text-gray-900 truncate">
 						{orgName}
 					</span>
 				</div>
@@ -224,7 +218,7 @@ export function MarketingSidebar({
 			</nav>
 
 			{/* Configuración */}
-			<div className="p-3 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
+			<div className="p-3 border-t border-gray-100 space-y-0.5">
 				<NavItem
 					href={`${basePath}/profile`}
 					icon={Building2}
@@ -247,7 +241,7 @@ export function MarketingSidebar({
 
 			{/* Usuario */}
 			{user && (
-				<div className="p-3 border-t border-gray-100 dark:border-gray-800">
+				<div className="p-3 border-t border-gray-100">
 					<div className="flex items-center gap-3 p-2">
 						<UserAvatar
 							name={user.name ?? ""}
@@ -255,7 +249,7 @@ export function MarketingSidebar({
 							className="size-8"
 						/>
 						<div className="flex-1 min-w-0">
-							<p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+							<p className="text-sm font-medium text-gray-900 truncate">
 								{user.name}
 							</p>
 							<p className="text-xs text-gray-500 truncate">
@@ -264,7 +258,7 @@ export function MarketingSidebar({
 						</div>
 						<button
 							onClick={onLogout}
-							className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+							className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
 							title="Cerrar sesión"
 						>
 							<LogOut className="h-4 w-4" />

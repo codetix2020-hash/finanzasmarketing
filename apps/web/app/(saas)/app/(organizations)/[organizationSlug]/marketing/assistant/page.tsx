@@ -423,7 +423,7 @@ export default function MarketingAssistantPage() {
 							onClick={sendMessage}
 							disabled={!input.trim() || isLoading}
 							size="icon"
-							className="h-[60px] w-[60px]"
+							className="h-[60px] w-[60px] bg-violet-500 text-white hover:bg-violet-600"
 						>
 							{isLoading ? (
 								<Loader2 className="h-4 w-4 animate-spin" />

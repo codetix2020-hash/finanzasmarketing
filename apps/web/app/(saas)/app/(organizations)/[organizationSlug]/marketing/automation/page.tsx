@@ -186,13 +186,19 @@ export default function MarketingAutomationPage() {
 
 				<div className="flex gap-2">
 					<Button
-						variant={isAutomationEnabled ? "destructive" : "default"}
+						variant="outline"
+						className="border-gray-300 text-gray-700 hover:bg-gray-50"
 						onClick={toggleAutomation}
 						disabled={isLoading || isToggling || !config}
 					>
 						{isAutomationEnabled ? "Pausar automatización" : "Activar automatización"}
 					</Button>
-					<Button variant="outline" onClick={loadAll} disabled={isLoading}>
+					<Button
+						variant="outline"
+						className="border-violet-200 text-violet-600 hover:bg-violet-50"
+						onClick={loadAll}
+						disabled={isLoading}
+					>
 						<RefreshCw className="mr-2 h-4 w-4" />
 						Actualizar
 					</Button>
