@@ -65,7 +65,7 @@ export const auth = betterAuth({
 	account: {
 		accountLinking: {
 			enabled: true,
-			trustedProviders: ["google", "github"],
+			trustedProviders: ["google"],
 		},
 	},
 	databaseHooks: {
@@ -243,16 +243,6 @@ export const auth = betterAuth({
 						clientId: process.env.GOOGLE_CLIENT_ID,
 						clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 						scope: ["email", "profile"],
-					},
-				}
-			: {}),
-		// Solo habilitar GitHub si las credenciales están configuradas
-		...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
-			? {
-					github: {
-						clientId: process.env.GITHUB_CLIENT_ID,
-						clientSecret: process.env.GITHUB_CLIENT_SECRET,
-						scope: ["user:email"],
 					},
 				}
 			: {}),

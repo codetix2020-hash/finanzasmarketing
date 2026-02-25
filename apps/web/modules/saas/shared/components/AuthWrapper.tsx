@@ -1,6 +1,5 @@
 import { config } from "@repo/config";
 import { Footer } from "@saas/shared/components/Footer";
-import { ColorModeToggle } from "@shared/components/ColorModeToggle";
 import { LocaleSwitch } from "@shared/components/LocaleSwitch";
 import { Logo } from "@shared/components/Logo";
 import { cn } from "@ui/lib";
@@ -26,7 +25,6 @@ export function AuthWrapper({
 									<LocaleSwitch withLocaleInUrl={false} />
 								</Suspense>
 							)}
-							<ColorModeToggle />
 						</div>
 					</div>
 				</div>
