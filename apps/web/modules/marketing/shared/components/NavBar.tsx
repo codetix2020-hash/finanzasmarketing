@@ -50,6 +50,7 @@ export function NavBar() {
 	const menuItems: {
 		label: string;
 		href: string;
+		isAuth?: boolean;
 	}[] = [
 		{
 			label: "Features",
@@ -62,6 +63,7 @@ export function NavBar() {
 		{
 			label: "Login",
 			href: "/auth/login",
+			isAuth: true,
 		},
 	];
 
@@ -93,19 +95,31 @@ export function NavBar() {
 
 					<div className="hidden flex-1 items-center justify-center lg:flex">
 						{menuItems.map((menuItem) => (
-							<LocaleLink
-								key={menuItem.href}
-								href={menuItem.href}
-								className={cn(
-									"block px-3 py-2 font-medium text-sm text-zinc-400 hover:text-white",
-									isMenuItemActive(menuItem.href)
-										? "text-white"
-										: "",
-								)}
-								prefetch
-							>
-								{menuItem.label}
-							</LocaleLink>
+							menuItem.isAuth ? (
+								<NextLink
+									key={menuItem.href}
+									href={menuItem.href}
+									className={cn(
+										"block px-3 py-2 font-medium text-sm text-zinc-400 hover:text-white",
+										isMenuItemActive(menuItem.href) ? "text-white" : "",
+									)}
+									prefetch
+								>
+									{menuItem.label}
+								</NextLink>
+							) : (
+								<LocaleLink
+									key={menuItem.href}
+									href={menuItem.href}
+									className={cn(
+										"block px-3 py-2 font-medium text-sm text-zinc-400 hover:text-white",
+										isMenuItemActive(menuItem.href) ? "text-white" : "",
+									)}
+									prefetch
+								>
+									{menuItem.label}
+								</LocaleLink>
+							)
 						))}
 					</div>
 
@@ -128,20 +142,33 @@ export function NavBar() {
 								<SheetTitle />
 								<div className="flex flex-col items-start justify-center">
 									{menuItems.map((menuItem) => (
-										<LocaleLink
-											key={menuItem.href}
-											href={menuItem.href}
-											onClick={handleMobileMenuClose}
-											className={cn(
-												"block px-3 py-2 font-medium text-base text-zinc-300 hover:text-white",
-												isMenuItemActive(menuItem.href)
-													? "text-white"
-													: "",
-											)}
-											prefetch
-										>
-											{menuItem.label}
-										</LocaleLink>
+										menuItem.isAuth ? (
+											<NextLink
+												key={menuItem.href}
+												href={menuItem.href}
+												onClick={handleMobileMenuClose}
+												className={cn(
+													"block px-3 py-2 font-medium text-base text-zinc-300 hover:text-white",
+													isMenuItemActive(menuItem.href) ? "text-white" : "",
+												)}
+												prefetch
+											>
+												{menuItem.label}
+											</NextLink>
+										) : (
+											<LocaleLink
+												key={menuItem.href}
+												href={menuItem.href}
+												onClick={handleMobileMenuClose}
+												className={cn(
+													"block px-3 py-2 font-medium text-base text-zinc-300 hover:text-white",
+													isMenuItemActive(menuItem.href) ? "text-white" : "",
+												)}
+												prefetch
+											>
+												{menuItem.label}
+											</LocaleLink>
+										)
 									))}
 
 									<NextLink

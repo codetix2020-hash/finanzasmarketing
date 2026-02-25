@@ -1,4 +1,4 @@
-import { LocaleLink } from "@i18n/routing";
+import Link from "next/link";
 
 export function Footer() {
 	return (
@@ -11,12 +11,12 @@ export function Footer() {
 				</div>
 
 				<div className="flex items-center gap-5 text-zinc-400">
-					<LocaleLink href="/legal/privacy-policy" className="hover:text-white">
+					<Link href="/en/legal/privacy-policy" className="hover:text-white">
 						Privacy
-					</LocaleLink>
-					<LocaleLink href="/legal/terms" className="hover:text-white">
+					</Link>
+					<Link href="/en/legal/terms" className="hover:text-white">
 						Terms
-					</LocaleLink>
+					</Link>
 					<a href="#" className="hover:text-white">
 						Contact
 					</a>
