@@ -172,7 +172,7 @@ export function MarketingSidebar({
 				/>
 				<NavItem
 					href={`${basePath}/content/create`}
-					icon={Wand2}
+					icon={Sparkles}
 					label="Crear contenido"
 					isActive={isActive("content/create")}
 				/>
