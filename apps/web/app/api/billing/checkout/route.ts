@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@repo/auth";
 import { prisma } from "@repo/database";
 import Stripe from "stripe";
+import { headers } from "next/headers";
 import {
 	STRIPE_PRICES,
 	type BillingCycle,
@@ -14,6 +15,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
 	try {
+		console.log("[CHECKOUT] Request received");
+		console.log("[CHECKOUT] Headers:", Object.fromEntries(request.headers.entries()));
+		console.log("[CHECKOUT] Stripe key exists:", !!process.env.STRIPE_SECRET_KEY);
+		console.log(
+			"[CHECKOUT] Stripe key prefix:",
+			process.env.STRIPE_SECRET_KEY?.substring(0, 12),
+		);
+
 		const body = await request.json();
 		const planRaw = body?.plan ?? body?.planId;
 		const billingRaw = body?.billing ?? "monthly";
@@ -25,10 +34,16 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Invalid plan or billing cycle" }, { status: 400 });
 		}
 
-		const session = await auth.api.getSession({ headers: request.headers });
+		console.log("[CHECKOUT] Starting checkout...");
+		const session = await auth.api.getSession({
+			headers: await headers(),
+		});
 		const organizationId = session?.session?.activeOrganizationId;
+		console.log("[CHECKOUT] Session:", session ? "found" : "null");
+		console.log("[CHECKOUT] Active organization:", organizationId || "none");
 
 		if (!session?.user?.id || !organizationId) {
+			console.log("[CHECKOUT] No session/organization found, returning 401");
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
