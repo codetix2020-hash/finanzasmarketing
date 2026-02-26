@@ -55,7 +55,6 @@ export default function CreateContentPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['instagram']);
 
   const canProceedStep1 = contentType !== "";
   const canGenerate = contentType !== "";
@@ -98,91 +97,108 @@ export default function CreateContentPage() {
     }
   }
 
-  const handlePublishNow = async (variation: GeneratedVariation, index: number) => {
+  const createGeneratedPost = async (
+    variation: GeneratedVariation,
+    status: "draft" | "scheduled",
+    scheduledAt?: string,
+  ) => {
+    if (!activeOrganization?.id) {
+      throw new Error("Organización no disponible");
+    }
+
+    const createRes = await fetch("/api/marketing/generated-posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        organizationId: activeOrganization.id,
+        mainText: variation.text,
+        hashtags: variation.hashtags || [],
+        contentType: contentType === "auto" ? "producto" : contentType,
+        platform,
+        selectedImageUrl: variation.imageUrl,
+        imagePrompt: variation.imageDescription,
+        status,
+        scheduledAt,
+      }),
+    });
+
+    const createData = await createRes.json();
+    if (!createRes.ok || !createData?.post?.id) {
+      throw new Error(createData?.error || "No se pudo guardar el post");
+    }
+
+    return createData.post.id as string;
+  };
+
+  const handlePublishNow = async (variation: GeneratedVariation) => {
     if (!variation.imageUrl) {
       toast.error('Se requiere una imagen para publicar.');
       return;
     }
 
-    if (selectedPlatforms.length === 0) {
-      toast.error('Selecciona al menos una plataforma');
+    if (platform !== "instagram") {
+      toast.error("Publicar ahora solo está disponible para Instagram.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "¿Publicar ahora en Instagram? Esta acción no se puede deshacer.",
+    );
+    if (!confirmed) {
       return;
     }
 
     setIsPublishing(true);
-    
-    const results: any[] = [];
-    const caption = `${variation.text}\n\n${variation.hashtags?.map((h: string) => 
-      h.startsWith('#') ? h : `#${h}`
-    ).join(' ') || ''}`;
-    
-    for (const platform of selectedPlatforms) {
-      try {
-        const response = await fetch('/api/marketing/posts/publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            organizationSlug,
-            platform,
-            caption,
-            imageUrl: variation.imageUrl,
-          }),
-        });
-        
-        const result = await response.json();
-        results.push({ platform, success: response.ok, ...result });
-        
-        if (response.ok) {
-          toast.success(`Publicado en ${platform}`);
-        } else {
-          toast.error(`${platform}: ${result.error || 'Error'}`);
-        }
-      } catch (err: any) {
-        results.push({ platform, success: false, error: err.message });
-        toast.error(`${platform}: ${err.message || 'Error'}`);
+
+    try {
+      const postId = await createGeneratedPost(variation, "draft");
+      const publishRes = await fetch("/api/social/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+      const publishData = await publishRes.json();
+
+      if (!publishRes.ok || !publishData?.success) {
+        throw new Error(publishData?.error || "Error al publicar");
       }
-    }
-    
-    setIsPublishing(false);
-    
-    // Si al menos una publicación fue exitosa, redirigir
-    if (results.some(r => r.success)) {
-      setTimeout(() => {
-        router.push(`/app/${organizationSlug}/marketing/content/calendar`);
-      }, 1500);
+
+      toast.success("¡Publicado en Instagram!");
+      router.push(`/app/${organizationSlug}/marketing/content?tab=published`);
+    } catch (error: any) {
+      toast.error(`Error al publicar: ${error.message || "Error desconocido"}`);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
-  const handleSchedule = async (variation: GeneratedVariation, index: number) => {
+  const handleSchedule = async (variation: GeneratedVariation) => {
     if (!variation.imageUrl && platform === 'instagram') {
       toast.error('Instagram requiere una imagen.');
       return;
     }
 
     try {
-      const res = await fetch('/api/marketing/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organizationSlug,
-          content: variation.text,
-          hashtags: variation.hashtags || [],
-          platform,
-          status: 'scheduled',
-          imageUrl: variation.imageUrl,
-          scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Error al programar');
-      }
+      await createGeneratedPost(
+        variation,
+        "scheduled",
+        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      );
 
       toast.success('Post programado para mañana');
-      router.push(`/app/${organizationSlug}/marketing/content/calendar`);
+      router.push(`/app/${organizationSlug}/marketing/content?tab=scheduled`);
     } catch (error: any) {
       toast.error(error.message || 'Error al programar');
+    }
+  };
+
+  const handleSaveDraft = async (variation: GeneratedVariation) => {
+    try {
+      await createGeneratedPost(variation, "draft");
+      toast.success("Borrador guardado");
+      router.push(`/app/${organizationSlug}/marketing/content?tab=draft`);
+    } catch (error: any) {
+      toast.error(error.message || "Error al guardar borrador");
     }
   };
 
@@ -353,70 +369,49 @@ export default function CreateContentPage() {
 
                       {/* Actions */}
                       <div className="p-3 border-t space-y-2">
-                        {/* Platform Selection */}
-                        <div className="flex gap-3 mb-2 text-xs">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedPlatforms.includes('instagram')}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                if (e.target.checked) {
-                                  setSelectedPlatforms([...selectedPlatforms, 'instagram']);
-                                } else {
-                                  setSelectedPlatforms(selectedPlatforms.filter(p => p !== 'instagram'));
-                                }
-                              }}
-                              className="rounded"
-                            />
-                            Instagram
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedPlatforms.includes('facebook')}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                if (e.target.checked) {
-                                  setSelectedPlatforms([...selectedPlatforms, 'facebook']);
-                                } else {
-                                  setSelectedPlatforms(selectedPlatforms.filter(p => p !== 'facebook'));
-                                }
-                              }}
-                              className="rounded"
-                            />
-                            Facebook
-                          </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-violet-500 text-white hover:bg-violet-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePublishNow(variation);
+                            }}
+                            disabled={isPublishing || !variation.imageUrl}
+                          >
+                            {isPublishing ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <Send className="w-4 h-4 mr-2" />
+                            )}
+                            Publicar ahora
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-violet-300 text-violet-700 hover:bg-violet-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSchedule(variation);
+                            }}
+                            disabled={!variation.imageUrl}
+                          >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Programar publicación
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveDraft(variation);
+                            }}
+                          >
+                            <Bookmark className="w-4 h-4 mr-2" />
+                            Guardar borrador
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePublishNow(variation, idx);
-                          }}
-                          disabled={isPublishing || !variation.imageUrl || selectedPlatforms.length === 0}
-                        >
-                          {isPublishing ? (
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          ) : (
-                            <Send className="w-4 h-4 mr-2" />
-                          )}
-                          Publicar ahora
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSchedule(variation, idx);
-                          }}
-                          disabled={!variation.imageUrl}
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Programar
-                        </Button>
                       </div>
                     </div>
                   ))}
