@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { db } from "@repo/database/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -14,6 +15,12 @@ export async function POST(request: NextRequest) {
 
 		if (!files || files.length === 0) {
 			return NextResponse.json({ error: "No files provided" }, { status: 400 });
+		}
+
+		// Auth: verify session and org membership before touching blob storage
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
 		}
 
 		// Verificar que BLOB_READ_WRITE_TOKEN esté configurado

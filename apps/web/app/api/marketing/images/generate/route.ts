@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 // Función para crear prompts de imagen más realistas
 function createRealisticImagePrompt(
@@ -80,6 +81,17 @@ export async function POST(request: NextRequest) {
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
     });
+
+    // Auth: verify session and org membership (only if org exists)
+    if (organization) {
+      const authCtx = await getAuthContext(organization.id);
+      if (!authCtx) {
+        return unauthorizedResponse();
+      }
+    } else {
+      // No org found → no point proceeding
+      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+    }
 
     const profile = organization
       ? await prisma.businessProfile.findUnique({
