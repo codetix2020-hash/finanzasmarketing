@@ -1,5 +1,6 @@
 import { saveSeoConfig } from "@repo/api/modules/marketing/services/seo-analyzer";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -10,11 +11,16 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		if (!websiteUrl) {
 			return NextResponse.json({ error: "Missing websiteUrl" }, { status: 400 });
 		}
 
-		const config = await saveSeoConfig(organizationId, {
+		const config = await saveSeoConfig(authCtx.organizationId, {
 			websiteUrl,
 			targetKeywords: targetKeywords || [],
 			competitors: competitors || [],

@@ -95,6 +95,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 });
     }
 
+    const { getAuthContext, unauthorizedResponse } = await import("@repo/api/lib/auth-guard");
+    const authCtx = await getAuthContext(organization.id);
+    if (!authCtx) {
+      return unauthorizedResponse();
+    }
+
     const profile = await prisma.businessProfile.findUnique({
       where: { organizationId: organization.id },
     });

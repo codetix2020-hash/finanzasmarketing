@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +16,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const authCtx = await getAuthContext(organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
+    }
+
     // Obtener contenido listo para publicar
     const content = await prisma.marketingContent.findMany({
       where: {
-        organizationId,
+        organizationId: authCtx.organizationId,
         type: "SOCIAL",
         status: "READY"
       },
@@ -81,6 +87,15 @@ export async function POST(request: NextRequest) {
     }
 
     const existing = await prisma.marketingContent.findUnique({ where: { id: contentId } });
+    
+    if (!existing) {
+      return NextResponse.json({ error: "Content not found" }, { status: 404 });
+    }
+
+    const authCtx = await getAuthContext(existing.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
+    }
     const existingMetadata = (existing?.metadata as any) || {};
 
     await prisma.marketingContent.update({

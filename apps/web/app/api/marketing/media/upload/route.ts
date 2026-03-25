@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { db } from "@repo/database/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -10,6 +11,11 @@ export async function POST(request: NextRequest) {
 
 		if (!organizationId) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		}
+
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
 		}
 
 		if (!files || files.length === 0) {

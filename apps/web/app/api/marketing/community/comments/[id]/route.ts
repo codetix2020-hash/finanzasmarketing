@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function PATCH(
 	request: NextRequest,
@@ -12,6 +13,11 @@ export async function PATCH(
 
 		if (!organizationId) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
+		}
+
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
 		}
 
 		const comment = await prisma.socialComment.update({
