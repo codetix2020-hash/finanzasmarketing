@@ -7,6 +7,8 @@
 import { NextResponse } from 'next/server';
 import { contentCalendar } from '@repo/api/modules/marketing/services/content-calendar';
 import { logger } from '@repo/api/modules/marketing/services/logger';
+import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +21,15 @@ export async function POST(request: Request) {
         { success: false, error: 'productId and month are required' },
         { status: 400 }
       );
+    }
+
+    const product = await prisma.saasProduct.findUnique({ where: { id: productId }, select: { organizationId: true } });
+    if (!product) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+    const authCtx = await getAuthContext(product.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     logger.info('📅 Generating calendar via API', { productId, month });
@@ -57,6 +68,15 @@ export async function GET(request: Request) {
         { success: false, error: 'productId and month are required' },
         { status: 400 }
       );
+    }
+
+    const product = await prisma.saasProduct.findUnique({ where: { id: productId }, select: { organizationId: true } });
+    if (!product) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+    const authCtx2 = await getAuthContext(product.organizationId);
+    if (!authCtx2) {
+      return unauthorizedResponse();
     }
 
     const calendar = await contentCalendar.getCalendar(productId, month);

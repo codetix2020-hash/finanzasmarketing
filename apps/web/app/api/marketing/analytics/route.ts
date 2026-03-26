@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -10,10 +11,15 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		// Obtener posts publicados
 		const posts = await prisma.marketingPost.findMany({
 			where: {
-				organizationId,
+				organizationId: authCtx.organizationId,
 				status: "published",
 			},
 			orderBy: { publishedAt: "desc" },

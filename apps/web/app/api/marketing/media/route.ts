@@ -1,5 +1,6 @@
 import { db, getOrganizationBySlug } from "@repo/database";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -22,8 +23,13 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId or organizationSlug" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(finalOrganizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		const where: { organizationId: string; category?: string } = {
-			organizationId: finalOrganizationId,
+			organizationId: authCtx.organizationId,
 		};
 
 		if (category && category !== "all") {

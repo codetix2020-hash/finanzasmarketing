@@ -1,59 +1,80 @@
 /**
  * POST /api/marketing/orchestrate
- * 
- * Ejecuta el ciclo completo de marketing automation
+ *
+ * Ejecuta el ciclo completo de marketing automation.
+ * Requiere sesión autenticada y membresía en la organización del producto.
  */
 
-import { NextResponse } from 'next/server';
-import { marketingOrchestrator } from '@repo/api/modules/marketing/services/marketing-orchestrator';
-import { logger } from '@repo/api/modules/marketing/services/logger';
+import { NextRequest, NextResponse } from "next/server";
+import { marketingOrchestrator } from "@repo/api/modules/marketing/services/marketing-orchestrator";
+import { logger } from "@repo/api/modules/marketing/services/logger";
+import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  try {
-    const { productId, mode } = await request.json();
+export async function POST(request: NextRequest) {
+	try {
+		const { productId, mode } = await request.json();
 
-    if (!productId) {
-      return NextResponse.json(
-        { success: false, error: 'productId is required' },
-        { status: 400 }
-      );
-    }
+		if (!productId) {
+			return NextResponse.json(
+				{ success: false, error: "productId is required" },
+				{ status: 400 },
+			);
+		}
 
-    logger.info('🚀 API: Starting marketing orchestration', { productId, mode });
+		// Resolver la organización del producto para poder verificar membresía
+		const product = await prisma.saasProduct.findUnique({
+			where: { id: productId },
+			select: { organizationId: true },
+		});
 
-    let result;
+		if (!product) {
+			return NextResponse.json(
+				{ success: false, error: "Product not found" },
+				{ status: 404 },
+			);
+		}
 
-    switch (mode) {
-      case 'full':
-        result = await marketingOrchestrator.runFullMarketingCycle(productId);
-        break;
-      
-      case 'content_only':
-        result = await marketingOrchestrator.runContentGenerationOnly(productId);
-        break;
-      
-      default:
-        result = await marketingOrchestrator.runFullMarketingCycle(productId);
-    }
+		// Auth: verificar sesión y membresía en la organización
+		const authCtx = await getAuthContext(product.organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
 
-    return NextResponse.json({
-      success: true,
-      result
-    });
-  } catch (error) {
-    logger.error('API error in orchestration', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
+		logger.info("🚀 API: Starting marketing orchestration", {
+			productId,
+			mode,
+			userId: authCtx.userId,
+			organizationId: authCtx.organizationId,
+		});
+
+		let result;
+
+		switch (mode) {
+			case "full":
+				result = await marketingOrchestrator.runFullMarketingCycle(productId);
+				break;
+
+			case "content_only":
+				result =
+					await marketingOrchestrator.runContentGenerationOnly(productId);
+				break;
+
+			default:
+				result = await marketingOrchestrator.runFullMarketingCycle(productId);
+		}
+
+		return NextResponse.json({ success: true, result });
+	} catch (error) {
+		logger.error("API error in orchestration", error);
+		return NextResponse.json(
+			{
+				success: false,
+				error: error instanceof Error ? error.message : "Unknown error",
+			},
+			{ status: 500 },
+		);
+	}
 }
-
-
-
-
