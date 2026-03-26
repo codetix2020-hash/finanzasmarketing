@@ -3,14 +3,22 @@
     {
       "schedule": "0 */3 * * *",
       "endpoint": "/api/cron/marketing-engine"
+    },
+    {
+      "schedule": "*/15 * * * *",
+      "endpoint": "/api/cron/publish-scheduled"
+    },
+    {
+      "schedule": "0 */6 * * *",
+      "endpoint": "/api/cron/sync-ads-metrics"
+    },
+    {
+      "schedule": "0 8 * * *",
+      "endpoint": "/api/cron/social-publish"
+    },
+    {
+      "schedule": "0 9 * * *",
+      "endpoint": "/api/cron/auto-publish"
     }
   ]
 }
-
-
-
-
-
-
-
-
