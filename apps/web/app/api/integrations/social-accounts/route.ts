@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { socialAccountsService } from '@repo/api/modules/marketing/services/social-accounts-service';
 import { getOrganizationBySlug } from '@repo/database';
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 // GET: Listar cuentas conectadas de la org
 export async function GET(request: NextRequest) {
@@ -26,7 +27,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const accounts = await socialAccountsService.listAccounts(orgId);
+  const authCtx = await getAuthContext(orgId);
+  if (!authCtx) {
+    return unauthorizedResponse();
+  }
+
+  const accounts = await socialAccountsService.listAccounts(authCtx.organizationId);
   
   // Formatear las cuentas para el dashboard
   const formattedAccounts = accounts.map((account: any) => ({

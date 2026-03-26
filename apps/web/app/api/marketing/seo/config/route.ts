@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -27,8 +28,13 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId or organizationSlug" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organization.id);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		const config = await prisma.seoConfig.findUnique({
-			where: { organizationId: organization.id },
+			where: { organizationId: authCtx.organizationId },
 			include: {
 				issues: {
 					orderBy: [
@@ -64,15 +70,20 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		const config = await prisma.seoConfig.upsert({
-			where: { organizationId },
+			where: { organizationId: authCtx.organizationId },
 			update: {
 				websiteUrl,
 				targetKeywords: keywords || [],
 				competitors: competitors || [],
 			},
 			create: {
-				organizationId,
+				organizationId: authCtx.organizationId,
 				websiteUrl,
 				targetKeywords: keywords || [],
 				competitors: competitors || [],

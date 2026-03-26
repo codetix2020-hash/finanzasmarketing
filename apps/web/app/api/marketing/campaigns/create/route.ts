@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { GoogleAdsClient } from "@repo/api/modules/marketing/services/google-ads-client";
 import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook-ads-client";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,11 @@ export async function POST(request: NextRequest) {
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const authCtx = await getAuthContext(product.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     // ========== GOOGLE ADS ==========

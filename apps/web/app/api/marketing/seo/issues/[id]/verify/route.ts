@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(
   request: NextRequest,
@@ -13,6 +14,11 @@ export async function POST(
 
     if (!issue) {
       return NextResponse.json({ error: "Issue not found" }, { status: 404 });
+    }
+
+    const authCtx = await getAuthContext(issue.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     // Re-analizar la página para verificar si se arregló

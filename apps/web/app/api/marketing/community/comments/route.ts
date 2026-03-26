@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -11,7 +12,12 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
-		const where: any = { organizationId };
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
+		const where: any = { organizationId: authCtx.organizationId };
 
 		if (filter === "unreplied") {
 			where.needsReply = true;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { decryptToken } from "@repo/api/lib/token-encryption";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,11 @@ export async function POST(request: NextRequest) {
 
     if (!organization) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+    }
+
+    const authCtx = await getAuthContext(organization.id);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     const facebookAccount = organization.socialAccounts[0];

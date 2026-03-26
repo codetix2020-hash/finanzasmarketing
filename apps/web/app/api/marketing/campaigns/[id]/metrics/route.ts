@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { GoogleAdsClient } from "@repo/api/modules/marketing/services/google-ads-client";
 import { FacebookAdsClient } from "@repo/api/modules/marketing/services/facebook-ads-client";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 // Force dynamic rendering - no pre-render during build
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,11 @@ export async function GET(
 
     if (!campaign) {
       return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+    }
+
+    const authCtx = await getAuthContext(campaign.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     // ========== GOOGLE ADS ==========

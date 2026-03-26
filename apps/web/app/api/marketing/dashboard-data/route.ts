@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -10,6 +11,11 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		// Obtener posts publicados este mes
 		const startOfMonth = new Date();
 		startOfMonth.setDate(1);
@@ -17,7 +23,7 @@ export async function GET(request: NextRequest) {
 
 		const posts = await prisma.marketingPost.findMany({
 			where: {
-				organizationId,
+				organizationId: authCtx.organizationId,
 				status: "published",
 				publishedAt: {
 					gte: startOfMonth,
@@ -36,7 +42,7 @@ export async function GET(request: NextRequest) {
 
 		// Obtener seguidores totales (simulado por ahora)
 		const socialAccounts = await prisma.socialAccount.findMany({
-			where: { organizationId, isActive: true },
+			where: { organizationId: authCtx.organizationId, isActive: true },
 		});
 		const totalFollowers = socialAccounts.length * 1000; // Mock
 
@@ -58,7 +64,7 @@ export async function GET(request: NextRequest) {
 		// Posts programados
 		const scheduledPosts = await prisma.marketingPost.findMany({
 			where: {
-				organizationId,
+				organizationId: authCtx.organizationId,
 				status: "scheduled",
 				scheduledAt: {
 					gte: new Date(),

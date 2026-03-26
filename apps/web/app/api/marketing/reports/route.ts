@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateWeeklyReport } from "@repo/api/modules/marketing/services/weekly-report";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -11,8 +12,13 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		const report = await generateWeeklyReport(
-			organizationId,
+			authCtx.organizationId,
 			weekStart ? new Date(weekStart) : undefined,
 		);
 
