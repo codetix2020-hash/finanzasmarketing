@@ -22,6 +22,12 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "No files provided" }, { status: 400 });
 		}
 
+		// Auth: verify session and org membership before touching blob storage
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		// Verificar que BLOB_READ_WRITE_TOKEN esté configurado
 		if (!process.env.BLOB_READ_WRITE_TOKEN) {
 			return NextResponse.json(
