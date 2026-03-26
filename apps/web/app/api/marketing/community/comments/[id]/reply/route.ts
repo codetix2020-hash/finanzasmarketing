@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(
 	request: NextRequest,
@@ -12,6 +13,11 @@ export async function POST(
 
 		if (!organizationId || !reply) {
 			return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+		}
+
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
 		}
 
 		// TODO: Enviar respuesta a la plataforma usando el access token

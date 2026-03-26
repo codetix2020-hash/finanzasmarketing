@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +13,15 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		const config = await prisma.marketingConfig.upsert({
-			where: { organizationId },
+			where: { organizationId: authCtx.organizationId },
 			update: {},
-			create: { organizationId },
+			create: { organizationId: authCtx.organizationId },
 		});
 
 		return NextResponse.json({ config });
@@ -40,14 +46,19 @@ export async function PATCH(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		if (typeof isPaused !== "boolean") {
 			return NextResponse.json({ error: "Missing isPaused" }, { status: 400 });
 		}
 
 		const config = await prisma.marketingConfig.upsert({
-			where: { organizationId },
+			where: { organizationId: authCtx.organizationId },
 			update: { isPaused },
-			create: { organizationId, isPaused },
+			create: { organizationId: authCtx.organizationId, isPaused },
 		});
 
 		return NextResponse.json({ config });

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || 'pilotsocials_instagram_webhook_2025_secure_token';
+const VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+
+if (!VERIFY_TOKEN && process.env.NODE_ENV === "production") {
+	throw new Error("INSTAGRAM_WEBHOOK_VERIFY_TOKEN is not set. Set it in Railway environment variables.");
+}
 
 // GET: Verificación inicial de Facebook
 export async function GET(request: NextRequest) {
@@ -10,7 +14,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+  if (mode === 'subscribe' && VERIFY_TOKEN && token === VERIFY_TOKEN) {
     console.log('Instagram webhook verified');
     return new NextResponse(challenge, { status: 200 });
   } else {
