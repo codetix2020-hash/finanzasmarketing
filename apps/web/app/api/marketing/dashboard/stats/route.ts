@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, getOrganizationBySlug } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
 	try {
@@ -25,6 +26,11 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
+		const authCtx = await getAuthContext(orgId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		// Obtener conteos y métricas
 		const startOfMonth = new Date();
 		startOfMonth.setDate(1);
@@ -39,16 +45,16 @@ export async function GET(request: NextRequest) {
 			socialAccounts,
 		] = await Promise.all([
 			prisma.marketingPost.count({
-				where: { organizationId: orgId, status: "published" },
+				where: { organizationId: authCtx.organizationId, status: "published" },
 			}),
 			prisma.marketingPost.count({
-				where: { organizationId: orgId, status: "scheduled" },
+				where: { organizationId: authCtx.organizationId, status: "scheduled" },
 			}),
 			prisma.socialAccount.count({
-				where: { organizationId: orgId, isActive: true },
+				where: { organizationId: authCtx.organizationId, isActive: true },
 			}),
 			prisma.marketingPost.findFirst({
-				where: { organizationId: orgId, status: "published" },
+				where: { organizationId: authCtx.organizationId, status: "published" },
 				orderBy: { publishedAt: "desc" },
 				select: {
 					id: true,
@@ -59,13 +65,13 @@ export async function GET(request: NextRequest) {
 			}),
 			prisma.marketingPost.findMany({
 				where: {
-					organizationId: orgId,
+					organizationId: authCtx.organizationId,
 					status: "published",
 					publishedAt: { gte: startOfMonth },
 				},
 			}),
 			prisma.socialAccount.findMany({
-				where: { organizationId: orgId, isActive: true },
+				where: { organizationId: authCtx.organizationId, isActive: true },
 			}),
 		]);
 
@@ -81,12 +87,12 @@ export async function GET(request: NextRequest) {
 
 		// Obtener media count
 		const mediaCount = await prisma.mediaLibrary.count({
-			where: { organizationId: orgId },
+			where: { organizationId: authCtx.organizationId },
 		});
 
 		// Actividad reciente (últimos 5 posts o acciones)
 		const recentActivity = await prisma.marketingPost.findMany({
-			where: { organizationId: orgId },
+			where: { organizationId: authCtx.organizationId },
 			orderBy: { createdAt: "desc" },
 			take: 5,
 			select: {

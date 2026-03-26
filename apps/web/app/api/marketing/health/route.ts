@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { healthMonitor } from '@repo/api/modules/marketing/services/health-monitor';
 import { logger } from '@repo/api/modules/marketing/services/logger';
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function GET(request: Request) {
   try {
@@ -18,6 +19,11 @@ export async function GET(request: Request) {
         { success: false, error: 'org parameter is required' },
         { status: 400 }
       );
+    }
+
+    const authCtx = await getAuthContext(orgId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     const health = await healthMonitor.calculateMarketingHealth(orgId);

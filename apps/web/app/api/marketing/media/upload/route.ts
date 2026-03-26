@@ -13,6 +13,11 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Missing organizationId" }, { status: 400 });
 		}
 
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
 		if (!files || files.length === 0) {
 			return NextResponse.json({ error: "No files provided" }, { status: 400 });
 		}
