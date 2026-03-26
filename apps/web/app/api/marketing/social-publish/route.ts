@@ -12,6 +12,8 @@ import {
   generateCarousel,
   generateEditorialCalendar
 } from "@repo/api/modules/marketing/services/content-generator-v2";
+import { auth } from "@repo/auth";
+import { headers } from "next/headers";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +29,14 @@ export async function POST(request: NextRequest) {
   console.log("📤 Social publish endpoint llamado");
 
   try {
+    // Verify user is authenticated
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { action, ...params } = body;
 

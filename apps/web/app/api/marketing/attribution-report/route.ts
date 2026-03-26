@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { attributionTracker } from "@repo/api/modules/marketing/services/attribution-tracker";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const authCtx = await getAuthContext(organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
+    }
+
     // Parse time range if provided
     const timeRange =
       startDate && endDate
@@ -44,7 +50,7 @@ export async function GET(request: NextRequest) {
         : undefined;
 
     // Get attribution report
-    const report = await attributionTracker.getAttributionReport(organizationId, timeRange);
+    const report = await attributionTracker.getAttributionReport(authCtx.organizationId, timeRange);
 
     console.log(`✅ Attribution report generated for org ${organizationId}`);
 

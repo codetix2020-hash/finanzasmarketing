@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBusinessProfile } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -10,7 +11,12 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 		}
 
-		const businessProfile = await getBusinessProfile(organizationId);
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
+		const businessProfile = await getBusinessProfile(authCtx.organizationId);
 
 		// En producción, usarías Anthropic API para generar títulos
 		// Por ahora, retornamos títulos simulados

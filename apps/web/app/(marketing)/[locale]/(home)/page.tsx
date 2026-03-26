@@ -102,23 +102,7 @@ const comparisonRows = [
 	},
 ];
 
-const testimonials = [
-	{
-		quote:
-			"PilotSocials saved us 15 hours a week. The AI actually sounds like our brand — our followers can't tell the difference.",
-		author: "Sarah M., Founder @ GlowUp Skincare",
-	},
-	{
-		quote:
-			"We went from posting twice a week to daily — and our engagement tripled. Best investment we've made this year.",
-		author: "Marco R., Marketing Lead @ FitNation",
-	},
-	{
-		quote:
-			"As a freelancer managing 5 clients, PilotSocials is a game-changer. I literally 3x'd my capacity without hiring anyone.",
-		author: "Lisa K., Social Media Freelancer",
-	},
-];
+// Testimonials will be added here once we have real customer feedback
 
 export default function HomePage() {
 	return (
@@ -164,24 +148,24 @@ export default function HomePage() {
 			<section className="border-y border-zinc-800 bg-zinc-900/50 py-10">
 				<div className="container">
 					<p className="text-center text-zinc-500">
-						Trusted by 200+ brands and agencies worldwide
+						Early access — join the first wave of brands automating their social media with AI
 					</p>
 					<div className="mt-8 grid grid-cols-2 gap-6 text-center md:grid-cols-4">
 						<div>
-							<p className="text-3xl font-bold text-white">200+</p>
-							<p className="mt-1 text-xs text-zinc-500">Brands</p>
+							<p className="text-3xl font-bold text-white">14</p>
+							<p className="mt-1 text-xs text-zinc-500">Day free trial</p>
 						</div>
 						<div>
-							<p className="text-3xl font-bold text-white">50K+</p>
-							<p className="mt-1 text-xs text-zinc-500">Posts generated</p>
+							<p className="text-3xl font-bold text-white">3</p>
+							<p className="mt-1 text-xs text-zinc-500">Platforms supported</p>
 						</div>
 						<div>
-							<p className="text-3xl font-bold text-white">4.9/5</p>
-							<p className="mt-1 text-xs text-zinc-500">Rating</p>
+							<p className="text-3xl font-bold text-white">€0</p>
+							<p className="mt-1 text-xs text-zinc-500">To get started</p>
 						</div>
 						<div>
 							<p className="text-3xl font-bold text-white">15min</p>
-							<p className="mt-1 text-xs text-zinc-500">Setup</p>
+							<p className="mt-1 text-xs text-zinc-500">Setup time</p>
 						</div>
 					</div>
 				</div>
@@ -389,18 +373,31 @@ export default function HomePage() {
 				<div className="container">
 					<div className="mx-auto max-w-3xl text-center">
 						<h2 className="text-3xl font-bold md:text-4xl">
-							Loved by brands worldwide
+							Be among the first
 						</h2>
+						<p className="mt-4 text-lg text-zinc-400">
+							PilotSocials is in early access. We're onboarding our first brands
+							and would love to feature your story here.
+						</p>
 					</div>
 					<div className="mt-12 grid gap-6 lg:grid-cols-3">
-						{testimonials.map((item) => (
+						{[0, 1, 2].map((i) => (
 							<div
-								key={item.author}
-								className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8"
+								key={i}
+								className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/30 p-8 text-center"
 							>
-								<p className="text-yellow-400">⭐⭐⭐⭐⭐</p>
-								<p className="mt-4 text-zinc-300">{item.quote}</p>
-								<p className="mt-6 font-medium text-zinc-100">— {item.author}</p>
+								<div className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-xl">
+									✦
+								</div>
+								<p className="mt-4 text-sm text-zinc-500">
+									Your review could be here.
+								</p>
+								<a
+									href="/auth/signup"
+									className="mt-4 text-sm font-medium text-purple-400 hover:text-purple-300"
+								>
+									Start free trial →
+								</a>
 							</div>
 						))}
 					</div>
@@ -417,7 +414,7 @@ export default function HomePage() {
 								Ready to put your social media on autopilot?
 							</h2>
 							<p className="mt-4 text-zinc-400">
-								Join 200+ brands already saving 15+ hours per week
+								Start saving hours every week — set up in 15 minutes
 							</p>
 							<a
 								href="/auth/signup"
