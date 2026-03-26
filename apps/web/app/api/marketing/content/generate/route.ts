@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import Anthropic from "@anthropic-ai/sdk";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 const anthropic = new Anthropic();
 
@@ -93,6 +94,12 @@ export async function POST(request: NextRequest) {
 
     if (!organization) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+    }
+
+    // Auth: verify session and org membership
+    const authCtx = await getAuthContext(organization.id);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     const profile = await prisma.businessProfile.findUnique({

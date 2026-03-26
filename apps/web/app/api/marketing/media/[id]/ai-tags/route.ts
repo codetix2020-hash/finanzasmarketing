@@ -1,5 +1,6 @@
 import { db } from "@repo/database/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(
 	request: NextRequest,
@@ -13,6 +14,11 @@ export async function POST(
 
 		if (!media) {
 			return NextResponse.json({ error: "Media not found" }, { status: 404 });
+		}
+
+		const authCtx = await getAuthContext(media.organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
 		}
 
 		// TODO: Implement AI tag generation using Anthropic API

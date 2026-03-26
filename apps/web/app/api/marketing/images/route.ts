@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { imageService } from "@repo/api/modules/marketing/services/image-service";
+import { auth } from "@repo/auth";
+import { headers } from "next/headers";
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query");
     const category = searchParams.get("category");
