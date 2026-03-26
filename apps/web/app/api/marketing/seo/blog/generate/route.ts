@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBusinessProfile } from "@repo/database";
 import { generateBlogPost } from "@repo/api/modules/marketing/services/seo-analyzer";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -11,7 +12,12 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 		}
 
-		const businessProfile = await getBusinessProfile(organizationId);
+		const authCtx = await getAuthContext(organizationId);
+		if (!authCtx) {
+			return unauthorizedResponse();
+		}
+
+		const businessProfile = await getBusinessProfile(authCtx.organizationId);
 
 		const post = await generateBlogPost(outline, businessProfile || undefined);
 

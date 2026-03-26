@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
+import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,11 @@ export async function POST(request: NextRequest) {
         },
         { status: 404, headers: corsHeaders }
       );
+    }
+
+    const authCtx = await getAuthContext(product.organizationId);
+    if (!authCtx) {
+      return unauthorizedResponse();
     }
 
     // Actualizar el campo autoPublish
@@ -112,6 +118,7 @@ export async function GET(request: NextRequest) {
         name: true,
         autoPublish: true,
         marketingEnabled: true,
+        organizationId: true,
       },
     });
 
@@ -123,6 +130,11 @@ export async function GET(request: NextRequest) {
         },
         { status: 404, headers: corsHeaders }
       );
+    }
+
+    const authCtx2 = await getAuthContext(product.organizationId);
+    if (!authCtx2) {
+      return unauthorizedResponse();
     }
 
     return NextResponse.json(
