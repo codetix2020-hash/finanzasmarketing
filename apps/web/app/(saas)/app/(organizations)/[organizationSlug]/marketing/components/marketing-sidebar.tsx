@@ -1,7 +1,6 @@
 "use client";
 
 import { useSession } from "@saas/auth/hooks/use-session";
-import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { OrganizationLogo } from "@saas/organizations/components/OrganizationLogo";
 import { UserAvatar } from "@shared/components/UserAvatar";
 import { cn } from "@ui/lib";
@@ -13,14 +12,10 @@ import {
 	Camera,
 	CreditCard,
 	FileText,
-	ImageIcon,
 	LayoutDashboard,
 	LogOut,
-	MessageSquare,
 	Plug,
 	Search,
-	Send,
-	Settings,
 	Sparkles,
 	Zap,
 } from "lucide-react";
@@ -155,12 +150,6 @@ export function MarketingSidebar({
 						</span>
 					}
 				/>
-				<NavItem
-					href={`${basePath}/generate`}
-					icon={Sparkles}
-					label="Generate content"
-					isActive={isActive("generate")}
-				/>
 
 				<SectionLabel>Content</SectionLabel>
 
@@ -181,18 +170,6 @@ export function MarketingSidebar({
 					icon={Calendar}
 					label="Calendar"
 					isActive={isActive("content/calendar")}
-				/>
-				<NavItem
-					href={`${basePath}/published`}
-					icon={Send}
-					label="Published"
-					isActive={isActive("published")}
-				/>
-				<NavItem
-					href={`${basePath}/media`}
-					icon={ImageIcon}
-					label="Photo library"
-					isActive={isActive("media")}
 				/>
 				<NavItem
 					href={`${basePath}/brand-photos`}
