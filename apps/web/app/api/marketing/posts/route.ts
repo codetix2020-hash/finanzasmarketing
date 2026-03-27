@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
 		if (!organizationId) {
 			return NextResponse.json(
-				{ error: "organizationId es requerido" },
+				{ error: "organizationId is required" },
 				{ status: 400 },
 			);
 		}
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
 		if (!finalOrganizationId || !content || !platform) {
 			return NextResponse.json(
-				{ error: "organizationId (o organizationSlug), content y platform son requeridos" },
+				{ error: "organizationId, content and platform are required" },
 				{ status: 400 },
 			);
 		}

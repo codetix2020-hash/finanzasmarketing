@@ -118,7 +118,7 @@ export async function POST(
 		const post = await getMarketingPost(id);
 
 		if (!post) {
-			return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
+			return NextResponse.json({ error: "Post not found" }, { status: 404 });
 		}
 
 		console.log('Publishing post:', { id: post.id, platform: post.platform });
@@ -197,7 +197,7 @@ export async function POST(
 				}
 
 				if (!account.businessId) {
-					throw new Error("Instagram Business ID no encontrado");
+					throw new Error("Instagram Business ID not found");
 				}
 
 				const caption = `${post.content}\n\n${post.hashtags.join(" ")}`;

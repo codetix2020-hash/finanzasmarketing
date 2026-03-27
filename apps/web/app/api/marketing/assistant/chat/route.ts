@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
 		if (!message || !organizationId) {
 			return NextResponse.json(
-				{ error: "message y organizationId son requeridos" },
+				{ error: "message and organizationId are required" },
 				{ status: 400 },
 			);
 		}
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 		if (conversationId) {
 			conversation = await getAiConversation(conversationId);
 			if (!conversation || conversation.organizationId !== organizationId) {
-				return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+				return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 			}
 		} else {
 			// Crear nueva conversación
