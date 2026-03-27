@@ -65,64 +65,64 @@ export async function generateWeeklyContent(
   product: ProductContext,
   nicho: string = "peluqueria"
 ): Promise<ContentBatch> {
-  console.log("📝 Generando contenido semanal para:", product.name);
+  console.log("📝 Generating weekly content for:", product.name);
   
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   
   // Definir los 7 tipos de posts de la semana
   const weekPlan = [
-    { dia: "Lunes", tipo: "educativo", objetivo: "valor" },
-    { dia: "Martes", tipo: "problema_solucion", objetivo: "awareness" },
-    { dia: "Miércoles", tipo: "testimonio", objetivo: "social proof" },
-    { dia: "Jueves", tipo: "educativo", objetivo: "valor" },
-    { dia: "Viernes", tipo: "promotional", objetivo: "conversión" },
-    { dia: "Sábado", tipo: "carrusel_hook", objetivo: "engagement" },
-    { dia: "Domingo", tipo: "problema_solucion", objetivo: "awareness" },
+    { day: "Monday", type: "educational", goal: "value" },
+    { day: "Tuesday", type: "problem_solution", goal: "awareness" },
+    { day: "Wednesday", type: "testimonial", goal: "social proof" },
+    { day: "Thursday", type: "educational", goal: "value" },
+    { day: "Friday", type: "promotional", goal: "conversion" },
+    { day: "Saturday", type: "carousel_hook", goal: "engagement" },
+    { day: "Sunday", type: "problem_solution", goal: "awareness" },
   ];
 
   // UN SOLO PROMPT para generar los 7 posts (ahorra 80% tokens)
-  const prompt = `Eres un experto en social media para negocios de ${nicho}.
+  const prompt = `You are a social media expert for ${nicho} businesses.
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
-AUDIENCIA: ${product.targetAudience}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
+AUDIENCE: ${product.targetAudience}
 USP: ${product.usp}
-COMPETIDORES: ${product.competitors?.join(", ") || "No especificados"}
+COMPETITORS: ${product.competitors?.join(", ") || "Not specified"}
 
-GENERA 7 POSTS (uno por día de la semana) siguiendo este plan:
+GENERATE 7 POSTS (one per day of the week) following this plan:
 
-${weekPlan.map((p, i) => `${i + 1}. ${p.dia} - Tipo: ${p.tipo} - Objetivo: ${p.objetivo}`).join("\n")}
+${weekPlan.map((p, i) => `${i + 1}. ${p.day} - Type: ${p.type} - Goal: ${p.goal}`).join("\n")}
 
-REGLAS CRÍTICAS:
-- Cada post MÁXIMO 150 caracteres (sin contar hashtags)
-- Empezar SIEMPRE con un hook potente (pregunta, dato, POV, etc)
-- Usar emojis estratégicamente (2-4 por post)
-- Tono: cercano, profesional, español de España
-- NO usar palabras en inglés innecesarias
-- El CTA debe ser natural, no forzado
-- Cada post debe poder funcionar solo (sin contexto)
+CRITICAL RULES:
+- Each post MUST be at most 150 characters (hashtags not included)
+- ALWAYS start with a strong hook (question, data point, POV, etc.)
+- Use emojis strategically (2-4 per post)
+- Tone: approachable, professional, Spain Spanish
+- DO NOT use unnecessary English words
+- The CTA must be natural, not forced
+- Each post must work on its own (without context)
 
-USA ESTAS FÓRMULAS DE HOOKS:
-- Problema: "¿Todavía X?", "El error que comete el 90%..."
-- Curiosidad: "Lo que nadie te cuenta sobre..."
-- Social proof: "X+ negocios ya..."
-- Urgencia: "Si no X ahora..."
+USE THESE HOOK FORMULAS:
+- Problem: "Still doing X?", "The mistake 90% make..."
+- Curiosity: "What no one tells you about..."
+- Social proof: "X+ businesses already..."
+- Urgency: "If you don't do X now..."
 
-FORMATO DE RESPUESTA (JSON):
+RESPONSE FORMAT (JSON):
 {
   "posts": [
     {
-      "dia": "Lunes",
-      "tipo": "educativo",
-      "hook": "el hook usado",
-      "contenido": "texto completo del post SIN hashtags",
+      "day": "Monday",
+      "type": "educational",
+      "hook": "the hook used",
+      "content": "full post text WITHOUT hashtags",
       "cta": "call to action",
-      "engagement_estimado": "alto/medio/bajo"
+      "estimated_engagement": "high/medium/low"
     }
   ]
 }
 
-Responde SOLO con el JSON, nada más.`;
+Respond ONLY with JSON, nothing else.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
@@ -142,7 +142,7 @@ Responde SOLO con el JSON, nada más.`;
       parsedPosts = parsed.posts || [];
     }
   } catch (e) {
-    console.error("❌ Error parseando respuesta:", e);
+    console.error("❌ Error parsing response:", e);
     parsedPosts = [];
   }
 
@@ -153,15 +153,15 @@ Responde SOLO con el JSON, nada más.`;
     
     return {
       platform: "instagram", // Generamos para IG, adaptamos para TikTok después
-      content: `${post.contenido}\n\n${post.cta}\n\n${hashtagString}`,
+      content: `${post.content || post.contenido || ""}\n\n${post.cta || ""}\n\n${hashtagString}`,
       hook: post.hook,
-      type: post.tipo,
+      type: post.type || post.tipo || "educational",
       hashtags,
-      estimatedEngagement: post.engagement_estimado || "medio"
+      estimatedEngagement: post.estimated_engagement || post.engagement_estimado || "medium"
     };
   });
 
-  console.log(`✅ Generados ${posts.length} posts con ${tokensUsed} tokens`);
+  console.log(`✅ Generated ${posts.length} posts with ${tokensUsed} tokens`);
 
   return {
     posts,
@@ -200,25 +200,25 @@ export async function generateSinglePost(
   tipo: string = "educativo",
   platform: string = "instagram"
 ): Promise<GeneratedPost> {
-  console.log(`📝 Generando post ${tipo} para ${platform}...`);
+  console.log(`📝 Generating ${tipo} post for ${platform}...`);
   
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   
   const rules = PLATFORM_RULES[platform as keyof typeof PLATFORM_RULES] || PLATFORM_RULES.instagram;
   
-  const prompt = `Genera UN post de ${tipo} para ${platform}.
+  const prompt = `Generate ONE ${tipo} post for ${platform}.
 
-PRODUCTO: ${product.name} - ${product.usp}
-AUDIENCIA: ${product.targetAudience}
+PRODUCT: ${product.name} - ${product.usp}
+AUDIENCE: ${product.targetAudience}
 
-REGLAS:
-- Máximo ${rules.idealLength} caracteres
-- Hook potente al inicio
-- ${rules.hashtagCount} hashtags máximo
-- Tono cercano, español de España
-- Emojis estratégicos
+RULES:
+- Maximum ${rules.idealLength} characters
+- Strong hook at the beginning
+- Maximum ${rules.hashtagCount} hashtags
+- Approachable tone, Spain Spanish
+- Strategic emojis
 
-Responde SOLO con el texto del post (incluye hashtags al final).`;
+Respond ONLY with the post text (include hashtags at the end).`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
@@ -235,7 +235,7 @@ Responde SOLO con el texto del post (incluye hashtags al final).`;
     hook: content.split("\n")[0],
     type: tipo,
     hashtags,
-    estimatedEngagement: "medio"
+    estimatedEngagement: "medium"
   };
 }
 
@@ -248,35 +248,35 @@ export async function generateABVariants(
   variantB: GeneratedPost;
   testHypothesis: string;
 }> {
-  console.log("🔬 Generando variantes A/B...");
+  console.log("🔬 Generating A/B variants...");
   
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `Genera 2 VERSIONES DIFERENTES del mismo post para A/B testing.
+  const prompt = `Generate 2 DIFFERENT VERSIONS of the same post for A/B testing.
 
-PRODUCTO: ${product.name} - ${product.usp}
-TIPO: ${tipo}
-AUDIENCIA: ${product.targetAudience}
+PRODUCT: ${product.name} - ${product.usp}
+TYPE: ${tipo}
+AUDIENCE: ${product.targetAudience}
 
-VERSION A: Usa un hook de PROBLEMA/DOLOR
-VERSION B: Usa un hook de BENEFICIO/ASPIRACIÓN
+VERSION A: Use a PROBLEM/PAIN hook
+VERSION B: Use a BENEFIT/ASPIRATION hook
 
-Ambas versiones deben:
-- Máximo 150 caracteres (sin hashtags)
-- Mismo mensaje core, diferente ángulo
-- Emojis estratégicos
+Both versions must:
+- Maximum 150 characters (without hashtags)
+- Same core message, different angle
+- Strategic emojis
 
-RESPONDE EN JSON:
+RESPOND IN JSON:
 {
   "variantA": {
-    "hook_type": "problema",
-    "content": "texto completo"
+    "hook_type": "problem",
+    "content": "full text"
   },
   "variantB": {
-    "hook_type": "beneficio", 
-    "content": "texto completo"
+    "hook_type": "benefit", 
+    "content": "full text"
   },
-  "hypothesis": "qué estamos testeando y por qué"
+  "hypothesis": "what we are testing and why"
 }`;
 
   const response = await client.messages.create({
@@ -295,20 +295,20 @@ RESPONDE EN JSON:
     variantA: {
       platform: "instagram",
       content: `${parsed.variantA?.content || ""}\n\n${hashtagString}`,
-      hook: parsed.variantA?.hook_type || "problema",
+      hook: parsed.variantA?.hook_type || "problem",
       type: tipo,
       hashtags,
-      estimatedEngagement: "medio"
+      estimatedEngagement: "medium"
     },
     variantB: {
       platform: "instagram",
       content: `${parsed.variantB?.content || ""}\n\n${hashtagString}`,
-      hook: parsed.variantB?.hook_type || "beneficio",
+      hook: parsed.variantB?.hook_type || "benefit",
       type: tipo,
       hashtags,
-      estimatedEngagement: "medio"
+      estimatedEngagement: "medium"
     },
-    testHypothesis: parsed.hypothesis || "Testeando hook de problema vs beneficio"
+    testHypothesis: parsed.hypothesis || "Testing problem vs benefit hook"
   };
 }
 
@@ -369,33 +369,33 @@ export async function generateCarousel(
   cta: string;
   hashtags: string[];
 }> {
-  console.log(`📊 Generando carrusel de ${slides} slides...`);
+  console.log(`📊 Generating carousel with ${slides} slides...`);
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `Genera un CARRUSEL de Instagram de ${slides} slides.
+  const prompt = `Generate an Instagram CAROUSEL with ${slides} slides.
 
-PRODUCTO: ${product.name}
-TEMA: ${tema}
-AUDIENCIA: ${product.targetAudience}
+PRODUCT: ${product.name}
+TOPIC: ${tema}
+AUDIENCE: ${product.targetAudience}
 
-ESTRUCTURA:
-- Slide 1: Hook potente (pregunta o dato impactante)
-- Slides 2-${slides - 1}: Contenido de valor (1 idea por slide)
-- Slide ${slides}: CTA claro
+STRUCTURE:
+- Slide 1: Strong hook (question or impactful data point)
+- Slides 2-${slides - 1}: Valuable content (1 idea per slide)
+- Slide ${slides}: Clear CTA
 
-REGLAS:
-- Cada slide MÁXIMO 30 palabras
-- Texto que funcione sin diseño (solo texto)
-- Numeración o emojis para guiar
-- Español de España, cercano
+RULES:
+- Each slide MAX 30 words
+- Text that works without design (text-only)
+- Numbering or emojis to guide
+- Approachable Spain Spanish
 
-RESPONDE EN JSON:
+RESPOND IN JSON:
 {
-  "titulo": "título del carrusel para el caption",
+  "titulo": "carousel title for the caption",
   "slides": ["slide1", "slide2", ...],
-  "cta": "call to action final",
-  "caption": "texto para el caption del post"
+  "cta": "final call to action",
+  "caption": "text for the post caption"
 }`;
 
   const response = await client.messages.create({
@@ -423,16 +423,16 @@ export function getCommentResponse(commentType: keyof typeof COMMENT_RESPONSES):
 
 // Calendario editorial inteligente
 export interface EditorialCalendar {
-  semana: number;
+  week: number;
   posts: {
-    dia: string;
-    fecha: string;
-    hora: string;
-    plataforma: string;
-    tipo: string;
-    objetivo: string;
-    contenido?: string;
-    estado: "pendiente" | "programado" | "publicado";
+    day: string;
+    date: string;
+    time: string;
+    platform: string;
+    type: string;
+    goal: string;
+    content?: string;
+    status: "pending" | "scheduled" | "published";
   }[];
 }
 
@@ -441,18 +441,28 @@ export function generateEditorialCalendar(
   weeks: number = 4
 ): EditorialCalendar[] {
   const calendar: EditorialCalendar[] = [];
-  const dias = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   
   // Distribución semanal óptima
   const weeklyPlan = [
-    { dia: "lunes", tipo: "educativo", objetivo: "awareness" },
-    { dia: "martes", tipo: "problema_solucion", objetivo: "awareness" },
-    { dia: "miercoles", tipo: "testimonio", objetivo: "conversion" },
-    { dia: "jueves", tipo: "tips", objetivo: "engagement" },
-    { dia: "viernes", tipo: "promotional", objetivo: "conversion" },
-    { dia: "sabado", tipo: "detras_camaras", objetivo: "engagement" },
-    { dia: "domingo", tipo: "inspiracional", objetivo: "retention" }
+    { day: "monday", type: "educational", goal: "awareness" },
+    { day: "tuesday", type: "problem_solution", goal: "awareness" },
+    { day: "wednesday", type: "testimonial", goal: "conversion" },
+    { day: "thursday", type: "tips", goal: "engagement" },
+    { day: "friday", type: "promotional", goal: "conversion" },
+    { day: "saturday", type: "behind_the_scenes", goal: "engagement" },
+    { day: "sunday", type: "inspirational", goal: "retention" }
   ];
+
+  const dayToPostingTimeKey: Record<string, keyof typeof BEST_POSTING_TIMES.instagram> = {
+    monday: "lunes",
+    tuesday: "martes",
+    wednesday: "miercoles",
+    thursday: "jueves",
+    friday: "viernes",
+    saturday: "sabado",
+    sunday: "domingo",
+  };
 
   for (let week = 0; week < weeks; week++) {
     const weekStart = new Date(startDate);
@@ -462,22 +472,23 @@ export function generateEditorialCalendar(
       const postDate = new Date(weekStart);
       postDate.setDate(postDate.getDate() + dayIndex);
       
-      const bestTimes = BEST_POSTING_TIMES.instagram[plan.dia as keyof typeof BEST_POSTING_TIMES.instagram];
-      const hora = bestTimes?.[0] || "10:00"; // Primera mejor hora
+      const postingTimeKey = dayToPostingTimeKey[plan.day] || "lunes";
+      const bestTimes = BEST_POSTING_TIMES.instagram[postingTimeKey];
+      const time = bestTimes?.[0] || "10:00"; // First best time
       
       return {
-        dia: plan.dia,
-        fecha: postDate.toISOString().split("T")[0],
-        hora,
-        plataforma: "instagram+tiktok",
-        tipo: plan.tipo,
-        objetivo: plan.objetivo,
-        estado: "pendiente" as const
+        day: plan.day,
+        date: postDate.toISOString().split("T")[0],
+        time,
+        platform: "instagram+tiktok",
+        type: plan.type,
+        goal: plan.goal,
+        status: "pending" as const
       };
     });
 
     calendar.push({
-      semana: week + 1,
+      week: week + 1,
       posts
     });
   }
@@ -538,9 +549,9 @@ export function getBestPerformingContent(analytics: PostAnalytics[]): {
 
   return {
     mejorTipo: avgByType[0]?.tipo || "educativo",
-    mejorHook: avgByHook[0]?.hook || "problema",
+    mejorHook: avgByHook[0]?.hook || "problem",
     mejorHora: "10:00", // TODO: calcular de analytics reales
-    mejorDia: "jueves" // TODO: calcular de analytics reales
+    mejorDia: "thursday" // TODO: calculate from real analytics
   };
 }
 

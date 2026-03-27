@@ -37,25 +37,25 @@ export class StrategyAgent {
     summary: string;
     budgetAllocation: Record<string, number>;
   }> {
-    const prompt = `Eres el Strategy Agent coordinando una campaña de marketing.
+    const prompt = `You are the Strategy Agent coordinating a marketing campaign.
 
-PERFORMANCE ACTUAL:
+CURRENT PERFORMANCE:
 ${Object.entries(params.channelPerformance).map(([channel, data]) => 
-  `- ${channel}: Gasto €${data.spend}, Revenue €${data.revenue}, ROI ${data.roi}%`
+  `- ${channel}: Spend €${data.spend}, Revenue €${data.revenue}, ROI ${data.roi}%`
 ).join('\n')}
 
-PRESUPUESTO TOTAL: €${params.totalBudget}
-OBJETIVOS: ${params.goals.join(', ')}
+TOTAL BUDGET: €${params.totalBudget}
+GOALS: ${params.goals.join(', ')}
 
-Analiza y proporciona:
+Analyze and provide:
 
 1. Decisiones estratégicas por canal (scale/maintain/optimize/pause/reallocate)
 
-2. Summary ejecutivo
+2. Executive summary
 
-3. Nueva asignación de presupuesto
+3. New budget allocation
 
-Responde en JSON:
+Respond in JSON:
 {
   "decisions": [
     {
@@ -64,12 +64,12 @@ Responde en JSON:
       "reasoning": "string",
       "expectedImpact": "string",
       "priority": "high|medium|low",
-      "budgetChange": number (porcentaje)
+      "budgetChange": number (percentage)
     }
   ],
-  "summary": "string (2-3 frases)",
+  "summary": "string (2-3 sentences)",
   "budgetAllocation": {
-    "channel": number (nuevo presupuesto)
+    "channel": number (new budget)
   }
 }`;
 
@@ -100,8 +100,8 @@ Responde en JSON:
           return {
             action: 'scale' as const,
             channel,
-            reasoning: `ROI excelente de ${data.roi}%`,
-            expectedImpact: 'Aumentar revenue significativamente',
+            reasoning: `Excellent ROI of ${data.roi}%`,
+            expectedImpact: 'Significantly increase revenue',
             priority: 'high' as const,
             budgetChange: 50,
           };
@@ -109,8 +109,8 @@ Responde en JSON:
           return {
             action: 'optimize' as const,
             channel,
-            reasoning: `ROI bajo de ${data.roi}%`,
-            expectedImpact: 'Mejorar eficiencia',
+            reasoning: `Low ROI of ${data.roi}%`,
+            expectedImpact: 'Improve efficiency',
             priority: 'high' as const,
             budgetChange: -25,
           };
@@ -118,8 +118,8 @@ Responde en JSON:
           return {
             action: 'maintain' as const,
             channel,
-            reasoning: `ROI aceptable de ${data.roi}%`,
-            expectedImpact: 'Mantener performance actual',
+            reasoning: `Acceptable ROI of ${data.roi}%`,
+            expectedImpact: 'Maintain current performance',
             priority: 'medium' as const,
             budgetChange: 0,
           };
@@ -128,7 +128,7 @@ Responde en JSON:
 
       return {
         decisions,
-        summary: 'Análisis completado. Recomendaciones generadas basadas en ROI actual.',
+        summary: 'Analysis completed. Recommendations generated based on current ROI.',
         budgetAllocation: params.channelPerformance,
       };
     }
@@ -149,13 +149,13 @@ Responde en JSON:
     const topPerformers = sorted.slice(0, 2).map(c => ({
       channel: c.name,
       roi: c.performance,
-      reason: `Performance excepcional con ROI de ${c.performance}%`,
+      reason: `Outstanding performance with ROI of ${c.performance}%`,
     }));
 
     const underperformers = sorted.slice(-2).map(c => ({
       channel: c.name,
       roi: c.performance,
-      issue: c.performance < 100 ? 'ROI negativo' : 'ROI por debajo del promedio',
+      issue: c.performance < 100 ? 'Negative ROI' : 'ROI below average',
     }));
 
     // Calcular nueva asignación de presupuesto
@@ -168,10 +168,10 @@ Responde en JSON:
     });
 
     const strategicInsights = [
-      `${topPerformers[0]?.channel || 'Top channel'} lidera con ${topPerformers[0]?.roi || 0}% ROI`,
-      `Considerar aumentar presupuesto en top performers`,
-      `Optimizar o pausar canales con ROI < 100%`,
-      'Testear nuevos canales para diversificar',
+      `${topPerformers[0]?.channel || 'Top channel'} leads with ${topPerformers[0]?.roi || 0}% ROI`,
+      `Consider increasing budget for top performers`,
+      `Optimize or pause channels with ROI < 100%`,
+      'Test new channels to diversify',
     ];
 
     return {
@@ -215,8 +215,8 @@ Responde en JSON:
           channel,
           change: Math.round(change),
           reason: change > 0 
-            ? `Alto ROI de ${data.roi}% justifica aumento`
-            : `Bajo ROI de ${data.roi}% sugiere reducción`,
+            ? `High ROI of ${data.roi}% justifies an increase`
+            : `Low ROI of ${data.roi}% suggests a reduction`,
         });
       }
     });
@@ -237,7 +237,7 @@ Responde en JSON:
   }
 
   /**
-   * Generar reporte estratégico
+   * Generate strategic report
    */
   async generateStrategicReport(params: {
     period: string;
@@ -248,14 +248,14 @@ Responde en JSON:
     challenges: string[];
     next_actions: string[];
   }> {
-    const prompt = `Genera un reporte estratégico de marketing:
+    const prompt = `Generate a strategic marketing report:
 
-PERÍODO: ${params.period}
-MÉTRICAS: ${JSON.stringify(params.metrics, null, 2)}
+PERIOD: ${params.period}
+METRICS: ${JSON.stringify(params.metrics, null, 2)}
 
-Proporciona en JSON:
+Provide in JSON:
 {
-  "executive_summary": "string (3-4 frases)",
+  "executive_summary": "string (3-4 sentences)",
   "key_wins": ["string", "string", "string"],
   "challenges": ["string", "string"],
   "next_actions": ["string", "string", "string"]
@@ -282,10 +282,10 @@ Proporciona en JSON:
     } catch (error) {
       console.error("Error generating report:", error);
       return {
-        executive_summary: `Reporte del período ${params.period}`,
-        key_wins: ['Crecimiento sostenido', 'ROI positivo'],
-        challenges: ['Optimización de canales'],
-        next_actions: ['Escalar top performers', 'Optimizar underperformers'],
+        executive_summary: `Report for period ${params.period}`,
+        key_wins: ['Sustained growth', 'Positive ROI'],
+        challenges: ['Channel optimization'],
+        next_actions: ['Scale top performers', 'Optimize underperformers'],
       };
     }
   }

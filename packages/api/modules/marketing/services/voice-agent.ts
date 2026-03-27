@@ -14,22 +14,22 @@ function getAnthropicClient() {
 // Perfiles de voz para marketing
 const VOICE_PROFILES = {
   professional: {
-    description: 'Corporativo, serio, confiable - ideal para B2B',
+    description: 'Corporate, serious, reliable - ideal for B2B',
     voiceId: 'pNInz6obpgDQGcFmaJgB', // Adam
     settings: { stability: 0.75, similarity_boost: 0.75 }
   },
   friendly: {
-    description: 'Cercano, cálido, accesible - ideal para B2C',
+    description: 'Close, warm, approachable - ideal for B2C',
     voiceId: 'EXAVITQu4vr4xnSDxMaL', // Bella
     settings: { stability: 0.5, similarity_boost: 0.8 }
   },
   energetic: {
-    description: 'Dinámico, entusiasta, motivador - ideal para ads',
+    description: 'Dynamic, enthusiastic, motivational - ideal for ads',
     voiceId: 'pFZP5JQG7iQjIQuC4Bku', // Lily
     settings: { stability: 0.4, similarity_boost: 0.9 }
   },
   calm: {
-    description: 'Tranquilo, relajante, explicativo - ideal para tutoriales',
+    description: 'Calm, relaxing, explanatory - ideal for tutorials',
     voiceId: '21m00Tcm4TlvDq8ikWAM', // Rachel
     settings: { stability: 0.8, similarity_boost: 0.6 }
   }
@@ -45,7 +45,7 @@ interface GenerateVoiceParams {
 
 // Generar audio con ElevenLabs
 export async function generateVoiceover(params: GenerateVoiceParams) {
-  console.log('🎙️ Generando voiceover de marketing...')
+  console.log('🎙️ Generating marketing voiceover...')
 
   const apiKey = process.env.ELEVENLABS_API_KEY
   console.log('🎙️ ELEVENLABS_API_KEY exists:', !!apiKey)
@@ -62,7 +62,7 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
   const optimizedScript = optimizeScriptForVoice(script)
 
   console.log(`  📝 Script: ${optimizedScript.substring(0, 100)}...`)
-  console.log(`  🎤 Perfil: ${voiceProfile}`)
+  console.log(`  🎤 Profile: ${voiceProfile}`)
   console.log(`  🎤 Voice ID: ${profile.voiceId}`)
 
   try {
@@ -99,7 +99,7 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
     const audioBase64 = Buffer.from(audioBuffer).toString('base64')
     const audioDataUrl = `data:audio/mpeg;base64,${audioBase64}`
 
-    console.log('  ✅ Audio generado')
+    console.log('  ✅ Audio generated')
 
     // Track API usage
     const characterCount = optimizedScript.length
@@ -153,7 +153,7 @@ export async function generateVoiceover(params: GenerateVoiceParams) {
     }
 
   } catch (error: any) {
-    console.error('❌ Error generando voiceover:', error)
+    console.error('❌ Error generating voiceover:', error)
     console.error('❌ Error message:', error?.message || 'Unknown error')
     console.error('❌ Error stack:', error?.stack || 'No stack')
     console.error('❌ Error name:', error?.name || 'Unknown')
@@ -182,7 +182,7 @@ export async function generateVideoScript(params: {
   style: 'tutorial' | 'promo' | 'explainer' | 'testimonial'
   targetAudience: string
 }) {
-  console.log('📝 Generando script de video para marketing...')
+  console.log('📝 Generating marketing video script...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -191,35 +191,35 @@ export async function generateVideoScript(params: {
   const targetWords = Math.round(params.duration * wordsPerSecond)
 
   const prompt = `
-Eres un experto en MARKETING DIGITAL y CREACIÓN DE CONTENIDO DE VIDEO.
-Tu objetivo es crear un script de video altamente efectivo para conversión.
+You are an expert in DIGITAL MARKETING and VIDEO CONTENT CREATION.
+Your goal is to create a highly effective video script for conversion.
 
-TEMA: ${params.topic}
-DURACIÓN: ${params.duration} segundos (~${targetWords} palabras)
-ESTILO: ${params.style}
-AUDIENCIA: ${params.targetAudience}
+TOPIC: ${params.topic}
+DURATION: ${params.duration} seconds (~${targetWords} words)
+STYLE: ${params.style}
+AUDIENCE: ${params.targetAudience}
 
-Genera un script de video que:
-1. Enganche en los primeros 3 segundos
-2. Mantenga la atención durante toda la duración
-3. Incluya un CTA claro al final
-4. Sea natural para voz en off
+Generate a video script that:
+1. Hooks the audience in the first 3 seconds
+2. Maintains attention throughout the full duration
+3. Includes a clear CTA at the end
+4. Feels natural for voiceover narration
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
-  "hook": "Los primeros 3-5 segundos (máximo 15 palabras)",
-  "script": "El script completo para voz en off",
+  "hook": "The first 3-5 seconds (maximum 15 words)",
+  "script": "The full voiceover script",
   "scenes": [
     {
       "timestamp": "0:00-0:05",
-      "narration": "Texto de narración para este segmento",
-      "visual": "Descripción de qué mostrar en pantalla"
+      "narration": "Narration text for this segment",
+      "visual": "Description of what to show on screen"
     }
   ],
-  "cta": "Call to action final",
-  "keyPoints": ["punto clave 1", "punto clave 2", "punto clave 3"],
+  "cta": "Final call to action",
+  "keyPoints": ["key point 1", "key point 2", "key point 3"],
   "estimatedDuration": ${params.duration},
-  "wordCount": "número de palabras del script"
+  "wordCount": "number of words in the script"
 }
 `
 
@@ -272,7 +272,7 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log('✅ Script de video generado')
+  console.log('✅ Video script generated')
   return result
 }
 
@@ -286,7 +286,7 @@ export async function generateScriptAndVoice(params: {
   voiceProfile: 'professional' | 'friendly' | 'energetic' | 'calm'
   targetAudience: string
 }) {
-  console.log('🎬 Generando script y voiceover completo...')
+  console.log('🎬 Generating full script and voiceover...')
 
   // 1. Generar script
   const script = await generateVideoScript({
@@ -306,7 +306,7 @@ export async function generateScriptAndVoice(params: {
     voiceProfile: params.voiceProfile
   })
 
-  console.log('✅ Script y voiceover completos')
+  console.log('✅ Script and voiceover completed')
 
   return {
     script,
@@ -324,8 +324,8 @@ export async function generateScriptAndVoice(params: {
 function optimizeScriptForVoice(script: string): string {
   return script
     .replace(/https?:\/\/[^\s]+/g, 'visit our website') // URLs
-    .replace(/\bAPI\b/g, 'A P I') // Acrónimos
-    .replace(/\bSaaS\b/g, 'sass') // Pronunciación
+    .replace(/\bAPI\b/g, 'A P I') // Acronyms
+    .replace(/\bSaaS\b/g, 'sass') // Pronunciation
     .replace(/\bAI\b/g, 'A I')
     .replace(/\.\.\./g, '...') // Pausas
     .replace(/([.!?])/g, '$1 ') // Espacios después de puntuación
@@ -334,7 +334,7 @@ function optimizeScriptForVoice(script: string): string {
 
 function estimateDuration(script: string): number {
   const words = script.split(/\s+/).length
-  return Math.round(words / 2.5) // ~2.5 palabras por segundo
+  return Math.round(words / 2.5) // ~2.5 words per second
 }
 
 export default {
