@@ -8,14 +8,14 @@ const anthropic = new Anthropic();
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// Buscar foto propia que coincida con el contenido
+// Find own brand photo that matches the content
 async function getBrandPhoto(
   organizationId: string, 
   contentType: string, 
   searchTerms: string[]
 ): Promise<string | null> {
   try {
-    // Buscar fotos que coincidan con el tipo de contenido o tags
+    // Find photos that match content type or tags
     const photos = await prisma.brandPhoto.findMany({
       where: {
         organizationId,
@@ -28,7 +28,7 @@ async function getBrandPhoto(
     });
 
     if (photos.length > 0) {
-      // Seleccionar una aleatoria para variedad
+      // Pick a random one for variety
       const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
       console.log('Using brand photo:', randomPhoto.description || randomPhoto.url);
       return randomPhoto.url;
@@ -40,12 +40,12 @@ async function getBrandPhoto(
   return null;
 }
 
-// Obtener imagen de stock de Pexels usando query personalizado de Claude
+// Get stock image from Pexels using Claude custom query
 async function getStockImage(customQuery: string, industry: string): Promise<string> {
-  // Limpiar y mejorar el query
+  // Clean and improve the query
   let searchQuery = customQuery || `${industry} business`;
   
-  // Agregar términos que mejoran calidad en Pexels
+  // Add terms that improve quality in Pexels
   const qualityTerms = ['minimal', 'professional', 'modern'];
   const randomQuality = qualityTerms[Math.floor(Math.random() * qualityTerms.length)];
   searchQuery = `${searchQuery} ${randomQuality}`;
@@ -65,7 +65,7 @@ async function getStockImage(customQuery: string, industry: string): Promise<str
         const data = await response.json();
         
         if (data.photos && data.photos.length > 0) {
-          // Filtrar fotos muy pequeñas
+          // Filter out very small photos
           const goodPhotos = data.photos.filter((p: any) => p.width >= 1000);
           const photos = goodPhotos.length > 0 ? goodPhotos : data.photos;
           
@@ -113,65 +113,65 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // PROMPT MEJORADO - MÁS HUMANO
-    const prompt = `Eres un Social Media Manager freelance con 8 años de experiencia. Manejas la cuenta de Instagram de esta empresa y te pagan por resultados.
+    // IMPROVED PROMPT - MORE HUMAN
+    const prompt = `You are a freelance Social Media Manager with 8 years of experience. You run this company's Instagram account and you are paid for results.
 
-EMPRESA:
-- Nombre: ${profile.businessName}
-- Qué hacen: ${profile.description}
-- Industria: ${profile.industry}
-- Público: ${profile.targetAudience || 'No especificado'}
-- Tono: ${profile.toneOfVoice || 'Profesional pero cercano'}
-- Emojis: ${profile.useEmojis ? 'Sí, con moderación' : 'Muy pocos'}
-- Propuesta única: ${profile.uniqueSellingPoint || 'No especificada'}
-- Productos/Servicios: ${profile.mainProducts ? JSON.stringify(profile.mainProducts) : profile.services ? JSON.stringify(profile.services) : 'No especificado'}
+COMPANY:
+- Name: ${profile.businessName}
+- What they do: ${profile.description}
+- Industry: ${profile.industry}
+- Audience: ${profile.targetAudience || 'Not specified'}
+- Tone: ${profile.toneOfVoice || 'Professional but approachable'}
+- Emojis: ${profile.useEmojis ? 'Yes, in moderation' : 'Very few'}
+- Unique value proposition: ${profile.uniqueSellingPoint || 'Not specified'}
+- Products/Services: ${profile.mainProducts ? JSON.stringify(profile.mainProducts) : profile.services ? JSON.stringify(profile.services) : 'Not specified'}
 
-${topic ? `TEMA DEL POST: ${topic}` : 'TEMA: Elige tú el mejor tema para hoy basándote en la empresa'}
-${contentType && contentType !== 'auto' ? `TIPO: ${contentType}` : 'TIPO: Decide qué tipo de post funcionará mejor'}
+${topic ? `POST TOPIC: ${topic}` : 'TOPIC: Choose the best topic for today based on the company'}
+${contentType && contentType !== 'auto' ? `TYPE: ${contentType}` : 'TYPE: Decide which post type will perform best'}
 
-CÓMO ESCRIBES TÚ (un humano real):
-- Escribes como si hablaras con un amigo que tiene un negocio
-- NUNCA empiezas con emoji + pregunta retórica (eso es de bots)
-- Usas frases cortas. Párrafos de 1-2 líneas máximo.
-- El gancho es TODO. Si no enganchas en 1 segundo, pierdes.
-- Cuentas mini-historias reales o creíbles
-- El CTA es natural, no forzado
+HOW YOU WRITE (like a real human):
+- You write as if you are talking to a friend who runs a business
+- You NEVER start with an emoji + rhetorical question (that sounds like bots)
+- You use short sentences. Paragraphs are 1-2 lines max.
+- The hook is EVERYTHING. If you do not hook in 1 second, you lose.
+- You tell mini-stories that are real or believable
+- Your CTA is natural, never forced
 
-PROHIBIDO (esto delata que es IA):
-- "¿Sabías que...?" como inicio
-- "En el mundo actual..." / "En la era digital..."
-- "¡Descubre cómo...!" 
-- "Es importante destacar que..."
-- Emojis al inicio de cada línea 🚀💡✨
-- Más de 3 hashtags seguidos
-- Preguntas retóricas obvias
+NEVER DO THIS (it gives away AI):
+- "Did you know...?" as an opener
+- "In today's world..." / "In the digital era..."
+- "Discover how...!"
+- "It is important to highlight that..."
+- Emojis at the beginning of every line 🚀💡✨
+- More than 3 hashtags in a row
+- Obvious rhetorical questions
 
-EJEMPLOS BUENOS (copia este estilo):
+GOOD EXAMPLES (copy this style):
 ---
-"3 semanas. Eso tardamos en lanzar la app de María.
-Ella tenía la idea hace 2 años. Nosotros la ejecutamos en 21 días.
-¿Tienes algo guardado en notas del móvil? Hablemos."
+"3 weeks. That is how long it took us to launch Maria's app.
+She had the idea for 2 years. We executed it in 21 days.
+Do you have something saved in your phone notes? Let's talk."
 ---
-"No voy a mentirte: el 80% de los proyectos web fallan.
-Pero no por la tecnología. Fallan porque nadie validó la idea antes de construir.
-Nosotros primero preguntamos, después programamos."
+"I will not lie to you: 80% of web projects fail.
+But not because of technology. They fail because no one validated the idea before building.
+We ask first, then we code."
 ---
-"Cliente real, historia real:
-Llegó con un Excel de 47 pestañas. 'Es mi sistema de reservas', dijo.
-Hoy tiene una app. Tarda 10 segundos en lo que antes tardaba 10 minutos."
+"Real client, real story:
+They showed up with a 47-tab spreadsheet. 'This is my booking system,' they said.
+Today they have an app. What used to take 10 minutes now takes 10 seconds."
 ---
 
-Genera 3 variaciones MUY diferentes entre sí.
+Generate 3 variations that are VERY different from each other.
 
-JSON (sin markdown, sin backticks):
+JSON (no markdown, no backticks):
 {
   "variations": [
     {
-      "text": "texto del post SIN hashtags",
-      "hashtags": ["sin#", "maximo5"],
-      "hook": "gancho en 5 palabras",
+      "text": "post text WITHOUT hashtags",
+      "hashtags": ["without#", "max5"],
+      "hook": "hook in 5 words",
       "style": "direct|storytelling|educational",
-      "imageSearchQuery": "query en inglés para Pexels, 3-4 palabras, específico para ESTA empresa"
+      "imageSearchQuery": "English query for Pexels, 3-4 words, specific to THIS company"
     }
   ]
 }`;
@@ -202,10 +202,10 @@ JSON (sin markdown, sin backticks):
 
     const variations = parsed.variations || [];
 
-    // OBTENER IMÁGENES - PRIORIDAD: Fotos propias primero, luego stock
+    // GET IMAGES - PRIORITY: Own brand photos first, then stock
     const variationsWithImages = await Promise.all(
       variations.map(async (variation: any, index: number) => {
-        // PRIORIDAD 1: Foto propia del negocio
+        // PRIORITY 1: Business's own brand photo
         const brandPhoto = await getBrandPhoto(
           organization.id,
           variation.style || contentType || 'promotional',
@@ -217,7 +217,7 @@ JSON (sin markdown, sin backticks):
           return { ...variation, imageUrl: brandPhoto, isOwnPhoto: true };
         }
         
-        // PRIORIDAD 2: Stock de Pexels
+        // PRIORITY 2: Pexels stock
         const stockPhoto = await getStockImage(
           variation.imageSearchQuery,
           profile.industry || 'business'
