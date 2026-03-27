@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const { organizationSlug, websiteUrl, platform } = await request.json();
 
-    // Obtener organización
+    // Get organization
     const organization = await prisma.organization.findFirst({
       where: { slug: organizationSlug },
     });
@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    // 1. Analizar con PageSpeed Insights
+    // 1. Analyze with PageSpeed Insights
     const pageSpeedData = await analyzeWithPageSpeed(websiteUrl);
 
-    // 2. Guardar/actualizar config
+    // 2. Save/update config
     const seoConfig = await prisma.seoConfig.upsert({
       where: { organizationId: organization.id },
       update: {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 3. Generar issues con soluciones detalladas
+    // 3. Generate issues with detailed solutions
     const issues = await generateDetailedIssues(
       pageSpeedData.audits,
       websiteUrl,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       organization.id
     );
 
-    // 4. Guardar issues en DB
+    // 4. Save issues in DB
     await prisma.seoIssue.deleteMany({
       where: { seoConfigId: seoConfig.id },
     });
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const savedIssues = await prisma.seoIssue.findMany({
       where: { seoConfigId: seoConfig.id },
       orderBy: [
-        { severity: 'asc' }, // critical primero
+        { severity: 'asc' }, // critical first
         { impactScore: 'desc' },
       ],
     });
@@ -115,7 +115,7 @@ async function analyzeWithPageSpeed(url: string) {
     };
   } catch (error) {
     console.error("PageSpeed error:", error);
-    // Retornar datos mock si falla
+    // Return mock data if it fails
     return {
       seoScore: 75,
       scanResults: {
@@ -138,40 +138,40 @@ async function generateDetailedIssues(
 ) {
   const issues: any[] = [];
 
-  // Mapear audits de Lighthouse a issues
+  // Map Lighthouse audits to issues
   const auditMappings = [
     {
       auditKey: 'meta-description',
       type: 'meta-description',
-      title: 'Falta meta description',
+      title: 'Missing meta description',
       severity: 'critical',
       impactScore: 85,
     },
     {
       auditKey: 'document-title',
       type: 'meta-title',
-      title: 'Título de página no optimizado',
+      title: 'Unoptimized page title',
       severity: 'critical',
       impactScore: 90,
     },
     {
       auditKey: 'image-alt',
       type: 'alt-text',
-      title: 'Imágenes sin texto alternativo',
+      title: 'Images without alt text',
       severity: 'warning',
       impactScore: 60,
     },
     {
       auditKey: 'uses-optimized-images',
       type: 'images',
-      title: 'Imágenes sin optimizar',
+      title: 'Unoptimized images',
       severity: 'warning',
       impactScore: 50,
     },
     {
       auditKey: 'speed-index',
       type: 'speed',
-      title: 'Tiempo de carga lento',
+      title: 'Slow load time',
       severity: 'warning',
       impactScore: 70,
     },
@@ -180,7 +180,7 @@ async function generateDetailedIssues(
   for (const mapping of auditMappings) {
     const audit = audits[mapping.auditKey];
     if (audit && audit.score !== null && audit.score < 0.9) {
-      // Generar solución con IA
+      // Generate AI solution
       const solution = await generateSolutionWithAI(
         mapping.type,
         mapping.title,
@@ -195,11 +195,11 @@ async function generateDetailedIssues(
         type: mapping.type,
         severity: mapping.severity,
         title: mapping.title,
-        description: audit.description || `Se detectó un problema con ${mapping.title.toLowerCase()}`,
+        description: audit.description || `A problem was detected with ${mapping.title.toLowerCase()}`,
         affectedUrls: [websiteUrl],
         affectedCount: 1,
         impactScore: mapping.impactScore,
-        impactDescription: `Puede afectar hasta un ${mapping.impactScore}% de tu visibilidad en búsquedas`,
+        impactDescription: `It can affect up to ${mapping.impactScore}% of your search visibility`,
         solution: solution.explanation,
         solutionCode: solution.code,
         solutionSteps: solution.steps,
@@ -220,51 +220,51 @@ async function generateSolutionWithAI(
   auditData: any
 ) {
   const platformInstructions: Record<string, string> = {
-    wordpress: "WordPress con Yoast SEO o RankMath instalado",
-    wix: "Editor de Wix",
-    shopify: "Admin de Shopify",
-    squarespace: "Editor de Squarespace",
-    webflow: "Designer de Webflow",
-    html: "código HTML directamente",
+    wordpress: "WordPress with Yoast SEO or RankMath installed",
+    wix: "Wix editor",
+    shopify: "Shopify admin",
+    squarespace: "Squarespace editor",
+    webflow: "Webflow designer",
+    html: "direct HTML code",
   };
 
-  const prompt = `Eres un experto SEO. Genera una solución DETALLADA y PRÁCTICA para este problema:
+  const prompt = `You are an SEO expert. Generate a DETAILED and PRACTICAL solution for this problem:
 
-PROBLEMA: ${issueTitle}
-SITIO WEB: ${websiteUrl}
-PLATAFORMA: ${platform} (${platformInstructions[platform] || 'desconocida'})
-DATOS DEL ANÁLISIS: ${JSON.stringify(auditData).slice(0, 500)}
+PROBLEM: ${issueTitle}
+WEBSITE: ${websiteUrl}
+PLATFORM: ${platform} (${platformInstructions[platform] || 'unknown'})
+ANALYSIS DATA: ${JSON.stringify(auditData).slice(0, 500)}
 
-Responde en JSON con este formato exacto:
+Respond in JSON with this exact format:
 {
-  "explanation": "Explicación clara de por qué esto es importante (2-3 oraciones)",
-  "code": "El código exacto que debe usar (meta tag, HTML, etc.) - si aplica",
+  "explanation": "Clear explanation of why this matters (2-3 sentences)",
+  "code": "The exact code to use (meta tag, HTML, etc.) - if applicable",
   "steps": [
     {
-      "title": "Título corto del paso",
-      "description": "Descripción detallada de qué hacer",
-      "url": "URL específica donde ir (si aplica, ej: /wp-admin/post.php)",
-      "urlLabel": "Texto del enlace",
-      "code": "Código específico para este paso (si aplica)",
-      "tip": "Consejo útil (opcional)"
+      "title": "Short step title",
+      "description": "Detailed description of what to do",
+      "url": "Specific URL to go to (if applicable, e.g. /wp-admin/post.php)",
+      "urlLabel": "Link text",
+      "code": "Specific code for this step (if applicable)",
+      "tip": "Useful tip (optional)"
     }
   ],
   "platformGuide": {
     "${platform}": [
-      // Mismos pasos pero específicos para la plataforma
+      // Same steps but specific to the platform
     ],
     "html": [
-      // Pasos para HTML genérico como fallback
+      // Steps for generic HTML as fallback
     ]
   }
 }
 
-IMPORTANTE:
-- Los pasos deben ser MUY específicos para ${platform}
-- Incluye URLs exactas donde el usuario debe ir
-- El código debe estar listo para copiar y pegar
-- Máximo 5 pasos
-- Lenguaje simple, sin jerga técnica innecesaria`;
+IMPORTANT:
+- The steps must be VERY specific for ${platform}
+- Include exact URLs where the user should go
+- The code must be ready to copy and paste
+- Maximum 5 steps
+- Use simple language, without unnecessary technical jargon`;
 
   try {
     const response = await anthropic.messages.create({
@@ -275,7 +275,7 @@ IMPORTANTE:
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     
-    // Extraer JSON de la respuesta
+    // Extract JSON from the response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -284,14 +284,14 @@ IMPORTANTE:
     console.error("AI solution generation error:", error);
   }
 
-  // Fallback si falla la IA
+  // Fallback if AI fails
   return {
-    explanation: `Este problema puede afectar tu posicionamiento en Google. Te recomendamos solucionarlo lo antes posible.`,
+    explanation: `This problem can affect your ranking on Google. We recommend fixing it as soon as possible.`,
     code: null,
     steps: [
       {
-        title: "Revisa la documentación",
-        description: `Busca en la documentación de tu plataforma cómo solucionar "${issueTitle}"`,
+        title: "Review the documentation",
+        description: `Check your platform documentation for how to fix "${issueTitle}"`,
       }
     ],
     platformGuide: {

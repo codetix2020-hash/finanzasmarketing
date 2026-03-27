@@ -118,7 +118,7 @@ async function generateDailyContent(
 	const postsNeeded = 7 - scheduledPosts;
 	if (postsNeeded <= 0) return;
 
-	const contentTypes = ["educativo", "promocional", "entretenimiento", "behind-the-scenes"];
+	const contentTypes = ["educational", "promotional", "entertainment", "behind-the-scenes"];
 	const platforms = (org.socialAccounts || [])
 		.map((a) => a.platform)
 		.filter(Boolean);
@@ -153,39 +153,39 @@ async function generateDailyContent(
 }
 
 async function generateContentWithAI(profile: any, contentType: string, platform: string) {
-	const systemPrompt = `Eres el social media manager de ${profile.businessName}.
+	const systemPrompt = `You are the social media manager for ${profile.businessName}.
 
-INFORMACIÓN DEL NEGOCIO:
-- Industria: ${profile.industry}
-- Descripción: ${profile.description}
-- Público objetivo: ${profile.targetAudience}
-- Tono de voz: ${profile.toneOfVoice}
-- Personalidad de marca: ${(profile.brandPersonality || []).join(", ")}
-- Productos/servicios: ${JSON.stringify(profile.mainProducts || [])}
-- Usar emojis: ${profile.useEmojis ? "Sí" : "No"} (nivel: ${profile.emojiStyle})
-- Palabras a usar: ${(profile.wordsToUse || []).join(", ")}
-- Palabras a evitar: ${(profile.wordsToAvoid || []).join(", ")}
-- Hashtags de marca: ${(profile.hashtagsToUse || []).join(" ")}
+BUSINESS INFORMATION:
+- Industry: ${profile.industry}
+- Description: ${profile.description}
+- Target audience: ${profile.targetAudience}
+- Tone of voice: ${profile.toneOfVoice}
+- Brand personality: ${(profile.brandPersonality || []).join(", ")}
+- Products/services: ${JSON.stringify(profile.mainProducts || [])}
+- Use emojis: ${profile.useEmojis ? "Yes" : "No"} (level: ${profile.emojiStyle})
+- Words to use: ${(profile.wordsToUse || []).join(", ")}
+- Words to avoid: ${(profile.wordsToAvoid || []).join(", ")}
+- Brand hashtags: ${(profile.hashtagsToUse || []).join(" ")}
 
-REGLAS:
-- El contenido debe ser 100% relevante para este negocio específico
-- Usa el tono y personalidad definidos
-- Para ${platform}, optimiza el formato
-- Incluye call-to-action cuando sea apropiado
-- Genera hashtags relevantes (mezcla los de marca con hashtags populares del nicho)`;
+RULES:
+- The content must be 100% relevant to this specific business
+- Use the defined tone and personality
+- For ${platform}, optimize the format
+- Include a call-to-action when appropriate
+- Generate relevant hashtags (mix brand hashtags with popular niche hashtags)`;
 
-	const userPrompt = `Genera un post de tipo "${contentType}" para ${platform}.
+	const userPrompt = `Generate a "${contentType}" post for ${platform}.
 
-El post debe:
-- Ser auténtico y no parecer generado por IA
-- Conectar con la audiencia objetivo
-- Incluir valor real (información útil, entretenimiento, o promoción relevante)
+The post must:
+- Be authentic and not look AI-generated
+- Connect with the target audience
+- Include real value (useful information, entertainment, or relevant promotion)
 
-Responde en JSON:
+Respond in JSON:
 {
-  "text": "El texto del post completo",
+  "text": "The full post text",
   "hashtags": ["#hashtag1", "#hashtag2", "..."],
-  "suggestedImagePrompt": "Descripción de imagen ideal para este post"
+  "suggestedImagePrompt": "Ideal image description for this post"
 }
 `;
 
@@ -231,7 +231,7 @@ async function publishScheduledPosts(
 					where: { id: post.id },
 					data: {
 						status: "failed",
-						publishError: `No hay cuenta conectada para ${post.platform}`,
+						publishError: `No connected account for ${post.platform}`,
 					},
 				});
 				continue;
@@ -253,7 +253,7 @@ async function publishScheduledPosts(
 					where: { id: post.id },
 					data: {
 						status: "failed",
-						publishError: `Publicación automática no soportada para ${post.platform}`,
+						publishError: `Automatic publishing is not supported for ${post.platform}`,
 					},
 				});
 				continue;
@@ -287,7 +287,7 @@ async function publishToInstagram(account: any, post: any) {
 	if (!igUserId) throw new Error("Instagram account missing businessId");
 
 	if (!Array.isArray(post.mediaUrls) || post.mediaUrls.length === 0) {
-		throw new Error("Instagram requiere una imagen para publicar");
+		throw new Error("Instagram requires an image to publish");
 	}
 
 	const caption = `${post.content}\n\n${Array.isArray(post.hashtags) ? post.hashtags.join(" ") : ""}`.trim();
@@ -459,13 +459,13 @@ async function generateCommentReply(profile: any, comment: any) {
 		messages: [
 			{
 				role: "user",
-				content: `Genera una respuesta corta y amigable a este comentario.
+				content: `Generate a short and friendly reply to this comment.
 
-Negocio: ${profile.businessName}
-Tono: ${profile.toneOfVoice}
-Comentario: "${comment.content}"
+Business: ${profile.businessName}
+Tone: ${profile.toneOfVoice}
+Comment: "${comment.content}"
 
-Responde solo con el texto de la respuesta, nada más.`,
+Reply only with the text of the response, nothing else.`,
 			},
 		],
 	});
