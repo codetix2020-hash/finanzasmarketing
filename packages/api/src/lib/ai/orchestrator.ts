@@ -20,14 +20,14 @@ interface OrchestrationContext {
   productId?: string
 }
 
-// Orquestar marketing para un producto específico
+// Orchestrate marketing for a specific product
 export async function orchestrateProduct(productId: string) {
-  console.log('🎯 Orquestando marketing para producto:', productId)
+  console.log('🎯 Orchestrating marketing for product:', productId)
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // 1. Obtener producto
+  // 1. Get product
   const product = await prisma.saasProduct.findUnique({
     where: { id: productId },
     include: { organization: true }
@@ -35,7 +35,7 @@ export async function orchestrateProduct(productId: string) {
 
   if (!product) throw new Error('Product not found')
 
-  // 2. Obtener memoria de marketing del producto
+  // 2. Get product marketing memory
   const marketingMemory = await searchMemory(
     product.organizationId,
     `${product.name} marketing strategy campaigns content`,
@@ -43,7 +43,7 @@ export async function orchestrateProduct(productId: string) {
     3
   )
 
-  // 3. Obtener learnings de campañas (cross-learning)
+  // 3. Get campaign learnings (cross-learning)
   const campaignLearnings = await searchMemory(
     product.organizationId,
     'successful campaigns conversions leads ROAS optimization',
@@ -51,7 +51,7 @@ export async function orchestrateProduct(productId: string) {
     3
   )
 
-  // 4. Obtener contenido reciente
+  // 4. Get recent content
   const recentContent = await prisma.marketingContent.findMany({
     where: {
       productId,
@@ -61,52 +61,52 @@ export async function orchestrateProduct(productId: string) {
     orderBy: { createdAt: 'desc' }
   })
 
-  // 5. Obtener campañas activas
+  // 5. Get active campaigns
   const activeCampaigns = await prisma.marketingAdCampaign.findMany({
     where: { productId, status: 'ACTIVE' }
   })
 
-  // 6. Generar decisiones de marketing con Claude
+  // 6. Generate marketing decisions with Claude
   const prompt = `
-Eres un experto en MARKETING DIGITAL y AUTOMATIZACIÓN DE CAMPAÑAS PUBLICITARIAS.
-Tu objetivo es orquestar la estrategia de marketing para un producto SaaS.
+You are an expert in DIGITAL MARKETING and AD CAMPAIGN AUTOMATION.
+Your goal is to orchestrate the marketing strategy for a SaaS product.
 
-PRODUCTO:
-- Nombre: ${product.name}
-- Descripción: ${product.description}
+PRODUCT:
+- Name: ${product.name}
+- Description: ${product.description}
 - Target Audience: ${product.targetAudience}
 - USP: ${product.usp}
 
-MEMORIA DE MARKETING:
+MARKETING MEMORY:
 ${marketingMemory.map(m => m.content || m.reasoning).join('\n\n')}
 
-LEARNINGS DE CAMPAÑAS PREVIAS:
+PREVIOUS CAMPAIGN LEARNINGS:
 ${campaignLearnings.map(m => m.content || m.reasoning).join('\n\n')}
 
-CONTENIDO RECIENTE (últimos 7 días):
-${recentContent.map(c => `- ${c.type}: ${c.title || 'Sin título'}`).join('\n')}
+RECENT CONTENT (last 7 days):
+${recentContent.map(c => `- ${c.type}: ${c.title || 'Untitled'}`).join('\n')}
 
-CAMPAÑAS ACTIVAS:
+ACTIVE CAMPAIGNS:
 ${activeCampaigns.map(c => `- ${c.name}: ${c.status}`).join('\n')}
 
-Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
+Generate a marketing plan for the next 6 hours. Reply ONLY with JSON:
 
 {
   "contentPlan": [
     {
       "type": "post | carousel | video_script | email | landing_page | blog",
       "platform": "instagram | twitter | linkedin | tiktok | email | web",
-      "topic": "tema específico de marketing",
-      "angle": "ángulo único para engagement",
-      "hook": "primera línea viral",
-      "cta": "call to action para conversión",
+      "topic": "specific marketing topic",
+      "angle": "unique engagement angle",
+      "hook": "viral opening line",
+      "cta": "conversion-focused call to action",
       "priority": "high | medium | low",
-      "reasoning": "por qué ahora es buen momento"
+      "reasoning": "why now is the right timing"
     }
   ],
   "experiments": [
     {
-      "hypothesis": "qué queremos probar en la campaña",
+      "hypothesis": "what we want to test in the campaign",
       "variants": ["A", "B"],
       "metric": "CPA | ROAS | CTR | Conversion Rate",
       "duration": "7 days"
@@ -114,14 +114,14 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
   ],
   "optimizations": [
     {
-      "target": "qué canal o campaña optimizar",
-      "action": "acción específica de optimización",
-      "expectedImpact": "mejora esperada en ROAS o CPA"
+      "target": "which channel or campaign to optimize",
+      "action": "specific optimization action",
+      "expectedImpact": "expected improvement in ROAS or CPA"
     }
   ],
   "insights": [
-    "insight 1 basado en performance de campañas",
-    "insight 2 sobre engagement del contenido"
+    "insight 1 based on campaign performance",
+    "insight 2 about content engagement"
   ]
 }
 `
@@ -135,7 +135,7 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const decision = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // 7. Guardar decisión de marketing
+  // 7. Save marketing decision
   await prisma.marketingDecision.create({
     data: {
       organizationId: product.organizationId,
@@ -151,16 +151,16 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Orquestación marketing completada: ${decision.contentPlan?.length || 0} contenidos planificados`)
+  console.log(`✅ Marketing orchestration completed: ${decision.contentPlan?.length || 0} planned content items`)
 
-  // 8. EJECUTAR ACCIONES AUTOMÁTICAMENTE (solo las de alta prioridad)
+  // 8. RUN ACTIONS AUTOMATICALLY (only high-priority ones)
   const executedActions = []
   const contentAgent = new ContentAgent()
   
-  for (const item of (decision.contentPlan || []).slice(0, 3)) { // Ejecutar máximo 3 acciones inmediatas
+  for (const item of (decision.contentPlan || []).slice(0, 3)) { // Execute a maximum of 3 immediate actions
     if (item.priority === 'high') {
       try {
-        console.log(`🎯 Ejecutando acción automática: ${item.type} - ${item.topic}`)
+        console.log(`🎯 Executing automatic action: ${item.type} - ${item.topic}`)
         
         if (item.type === 'blog' || item.type === 'post' || item.type === 'email') {
           const contentResult = await contentAgent.generateContent({
@@ -170,7 +170,7 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
             length: 'medium'
           })
           
-          // Guardar contenido generado
+          // Save generated content
           await prisma.marketingContent.create({
             data: {
               organizationId: product.organizationId,
@@ -201,23 +201,23 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
           executedActions.push({ type: 'image', success: true, topic: item.topic })
         }
       } catch (error) {
-        console.error(`❌ Error ejecutando acción ${item.type}:`, error)
+        console.error(`❌ Error executing action ${item.type}:`, error)
         executedActions.push({ type: item.type, success: false, error: String(error) })
       }
     }
   }
 
-  // 9. Notificar por Slack si está configurado
+  // 9. Notify in Slack if configured
   if (process.env.SLACK_WEBHOOK_URL && executedActions.length > 0) {
     try {
       await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: `🤖 MarketingOS ha orquestado marketing para *${product.name}*\n` +
-                `📊 Contenidos planificados: ${decision.contentPlan?.length || 0}\n` +
-                `✅ Acciones ejecutadas: ${executedActions.filter(a => a.success).length}\n` +
-                `📝 Estrategia: ${decision.insights?.[0] || 'Ver dashboard'}`
+          text: `🤖 MarketingOS orchestrated marketing for *${product.name}*\n` +
+                `📊 Planned content items: ${decision.contentPlan?.length || 0}\n` +
+                `✅ Executed actions: ${executedActions.filter(a => a.success).length}\n` +
+                `📝 Strategy: ${decision.insights?.[0] || 'See dashboard'}`
         })
       })
     } catch (e) {
@@ -234,11 +234,11 @@ Genera un plan de marketing para las próximas 6 horas. Responde SOLO con JSON:
   }
 }
 
-// Orquestar todos los productos de una organización
+// Orchestrate all products in an organization
 export async function orchestrateMaster(organizationId: string) {
-  console.log('🎯 Orquestación master marketing para org:', organizationId)
+  console.log('🎯 Master marketing orchestration for org:', organizationId)
 
-  // Obtener todos los productos activos
+  // Get all active products
   const products = await prisma.saasProduct.findMany({
     where: {
       organizationId,
@@ -246,14 +246,14 @@ export async function orchestrateMaster(organizationId: string) {
     }
   })
 
-  console.log(`📦 Productos para marketing: ${products.length}`)
+  console.log(`📦 Products for marketing: ${products.length}`)
 
   if (products.length === 0) {
-    // Orquestación genérica sin productos específicos
+    // Generic orchestration without specific products
     return orchestrateGeneric(organizationId)
   }
 
-  // Orquestar cada producto en paralelo
+  // Orchestrate each product in parallel
   const results = await Promise.allSettled(
     products.map(product => orchestrateProduct(product.id))
   )
@@ -261,7 +261,7 @@ export async function orchestrateMaster(organizationId: string) {
   const successful = results.filter(r => r.status === 'fulfilled')
   const failed = results.filter(r => r.status === 'rejected')
 
-  console.log(`✅ Marketing orchestration: ${successful.length} éxitos, ${failed.length} fallos`)
+  console.log(`✅ Marketing orchestration: ${successful.length} successes, ${failed.length} failures`)
 
   return {
     organizationId,
@@ -276,40 +276,40 @@ export async function orchestrateMaster(organizationId: string) {
   }
 }
 
-// Orquestación genérica (sin productos específicos)
+// Generic orchestration (without specific products)
 async function orchestrateGeneric(organizationId: string) {
-  console.log('🎯 Orquestación marketing genérica para org:', organizationId)
+  console.log('🎯 Generic marketing orchestration for org:', organizationId)
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // Obtener memoria de marketing de la organización
+  // Get organization marketing memory
   const memory = await searchMemory(organizationId, 'marketing strategy campaigns content goals', undefined, 5)
 
   const prompt = `
-Eres un experto en MARKETING DIGITAL y GENERACIÓN DE CONTENIDO.
-Genera un plan de marketing genérico para una organización.
+You are an expert in DIGITAL MARKETING and CONTENT GENERATION.
+Generate a generic marketing plan for an organization.
 
-MEMORIA DE MARKETING DISPONIBLE:
+AVAILABLE MARKETING MEMORY:
 ${memory.map(m => m.content || m.reasoning).join('\n\n')}
 
-Genera un plan de contenido para las próximas 6 horas. Responde SOLO con JSON:
+Generate a content plan for the next 6 hours. Reply ONLY with JSON:
 
 {
   "contentPlan": [
     {
       "type": "post | blog | email",
       "platform": "instagram | twitter | linkedin",
-      "topic": "tema de marketing",
-      "angle": "ángulo para engagement",
+      "topic": "marketing topic",
+      "angle": "engagement angle",
       "hook": "hook viral",
       "cta": "call to action",
       "priority": "high | medium | low"
     }
   ],
   "recommendations": [
-    "recomendación 1 de marketing",
-    "recomendación 2 de optimización"
+    "marketing recommendation 1",
+    "optimization recommendation 2"
   ]
 }
 `
@@ -337,7 +337,7 @@ Genera un plan de contenido para las próximas 6 horas. Responde SOLO con JSON:
   return { organizationId, decision, type: 'generic' }
 }
 
-// Función principal de orquestación
+// Main orchestration function
 export async function orchestrate(context: OrchestrationContext) {
   if (context.productId) {
     return orchestrateProduct(context.productId)

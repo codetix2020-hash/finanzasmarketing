@@ -34,7 +34,7 @@ export class SocialAgent {
   }
 
   /**
-   * Generar post para redes sociales
+   * Generate social media post
    */
   async generatePost(params: {
     platform: 'twitter' | 'linkedin' | 'facebook' | 'instagram';
@@ -50,16 +50,16 @@ export class SocialAgent {
       instagram: 2200,
     };
 
-    const prompt = `Genera un post para ${params.platform} sobre: ${params.topic}
+    const prompt = `Generate a post for ${params.platform} about: ${params.topic}
 
-LÍMITE DE CARACTERES: ${characterLimits[params.platform]}
-TONO: ${params.tone || 'profesional y atractivo'}
-${params.includeHashtags ? 'INCLUIR: Hashtags relevantes' : ''}
-${params.includeEmojis ? 'INCLUIR: Emojis apropiados' : ''}
+CHARACTER LIMIT: ${characterLimits[params.platform]}
+TONE: ${params.tone || 'professional and engaging'}
+${params.includeHashtags ? 'INCLUDE: Relevant hashtags' : ''}
+${params.includeEmojis ? 'INCLUDE: Appropriate emojis' : ''}
 
-Responde en JSON:
+Reply in JSON:
 {
-  "content": "string (el post completo)",
+  "content": "string (the full post)",
   "hashtags": ["string", "string"]
 }`;
 
@@ -84,17 +84,17 @@ Responde en JSON:
     } catch (error) {
       console.error("Error generating social post:", error);
       return {
-        content: `Contenido sobre ${params.topic}`,
+        content: `Content about ${params.topic}`,
         hashtags: ['#marketing', '#growth'],
       };
     }
   }
 
   /**
-   * Programar publicación
+   * Schedule post
    */
   async schedulePost(post: SocialPost): Promise<{ scheduled: boolean; scheduledFor: Date }> {
-    // En producción, integraría con Buffer, Hootsuite, o APIs nativas
+    // In production, this would integrate with Buffer, Hootsuite, or native APIs
     console.log("Scheduling post:", post);
     
     return {
@@ -104,7 +104,7 @@ Responde en JSON:
   }
 
   /**
-   * Analizar engagement
+   * Analyze engagement
    */
   async analyzeEngagement(posts: SocialPost[]): Promise<{
     totalEngagement: number;
@@ -131,9 +131,9 @@ Responde en JSON:
     const avgEngagementRate = posts.length > 0 ? totalEngagement / posts.length : 0;
 
     const insights = [
-      `Total de ${posts.length} posts analizados`,
-      `Engagement promedio: ${avgEngagementRate.toFixed(1)} interacciones`,
-      bestPost ? `Mejor post: ${bestPost.content.substring(0, 50)}...` : 'No hay datos',
+      `Total of ${posts.length} posts analyzed`,
+      `Average engagement: ${avgEngagementRate.toFixed(1)} interactions`,
+      bestPost ? `Best post: ${bestPost.content.substring(0, 50)}...` : 'No data',
     ];
 
     return {
@@ -145,7 +145,7 @@ Responde en JSON:
   }
 
   /**
-   * Análisis de sentiment
+   * Sentiment analysis
    */
   async analyzeSentiment(comments: string[]): Promise<{
     overall: 'positive' | 'neutral' | 'negative';
@@ -160,17 +160,17 @@ Responde en JSON:
       };
     }
 
-    const prompt = `Analiza el sentiment de estos comentarios:
+    const prompt = `Analyze the sentiment of these comments:
 
 ${comments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
-Responde en JSON:
+Reply in JSON:
 {
   "overall": "positive|neutral|negative",
   "breakdown": {
-    "positive": number (porcentaje),
-    "neutral": number (porcentaje),
-    "negative": number (porcentaje)
+    "positive": number (percentage),
+    "neutral": number (percentage),
+    "negative": number (percentage)
   },
   "sampleComments": [
     { "text": "string", "sentiment": "string" }
@@ -206,20 +206,20 @@ Responde en JSON:
   }
 
   /**
-   * Responder automáticamente a comentarios
+   * Automatically reply to comments
    */
   async generateAutoReply(params: {
     comment: string;
     context: string;
     tone?: string;
   }): Promise<string> {
-    const prompt = `Genera una respuesta apropiada para este comentario:
+    const prompt = `Generate an appropriate reply for this comment:
 
-COMENTARIO: "${params.comment}"
-CONTEXTO: ${params.context}
-TONO: ${params.tone || 'amigable y profesional'}
+COMMENT: "${params.comment}"
+CONTEXT: ${params.context}
+TONE: ${params.tone || 'friendly and professional'}
 
-Genera una respuesta corta (max 200 caracteres) que sea apropiada y útil.`;
+Generate a short reply (max 200 characters) that is appropriate and helpful.`;
 
     try {
       const message = await this.anthropic.messages.create({
@@ -236,12 +236,12 @@ Genera una respuesta corta (max 200 caracteres) que sea apropiada y útil.`;
       return responseContent.text.trim();
     } catch (error) {
       console.error("Error generating auto reply:", error);
-      return "¡Gracias por tu comentario! 😊";
+      return "Thanks for your comment! 😊";
     }
   }
 
   /**
-   * Obtener mejores horarios para publicar
+   * Get best posting times
    */
   async getBestPostingTimes(params: {
     platform: string;
@@ -250,12 +250,12 @@ Genera una respuesta corta (max 200 caracteres) que sea apropiada y útil.`;
     weekdays: Array<{ day: string; hours: number[] }>;
     recommendations: string[];
   }> {
-    // Datos basados en estudios de redes sociales
+    // Data based on social media studies
     const bestTimes = {
-      twitter: { weekdays: ['Lunes', 'Miércoles', 'Viernes'], hours: [9, 12, 17] },
-      linkedin: { weekdays: ['Martes', 'Miércoles', 'Jueves'], hours: [8, 12, 17] },
-      facebook: { weekdays: ['Martes', 'Jueves'], hours: [13, 15, 19] },
-      instagram: { weekdays: ['Miércoles', 'Viernes'], hours: [11, 14, 19] },
+      twitter: { weekdays: ['Monday', 'Wednesday', 'Friday'], hours: [9, 12, 17] },
+      linkedin: { weekdays: ['Tuesday', 'Wednesday', 'Thursday'], hours: [8, 12, 17] },
+      facebook: { weekdays: ['Tuesday', 'Thursday'], hours: [13, 15, 19] },
+      instagram: { weekdays: ['Wednesday', 'Friday'], hours: [11, 14, 19] },
     };
 
     const platform = params.platform.toLowerCase() as keyof typeof bestTimes;
@@ -267,9 +267,9 @@ Genera una respuesta corta (max 200 caracteres) que sea apropiada y útil.`;
         hours: data.hours,
       })),
       recommendations: [
-        `Publica en ${data.weekdays.join(', ')} para mejor alcance`,
-        `Horarios óptimos: ${data.hours.join(':00, ')}:00`,
-        'Evita fines de semana para contenido B2B',
+        `Post on ${data.weekdays.join(', ')} for better reach`,
+        `Optimal times: ${data.hours.join(':00, ')}:00`,
+        'Avoid weekends for B2B content',
       ],
     };
   }
