@@ -1,9 +1,9 @@
 "use client";
 
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { Badge } from "@ui/components/badge";
 import { Button } from "@ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
-import { Input } from "@ui/components/input";
 import { Label } from "@ui/components/label";
 import {
   Select,
@@ -13,9 +13,29 @@ import {
   SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Calendar, Image as ImageIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@ui/components/tooltip";
+import { cn } from "@ui/lib";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  Calendar,
+  Check,
+  Heart,
+  Info,
+  Loader2,
+  MessageCircle,
+  Send,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 interface GeneratedVariation {
@@ -24,6 +44,60 @@ interface GeneratedVariation {
   contentType?: string;
   imageDescription?: string;
   imageUrl?: string;
+  hook?: string;
+  style?: string;
+}
+
+const HERO_STORAGE_PREFIX = "fm-marketing-content-hero-dismissed:";
+
+const TOPIC_SUGGESTIONS_BY_TYPE = {
+  promotional: [
+    "New product launch",
+    "Special offer",
+    "Customer success story",
+    "Behind the brand",
+  ],
+  educational: ["Industry tip", "How-to guide", "Myth vs fact", "Did you know?"],
+  entertaining: ["Meme-worthy moment", "Team fun", "Caption this", "Throwback"],
+  "behind-scenes": ["Day in the life", "Making of", "Meet the team", "Our workspace"],
+  tips: ["Quick win", "Pro tip", "Common mistakes", "Best practices"],
+  auto: ["Trending now", "Seasonal", "Engagement bait", "Storytelling"],
+} as const;
+
+function getTopicSuggestionsForType(contentType: string): string[] {
+  if (contentType in TOPIC_SUGGESTIONS_BY_TYPE) {
+    return [
+      ...TOPIC_SUGGESTIONS_BY_TYPE[
+        contentType as keyof typeof TOPIC_SUGGESTIONS_BY_TYPE
+      ],
+    ];
+  }
+  return [...TOPIC_SUGGESTIONS_BY_TYPE.auto];
+}
+
+const PLATFORM_DISPLAY: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+};
+
+const TYPEWRITER_BASE = "AI is crafting your content";
+
+function getWhyThisWorksText(variation: GeneratedVariation): string {
+  const style = variation.style?.toLowerCase().trim();
+  if (style === "direct") {
+    return "Direct CTA approach — clear, action-oriented copy.";
+  }
+  if (style === "storytelling") {
+    return "Uses storytelling hook — narrative-driven engagement.";
+  }
+  if (style === "educational") {
+    return "Educational value-first — teaches before selling.";
+  }
+  if (variation.hook?.trim()) {
+    return `Opening angle: “${variation.hook.trim()}”.`;
+  }
+  return "Balanced approach — tuned for your brand voice.";
 }
 
 const CONTENT_TYPES = [
@@ -55,9 +129,85 @@ export default function CreateContentPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedCount, setPublishedCount] = useState<number | null>(null);
+  const [statsLoaded, setStatsLoaded] = useState(false);
+  const [heroDismissed, setHeroDismissed] = useState(false);
+  const [typewriterShown, setTypewriterShown] = useState("");
+  const [genPhase, setGenPhase] = useState(0);
 
   const canProceedStep1 = contentType !== "";
-  const canGenerate = contentType !== "";
+
+  const fetchDashboardStats = useCallback(async () => {
+    if (!activeOrganization?.id) return;
+    try {
+      const res = await fetch(
+        `/api/marketing/dashboard/stats?organizationSlug=${encodeURIComponent(organizationSlug)}&organizationId=${activeOrganization.id}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setPublishedCount(
+          typeof data.publishedCount === "number" ? data.publishedCount : 0,
+        );
+      }
+    } catch {
+      setPublishedCount(null);
+    } finally {
+      setStatsLoaded(true);
+    }
+  }, [activeOrganization?.id, organizationSlug]);
+
+  useEffect(() => {
+    if (!loaded || !activeOrganization?.id) return;
+    setPublishedCount(null);
+    setStatsLoaded(false);
+    const key = `${HERO_STORAGE_PREFIX}${activeOrganization.id}`;
+    if (typeof window !== "undefined") {
+      setHeroDismissed(localStorage.getItem(key) === "1");
+    }
+    void fetchDashboardStats();
+  }, [loaded, activeOrganization?.id, fetchDashboardStats]);
+
+  const dismissHeroBanner = useCallback(() => {
+    if (!activeOrganization?.id) return;
+    const key = `${HERO_STORAGE_PREFIX}${activeOrganization.id}`;
+    localStorage.setItem(key, "1");
+    setHeroDismissed(true);
+  }, [activeOrganization?.id]);
+
+  const showFirstTimeHero =
+    statsLoaded &&
+    publishedCount === 0 &&
+    !heroDismissed;
+
+  const topicSuggestions = useMemo(
+    () => getTopicSuggestionsForType(contentType || "auto"),
+    [contentType],
+  );
+
+  useEffect(() => {
+    if (!isGenerating) {
+      setTypewriterShown("");
+      setGenPhase(0);
+      return;
+    }
+    const full = `${TYPEWRITER_BASE}...`;
+    let i = 0;
+    setTypewriterShown("");
+    const id = window.setInterval(() => {
+      i += 1;
+      setTypewriterShown(full.slice(0, Math.min(i, full.length)));
+      if (i >= full.length) window.clearInterval(id);
+    }, 38);
+    const phaseId = window.setInterval(() => {
+      setGenPhase((p) => (p + 1) % 3);
+    }, 2200);
+    return () => {
+      window.clearInterval(id);
+      window.clearInterval(phaseId);
+    };
+  }, [isGenerating]);
+
+  const platformDisplayName = PLATFORM_DISPLAY[platform] ?? platform;
 
   async function handleGenerate() {
     if (!activeOrganization?.id) return;
@@ -87,8 +237,6 @@ export default function CreateContentPage() {
       if (data.variations && Array.isArray(data.variations)) {
         setVariations(data.variations);
       }
-
-      setStep(3);
     } catch (error) {
       console.error(error);
       toast.error(error instanceof Error ? error.message : "Failed to generate content");
@@ -164,6 +312,7 @@ export default function CreateContentPage() {
       }
 
       toast.success("Published to Instagram!");
+      void fetchDashboardStats();
       router.push(`/app/${organizationSlug}/marketing/content?tab=published`);
     } catch (error: any) {
       toast.error(`Failed to publish: ${error.message || "Unknown error"}`);
@@ -211,15 +360,43 @@ export default function CreateContentPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create content</h1>
-        <p className="text-muted-foreground mt-2">
-          Generate tailored content from your company profile
-        </p>
-      </div>
+    <TooltipProvider delayDuration={200}>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Create content</h1>
+          <p className="text-muted-foreground mt-2">
+            Generate tailored content from your company profile
+          </p>
+        </div>
 
-      {/* Progress */}
+        {showFirstTimeHero && (
+          <div className="relative overflow-hidden rounded-xl border border-violet-500/35 bg-gradient-to-br from-violet-950/90 via-slate-950/95 to-purple-950/90 p-6 shadow-lg">
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-8 left-1/4 h-32 w-32 rounded-full bg-violet-600/15 blur-2xl" />
+            <button
+              type="button"
+              onClick={dismissHeroBanner}
+              className="absolute right-3 top-3 rounded-md p-1.5 text-violet-200/80 transition hover:bg-white/10 hover:text-white"
+              aria-label="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <Badge
+              className="mb-3 border border-violet-400/40 bg-violet-500/25 text-[10px] font-semibold uppercase tracking-wide text-violet-100"
+            >
+              Powered by your brand profile
+            </Badge>
+            <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+              Create your first AI post ✨
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-violet-100/90 sm:text-base">
+              Choose a content type below and our AI will generate 3 branded variations for you.
+              Pick your favorite and publish — it takes less than 60 seconds.
+            </p>
+          </div>
+        )}
+
+        {/* Progress */}
       <div className="flex items-center gap-2">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
@@ -287,6 +464,23 @@ export default function CreateContentPage() {
                   className="min-h-[100px]"
                 />
               </div>
+              {topic.trim() === "" && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Quick ideas</p>
+                  <div className="flex flex-wrap gap-2">
+                    {topicSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => setTopic(suggestion)}
+                        className="rounded-full bg-violet-100 px-3 py-1.5 text-xs font-medium text-violet-900 transition hover:bg-violet-200/90 dark:bg-violet-500/20 dark:text-violet-100 dark:hover:bg-violet-500/30"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Platform</Label>
                 <Select value={platform} onValueChange={setPlatform}>
@@ -309,12 +503,61 @@ export default function CreateContentPage() {
           {step === 3 && (
             <div className="space-y-4">
               {isGenerating ? (
-                <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <Sparkles className="h-12 w-12 animate-pulse text-primary" />
-                  <p className="font-medium">Generating content...</p>
-                  <p className="text-sm text-muted-foreground">
-                    Analyzing your profile and creating variations...
-                  </p>
+                <div className="flex flex-col items-center justify-center gap-8 py-8">
+                  <div className="w-full max-w-sm animate-pulse rounded-xl border-2 border-violet-500/40 bg-gradient-to-b from-muted/80 to-muted/40 p-4 shadow-[0_0_40px_-8px_rgba(139,92,246,0.35)]">
+                    <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+                      <div className="h-9 w-9 rounded-full bg-muted-foreground/20" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-2.5 w-24 rounded bg-muted-foreground/25" />
+                        <div className="h-2 w-16 rounded bg-muted-foreground/15" />
+                      </div>
+                    </div>
+                    <div className="mt-3 aspect-square w-full rounded-lg bg-muted-foreground/15" />
+                    <div className="mt-3 flex gap-3">
+                      <div className="h-5 w-5 rounded bg-muted-foreground/15" />
+                      <div className="h-5 w-5 rounded bg-muted-foreground/15" />
+                      <div className="h-5 w-5 rounded bg-muted-foreground/15" />
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="h-2 w-full rounded bg-muted-foreground/20" />
+                      <div className="h-2 w-[92%] rounded bg-muted-foreground/15" />
+                      <div className="h-2 w-[70%] rounded bg-muted-foreground/10" />
+                    </div>
+                  </div>
+                  <div className="space-y-3 text-center">
+                    <p className="min-h-[1.5rem] font-medium text-foreground">
+                      {typewriterShown}
+                      <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-primary align-middle" />
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          genPhase === 0 ? "font-medium text-violet-600 dark:text-violet-400" : "",
+                        )}
+                      >
+                        Analyzing your brand voice
+                      </span>
+                      <span aria-hidden className="text-muted-foreground/60">•</span>
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          genPhase === 1 ? "font-medium text-violet-600 dark:text-violet-400" : "",
+                        )}
+                      >
+                        Matching your industry
+                      </span>
+                      <span aria-hidden className="text-muted-foreground/60">•</span>
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          genPhase === 2 ? "font-medium text-violet-600 dark:text-violet-400" : "",
+                        )}
+                      >
+                        Optimizing for {platformDisplayName}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ) : variations.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -365,6 +608,23 @@ export default function CreateContentPage() {
                             ))}
                           </div>
                         </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 border-t border-border/60 bg-muted/40 px-3 py-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex shrink-0 cursor-help pt-0.5">
+                              <Info className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs">
+                            Each variation uses a different creative strategy so you can compare angles.
+                          </TooltipContent>
+                        </Tooltip>
+                        <p className="text-xs leading-snug text-muted-foreground">
+                          <span className="font-medium text-foreground">Why this works:</span>{" "}
+                          {getWhyThisWorksText(variation)}
+                        </p>
                       </div>
 
                       {/* Actions */}
@@ -467,6 +727,7 @@ export default function CreateContentPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
