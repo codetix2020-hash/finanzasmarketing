@@ -20,10 +20,10 @@ interface PostResult {
 
 // Obtener cuentas conectadas
 export async function getPublerAccounts(): Promise<PublerAccount[]> {
-  console.log("📱 Obteniendo cuentas de Publer...");
+  console.log("📱 Fetching Publer accounts...");
   
   if (!PUBLER_API_KEY) {
-    console.error("❌ PUBLER_API_KEY no configurada");
+    console.error("❌ PUBLER_API_KEY not configured");
     return [];
   }
 
@@ -43,15 +43,15 @@ export async function getPublerAccounts(): Promise<PublerAccount[]> {
     });
 
     if (!response.ok) {
-      console.error("❌ Error obteniendo cuentas:", response.status);
+      console.error("❌ Error fetching accounts:", response.status);
       return [];
     }
 
     const accounts = await response.json();
-    console.log("✅ Cuentas encontradas:", accounts.length);
+    console.log("✅ Accounts found:", accounts.length);
     return accounts;
   } catch (error: any) {
-    console.error("❌ Error en Publer:", error.message);
+    console.error("❌ Publer error:", error.message);
     return [];
   }
 }
@@ -63,12 +63,12 @@ export async function publishToSocial(params: {
   platforms: string[]; // ["instagram", "tiktok"]
   scheduleAt?: Date;
 }): Promise<PostResult[]> {
-  console.log("📤 Publicando en redes sociales...");
-  console.log("  📝 Contenido:", params.content.substring(0, 50) + "...");
-  console.log("  📱 Plataformas:", params.platforms.join(", "));
+  console.log("📤 Publishing to social media...");
+  console.log("  📝 Content:", params.content.substring(0, 50) + "...");
+  console.log("  📱 Platforms:", params.platforms.join(", "));
 
   if (!PUBLER_API_KEY) {
-    console.error("❌ PUBLER_API_KEY no configurada");
+    console.error("❌ PUBLER_API_KEY not configured");
     return params.platforms.map(p => ({
       success: false,
       error: "API key not configured",
@@ -79,7 +79,7 @@ export async function publishToSocial(params: {
   try {
     // Obtener cuentas
     const accounts = await getPublerAccounts();
-    console.log("📱 Cuentas obtenidas:", JSON.stringify(accounts, null, 2));
+    console.log("📱 Retrieved accounts:", JSON.stringify(accounts, null, 2));
     
     if (!accounts || accounts.length === 0) {
       return params.platforms.map(p => ({
@@ -100,7 +100,7 @@ export async function publishToSocial(params: {
       });
     });
 
-    console.log("🎯 Cuentas objetivo:", targetAccounts.map((a: any) => ({
+    console.log("🎯 Target accounts:", targetAccounts.map((a: any) => ({
       id: a.id,
       name: a.name,
       provider: a.provider || a.type || a.platform
@@ -216,7 +216,7 @@ export async function publishToSocial(params: {
 
       // Si hay job_id, el post está en cola
       if (result.job_id) {
-        console.log("✅ Post en cola (job_id):", result.job_id);
+        console.log("✅ Post queued (job_id):", result.job_id);
         
         // Opcional: hacer polling al job_status
         // Por ahora devolvemos éxito ya que el post está en cola
@@ -224,7 +224,7 @@ export async function publishToSocial(params: {
           success: true,
           postId: result.job_id,
           platform: p,
-          message: "Post en cola de publicación"
+          message: "Post queued for publishing"
         }));
       }
 
@@ -237,7 +237,7 @@ export async function publishToSocial(params: {
     }
 
     // Si no es 202 ni 200, es un error
-    console.error("❌ Error publicando:", response.status, responseText);
+    console.error("❌ Error publishing:", response.status, responseText);
     return params.platforms.map(p => ({
       success: false,
       error: `API error: ${response.status} - ${responseText.substring(0, 100)}`,
@@ -245,7 +245,7 @@ export async function publishToSocial(params: {
     }));
 
   } catch (error: any) {
-    console.error("❌ Error en publishToSocial:", error.message);
+    console.error("❌ Error in publishToSocial:", error.message);
     return params.platforms.map(p => ({
       success: false,
       error: error.message,
@@ -265,7 +265,7 @@ export async function generateAndPublish(params: {
   content: string;
   results: PostResult[];
 }> {
-  console.log("🤖 Generando contenido para publicar...");
+  console.log("🤖 Generating content to publish...");
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -275,21 +275,21 @@ export async function generateAndPublish(params: {
     max_tokens: 1024,
     messages: [{
       role: "user",
-      content: `Genera un post para redes sociales (Instagram/TikTok) sobre:
+      content: `Generate a social media post (Instagram/TikTok) about:
 
-Producto: ${params.productName}
-Descripción: ${params.productDescription}
-Tema específico: ${params.topic}
+Product: ${params.productName}
+Description: ${params.productDescription}
+Specific topic: ${params.topic}
 
-REGLAS:
-- Máximo 280 caracteres
-- Incluir 3-5 hashtags relevantes
-- Tono cercano y profesional
-- Call to action claro
-- Usar emojis apropiados
-- En español
+RULES:
+- Maximum 280 characters
+- Include 3-5 relevant hashtags
+- Approachable and professional tone
+- Clear call to action
+- Use appropriate emojis
+- In English
 
-Responde SOLO con el texto del post, nada más.`
+Respond ONLY with the post text, nothing else.`
     }]
   });
 
@@ -297,7 +297,7 @@ Responde SOLO con el texto del post, nada más.`
     ? response.content[0].text 
     : "";
 
-  console.log("✅ Contenido generado:", content.substring(0, 100) + "...");
+  console.log("✅ Content generated:", content.substring(0, 100) + "...");
 
   // Publicar
   const results = await publishToSocial({
@@ -326,7 +326,7 @@ export async function generateWeeklyAndSchedule(params: {
   tokensUsed: number;
   scheduled: number;
 }> {
-  console.log("📅 Generando y programando contenido semanal...");
+  console.log("📅 Generating and scheduling weekly content...");
 
   // Generar 7 posts
   const batch = await generateWeeklyContent(
@@ -376,7 +376,7 @@ export async function generateWeeklyAndSchedule(params: {
     r.instagram[0]?.success || r.tiktok[0]?.success
   ).length;
 
-  console.log(`✅ Programados ${scheduled}/7 días de contenido`);
+  console.log(`✅ Scheduled ${scheduled}/7 days of content`);
 
   return {
     success: scheduled > 0,
@@ -402,7 +402,7 @@ export async function generateAndPublishOptimized(params: {
   content: string;
   results: any[];
 }> {
-  console.log("🚀 Generando y publicando post optimizado...");
+  console.log("🚀 Generating and publishing optimized post...");
 
   const post = await generateSinglePost(
     params.product,
