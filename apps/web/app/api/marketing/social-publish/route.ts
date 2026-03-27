@@ -26,7 +26,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("📤 Social publish endpoint llamado");
+  console.log("📤 Social publish endpoint called");
 
   try {
     // Verify user is authenticated
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       headers: await headers(),
     });
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         break;
 
       case "preview":
-        // Solo genera sin publicar, para revisar
+        // Generate only (no publishing) for review
         const previewBatch = await generateWeeklyContent(
           {
             name: params.productName,
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           success: true, 
           posts: previewBatch.posts,
           tokensUsed: previewBatch.tokensUsed,
-          message: "Preview generado. Usa 'generate-weekly' para programar."
+          message: "Preview generated. Use 'generate-weekly' to schedule."
         };
         break;
 
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
           success: true, 
           calendar: editorialCalendar,
           totalPosts: editorialCalendar.reduce((acc, week) => acc + week.posts.length, 0),
-          message: `Calendario editorial de ${weeks} semanas generado`
+          message: `Editorial calendar for ${weeks} weeks generated`
         };
         break;
 
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { headers: corsHeaders });
 
   } catch (error: any) {
-    console.error("❌ Error en social-publish:", error.message);
+    console.error("❌ Error in social-publish:", error.message);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500, headers: corsHeaders }

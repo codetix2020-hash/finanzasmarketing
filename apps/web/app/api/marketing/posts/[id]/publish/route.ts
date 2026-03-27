@@ -123,35 +123,35 @@ export async function POST(
 
 		console.log('Publishing post:', { id: post.id, platform: post.platform });
 
-		// Obtener cuenta conectada
+		// Get connected account
 		const accounts = await socialAccountsService.getAccounts(post.organizationId);
 		const account = accounts.find(
 			(acc) => acc.platform === post.platform && acc.isActive,
 		);
 
 		if (!account) {
-			// Si no hay cuenta conectada, marcar como publicado manualmente
+			// If there is no connected account, mark as manually published
 			const updated = await updateMarketingPost(id, {
 				status: "published",
 				publishedAt: new Date(),
-				publishError: "No hay cuenta conectada. Copia el contenido y publícalo manualmente.",
+				publishError: "No connected account. Copy the content and publish it manually.",
 			});
 
 			return NextResponse.json({
 				success: false,
-				message: "No hay cuenta de Instagram conectada. El post se guardó pero debes publicarlo manualmente.",
+				message: "No Instagram account connected. The post was saved but you need to publish it manually.",
 				post: updated,
 				needsManualPublish: true,
 			});
 		}
 
-		// Actualizar estado a "publishing"
+		// Update status to "publishing"
 		await updateMarketingPost(id, { status: "publishing" });
 
 		try {
 			let result: { postId: string; url?: string };
 
-			// Intentar publicar via Publer (más confiable) si está configurado
+			// Try publishing via Publer (more reliable) if configured
 			if (post.platform === "instagram" && process.env.PUBLER_API_KEY && process.env.PUBLER_WORKSPACE_ID) {
 				try {
 					const publerResponse = await fetch('https://api.publer.io/v1/posts', {
@@ -187,13 +187,13 @@ export async function POST(
 					}
 				} catch (publerError) {
 					console.error('Publer error:', publerError);
-					// Continuar con el método normal si Publer falla
+					// Continue with the standard method if Publer fails
 				}
 			}
 
 			if (post.platform === "instagram") {
 				if (!post.mediaUrls || post.mediaUrls.length === 0) {
-					throw new Error("Instagram requiere al menos una imagen");
+					throw new Error("Instagram requires at least one image");
 				}
 
 				if (!account.businessId) {
@@ -212,7 +212,7 @@ export async function POST(
 					throw new Error("Facebook not connected. Please connect your Facebook Page first.");
 				}
 
-				// Construir caption con hashtags
+				// Build caption with hashtags
 				const hashtagsArray = post.hashtags || [];
 				const hashtags = hashtagsArray.map(h => h.startsWith('#') ? h : `#${h}`).join(' ');
 				const caption = `${post.content}\n\n${hashtags}`;
@@ -220,7 +220,7 @@ export async function POST(
 				console.log('Publishing to Facebook Page:', account.accountId);
 
 				result = await publishToFacebook({
-					pageAccessToken: account.accessToken, // Ya es el Page Access Token
+					pageAccessToken: account.accessToken, // Already the Page Access Token
 					pageId: account.accountId,
 					caption,
 					imageUrl: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined,
@@ -230,7 +230,7 @@ export async function POST(
 					throw new Error("TikTok requires a video URL");
 				}
 
-				// Construir caption con hashtags
+				// Build caption with hashtags
 				const hashtagsArray = post.hashtags || [];
 				const hashtags = hashtagsArray.map(h => h.startsWith('#') ? h : `#${h}`).join(' ');
 				const caption = `${post.content}\n\n${hashtags}`;
@@ -247,13 +247,13 @@ export async function POST(
 					throw new Error(tiktokResult.error || "Failed to publish to TikTok");
 				}
 
-				// TikTok devuelve publishId, no postId directamente
+				// TikTok returns publishId, not postId directly
 				result = { postId: tiktokResult.publishId || "pending" };
 			} else {
-				throw new Error(`Plataforma ${post.platform} no soportada para publicación automática`);
+				throw new Error(`Platform ${post.platform} is not supported for automatic publishing`);
 			}
 
-			// Actualizar post como publicado
+			// Update post as published
 			const updatedPost = await updateMarketingPost(id, {
 				status: "published",
 				publishedAt: new Date(),
@@ -263,26 +263,26 @@ export async function POST(
 
 			return NextResponse.json({
 				success: true,
-				message: "Post publicado correctamente",
+				message: "Post published successfully",
 				post: updatedPost,
 			});
 		} catch (error) {
-			// Actualizar estado a "failed"
+			// Update status to "failed"
 			await updateMarketingPost(id, {
 				status: "failed",
-				publishError: error instanceof Error ? error.message : "Error desconocido",
+				publishError: error instanceof Error ? error.message : "Unknown error",
 			});
 
 			return NextResponse.json({
 				success: false,
-				error: error instanceof Error ? error.message : "Error desconocido",
+				error: error instanceof Error ? error.message : "Unknown error",
 			}, { status: 500 });
 		}
 	} catch (error) {
 		console.error("Error publishing post:", error);
 		return NextResponse.json(
 			{
-				error: error instanceof Error ? error.message : "Error desconocido",
+				error: error instanceof Error ? error.message : "Unknown error",
 			},
 			{ status: 500 },
 		);

@@ -57,7 +57,7 @@ async function publishToFacebook(params: {
 	pageId: string;
 	message: string;
 }) {
-	// Intercambiar user token -> page token (para la page concreta)
+	// Exchange user token -> page token (for the specific page)
 	const pagesUrl = new URL(`${GRAPH_BASE}/me/accounts`);
 	pagesUrl.searchParams.set("fields", "id,access_token");
 	pagesUrl.searchParams.set("access_token", params.userAccessToken);
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
 		const account = await socialAccountsService.getAccount(organizationId, platform);
 		if (!account) {
 			return NextResponse.json(
-				{ success: false, error: `No hay cuenta conectada para ${platform}` },
+				{ success: false, error: `No connected account for ${platform}` },
 				{ status: 400 },
 			);
 		}
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
 		if (platform === "instagram") {
 			if (!account.businessId) {
 				return NextResponse.json(
-					{ success: false, error: "Cuenta de Instagram sin businessId (reconecta Instagram Business)" },
+					{ success: false, error: "Instagram account without businessId (reconnect Instagram Business)" },
 					{ status: 400 },
 				);
 			}
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 		} else if (platform === "facebook") {
 			if (!account.pageId) {
 				return NextResponse.json(
-					{ success: false, error: "Cuenta de Facebook sin pageId (reconecta Facebook Page)" },
+					{ success: false, error: "Facebook account without pageId (reconnect Facebook Page)" },
 					{ status: 400 },
 				);
 			}
@@ -169,12 +169,12 @@ export async function POST(request: Request) {
 			});
 		} else if (platform === "tiktok") {
 			return NextResponse.json(
-				{ success: false, error: "TikTok requiere vídeo para publicar. Endpoint aún no soportado." },
+				{ success: false, error: "TikTok requires video for publishing. Endpoint not yet supported." },
 				{ status: 400 },
 			);
 		} else {
 			return NextResponse.json(
-				{ success: false, error: "Plataforma no soportada" },
+				{ success: false, error: "Unsupported platform" },
 				{ status: 400 },
 			);
 		}

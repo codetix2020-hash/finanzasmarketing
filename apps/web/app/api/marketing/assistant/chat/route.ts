@@ -21,31 +21,31 @@ function buildSystemPrompt(businessProfile: any, connectedAccounts: any[]) {
 		.map((acc) => `- ${acc.platform}: @${acc.accountName}`)
 		.join("\n");
 
-	return `Eres el asistente de marketing personal de ${businessProfile?.businessName || "la empresa"}.
+	return `You are the personal marketing assistant for ${businessProfile?.businessName || "the business"}.
 
-CONTEXTO DEL NEGOCIO:
-- Nombre: ${businessProfile?.businessName || "No especificado"}
-- Industria: ${businessProfile?.industry || "No especificado"}
-- Descripción: ${businessProfile?.description || "No especificado"}
-- Público objetivo: ${businessProfile?.targetAudience || "No especificado"}
-- Tono de voz: ${businessProfile?.toneOfVoice || "No especificado"}
-- Personalidad: ${(businessProfile?.brandPersonality || []).join(", ") || "No especificado"}
-- Productos: ${JSON.stringify(businessProfile?.mainProducts || [])}
-- Hashtags: ${(businessProfile?.hashtagsToUse || []).join(", ") || "Ninguno"}
+BUSINESS CONTEXT:
+- Name: ${businessProfile?.businessName || "Not specified"}
+- Industry: ${businessProfile?.industry || "Not specified"}
+- Description: ${businessProfile?.description || "Not specified"}
+- Target audience: ${businessProfile?.targetAudience || "Not specified"}
+- Tone of voice: ${businessProfile?.toneOfVoice || "Not specified"}
+- Personality: ${(businessProfile?.brandPersonality || []).join(", ") || "Not specified"}
+- Products: ${JSON.stringify(businessProfile?.mainProducts || [])}
+- Hashtags: ${(businessProfile?.hashtagsToUse || []).join(", ") || "None"}
 
-CUENTAS CONECTADAS:
-${accountsList || "Ninguna cuenta conectada"}
+CONNECTED ACCOUNTS:
+${accountsList || "No connected accounts"}
 
-Tu rol es ayudar a crear contenido, responder preguntas sobre marketing, 
-dar ideas y estrategias. Siempre habla en el tono de la marca.
+Your role is to help create content, answer marketing questions,
+and provide ideas and strategies. Always speak in the brand's tone.
 
-Cuando generes contenido:
-- Usa el tono definido
-- Incluye hashtags relevantes
-- Adapta al formato de cada plataforma
-- Sé específico para este negocio
+When generating content:
+- Use the defined tone
+- Include relevant hashtags
+- Adapt to each platform's format
+- Be specific to this business
 
-Responde siempre en español (España).`;
+Always respond in English.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -67,18 +67,18 @@ export async function POST(request: NextRequest) {
 
 		if (!ANTHROPIC_API_KEY) {
 			return NextResponse.json(
-				{ error: "ANTHROPIC_API_KEY no configurada" },
+				{ error: "ANTHROPIC_API_KEY is not configured" },
 				{ status: 500 },
 			);
 		}
 
-		// Obtener perfil de negocio y cuentas conectadas
+		// Get business profile and connected accounts
 		const [businessProfile, accounts] = await Promise.all([
 			getBusinessProfile(organizationId),
 			socialAccountsService.getAccounts(organizationId),
 		]);
 
-		// Crear o obtener conversación
+		// Create or get conversation
 		let conversation;
 		if (conversationId) {
 			conversation = await getAiConversation(conversationId);
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 				return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 			}
 		} else {
-			// Crear nueva conversación
+			// Create new conversation
 			const title = message.substring(0, 50);
 			conversation = await createAiConversation({
 				organizationId,
@@ -95,31 +95,31 @@ export async function POST(request: NextRequest) {
 			});
 		}
 
-		// Guardar mensaje del usuario
+		// Save user message
 		await createAiMessage({
 			conversationId: conversation.id,
 			role: "user",
 			content: message,
 		});
 
-		// Obtener historial de mensajes
+		// Get message history
 		const existingMessages = await getAiConversation(conversation.id);
 		const messageHistory = (existingMessages?.messages || []).map((msg) => ({
 			role: msg.role === "user" ? "user" : "assistant",
 			content: msg.content,
 		}));
 
-		// Construir mensajes para Anthropic
+		// Build messages for Anthropic
 		const systemPrompt = buildSystemPrompt(businessProfile, accounts);
 		const messages = [
-			...messageHistory.slice(-10), // Últimos 10 mensajes para contexto
+			...messageHistory.slice(-10), // Last 10 messages for context
 			{ role: "user" as const, content: message },
 		];
 
-		// Crear cliente de Anthropic
+		// Create Anthropic client
 		const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-		// Crear stream con manejo de rate limit
+		// Create stream with rate limit handling
 		let stream;
 		try {
 			stream = await client.messages.stream({
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
 			throw error;
 		}
 
-		// Crear ReadableStream para la respuesta
+		// Create ReadableStream for the response
 		const encoder = new TextEncoder();
 		let fullResponse = "";
 
@@ -157,14 +157,14 @@ export async function POST(request: NextRequest) {
 						}
 					}
 
-					// Guardar respuesta del asistente
+					// Save assistant response
 					await createAiMessage({
 						conversationId: conversation.id,
 						role: "assistant",
 						content: fullResponse,
 					});
 
-					// Actualizar título si es el primer mensaje
+					// Update title if this is the first message
 					if (!conversation.title && messageHistory.length === 0) {
 						await updateAiConversation(conversation.id, {
 							title: message.substring(0, 50),
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
 		console.error("Assistant API error:", error);
 		return NextResponse.json(
 			{
-				error: error instanceof Error ? error.message : "Error desconocido",
+				error: error instanceof Error ? error.message : "Unknown error",
 			},
 			{ status: 500 },
 		);
