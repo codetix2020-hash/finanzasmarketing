@@ -10,7 +10,7 @@ const locales = config.i18n.enabled
 	? Object.keys(config.i18n.locales)
 	: [config.i18n.defaultLocale];
 
-const staticMarketingPages = ["", "/changelog"];
+const staticMarketingPages = ["", "/changelog", "/pricing"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	const posts = await getAllPosts();
