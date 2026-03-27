@@ -264,6 +264,11 @@
 			"confirmEmail": "Confirm email",
 			"subject": "Confirm your email"
 		},
+		"onboardingComplete": {
+			"subject": "Your brand profile is ready — let's create content!",
+			"body": "Hey {name}!\n\nYour brand profile for {orgName} is ready. We've configured your AI content engine for the {industry} industry with a {brandTones} tone.\n\nYour first AI-generated posts are waiting. Head to your dashboard to review and publish them.",
+			"cta": "Go to your dashboard"
+		},
 		"newsletterSignup": {
 			"body": "Thank you for signing up for the PilotSocials newsletter. We will keep you updated with the latest news and updates.",
 			"subject": "Welcome to our newsletter"

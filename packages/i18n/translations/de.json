@@ -261,6 +261,11 @@
 			"confirmEmail": "E-Mail bestätigen",
 			"subject": "E-Mail bestätigen"
 		},
+		"onboardingComplete": {
+			"subject": "Dein Markenprofil ist bereit - lass uns Inhalte erstellen!",
+			"body": "Hey {name}!\n\nDein Markenprofil für {orgName} ist bereit. Wir haben deine KI-Content-Engine für die Branche {industry} mit einem {brandTones}-Ton konfiguriert.\n\nDeine ersten KI-generierten Posts warten schon auf dich. Gehe zu deinem Dashboard, um sie zu prüfen und zu veröffentlichen.",
+			"cta": "Zum Dashboard"
+		},
 		"newsletterSignup": {
 			"body": "Vielen Dank, dass du dich für den PilotSocials-Newsletter angemeldet hast. \nWir halten dich mit den neuesten Nachrichten und Updates auf dem Laufenden.",
 			"subject": "Willkommen bei unserem Newsletter"
