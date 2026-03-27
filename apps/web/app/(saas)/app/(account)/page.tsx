@@ -2,12 +2,12 @@ import { getOrganizationList, getSession } from "@saas/auth/lib/server";
 import { redirect } from "next/navigation";
 
 export default async function AppStartPage() {
-	// Obtener sesión del usuario
+	// Get user session
 	let session = null;
 	try {
 		session = await getSession();
 	} catch (error) {
-		console.warn("No se pudo obtener sesión:", error);
+		console.warn("Could not get session:", error);
 	}
 
 	if (!session?.user) {
@@ -15,7 +15,7 @@ export default async function AppStartPage() {
 		return null;
 	}
 
-	// Buscar la primera organización del usuario y redirigir al dashboard
+	// Find first org and redirect to dashboard
 	try {
 		const organizations = await getOrganizationList();
 
@@ -24,9 +24,9 @@ export default async function AppStartPage() {
 			redirect(`/app/${org.slug}/marketing/dashboard`);
 		}
 	} catch (error) {
-		console.warn("No se pudieron obtener organizaciones:", error);
+		console.warn("Could not get organizations:", error);
 	}
 
-	// Si no tiene organización, ir a crear una
-	redirect("/new-organization");
+	// No organization found, redirect to onboarding
+	redirect("/app/onboarding");
 }
