@@ -47,19 +47,19 @@ interface BlogPost {
 }
 
 /**
- * Analiza un sitio web usando Google PageSpeed Insights API
- * Nota: En producción, necesitarás una API key de Google Cloud
+ * Analyzes a website using Google PageSpeed Insights API
+ * Note: In production, you will need a Google Cloud API key
  */
 export async function analyzeSite(url: string): Promise<SiteAnalysisResult> {
 	try {
-		// Simulación de análisis - En producción usarías Google PageSpeed Insights API
+		// Analysis simulation - In production you would use Google PageSpeed Insights API
 		// const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
 		// const response = await fetch(
 		//   `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${apiKey}`
 		// );
 		// const data = await response.json();
 
-		// Por ahora, retornamos datos simulados
+		// For now, return mock data
 		const mockScore = Math.floor(Math.random() * 40) + 60; // 60-100
 
 		return {
@@ -70,35 +70,35 @@ export async function analyzeSite(url: string): Promise<SiteAnalysisResult> {
 			issues: [
 				{
 					id: "1",
-					title: "Imágenes sin optimizar",
-					description: "Se encontraron 5 imágenes que pueden ser optimizadas",
+					title: "Unoptimized images",
+					description: "5 images were found that can be optimized",
 					severity: "warning",
-					solution: "Comprime las imágenes usando herramientas como TinyPNG o ImageOptim",
+					solution: "Compress images using tools like TinyPNG or ImageOptim",
 				},
 				{
 					id: "2",
-					title: "Falta meta description",
-					description: "3 páginas no tienen meta description",
+					title: "Missing meta description",
+					description: "3 pages do not have a meta description",
 					severity: "critical",
-					solution: "Agrega meta descriptions únicas y descriptivas a todas las páginas",
+					solution: "Add unique and descriptive meta descriptions to all pages",
 				},
 				{
 					id: "3",
-					title: "Tiempo de carga lento",
-					description: "El tiempo de carga es de 4.2s, debería ser < 3s",
+					title: "Slow loading time",
+					description: "Loading time is 4.2s, it should be < 3s",
 					severity: "warning",
-					solution: "Optimiza el código, usa CDN y comprime recursos",
+					solution: "Optimize code, use a CDN, and compress assets",
 				},
 			],
 			opportunities: [
 				{
-					title: "Agregar schema markup",
-					description: "Mejora la visibilidad en resultados de búsqueda",
+					title: "Add schema markup",
+					description: "Improves visibility in search results",
 					impact: "high",
 				},
 				{
-					title: "Optimizar títulos H1",
-					description: "Algunos títulos pueden ser más descriptivos",
+					title: "Optimize H1 titles",
+					description: "Some titles could be more descriptive",
 					impact: "medium",
 				},
 			],
@@ -110,15 +110,15 @@ export async function analyzeSite(url: string): Promise<SiteAnalysisResult> {
 }
 
 /**
- * Verifica la posición de una keyword en Google
- * Nota: Esto requeriría una API de SEO como Ahrefs, SEMrush, o Moz
+ * Checks the position of a keyword in Google
+ * Note: This would require an SEO API like Ahrefs, SEMrush, or Moz
  */
 export async function checkKeywordPosition(
 	keyword: string,
 	domain: string,
 ): Promise<KeywordPosition> {
 	try {
-		// Simulación - En producción usarías una API de SEO
+		// Simulation - In production you would use an SEO API
 		const mockPosition = Math.floor(Math.random() * 50) + 1;
 		const mockVolume = Math.floor(Math.random() * 10000) + 100;
 
@@ -136,101 +136,101 @@ export async function checkKeywordPosition(
 }
 
 /**
- * Genera un outline para un blog post SEO-optimizado
+ * Generates an SEO-optimized blog post outline
  */
 export async function generateBlogPostOutline(
 	topic: string,
 	keywords: string[],
 	businessProfile?: any,
 ): Promise<BlogPostOutline> {
-	// En producción, usarías Anthropic API para generar el outline
-	const prompt = `Genera un outline SEO-optimizado para un blog post sobre "${topic}".
+	// In production, you would use Anthropic API to generate the outline
+	const prompt = `Generate an SEO-optimized outline for a blog post about "${topic}".
 
-Keywords a incluir: ${keywords.join(", ")}
+Keywords to include: ${keywords.join(", ")}
 
-${businessProfile ? `Contexto del negocio: ${businessProfile.businessName} - ${businessProfile.description}` : ""}
+${businessProfile ? `Business context: ${businessProfile.businessName} - ${businessProfile.description}` : ""}
 
-El outline debe incluir:
-- Un título H1 optimizado para SEO
-- 4-6 secciones H2 con subtítulos H3 cuando sea apropiado
-- Meta title (60 caracteres máximo)
-- Meta description (160 caracteres máximo)
-- Lista de keywords principales
-- Estimación de palabras (1500-2000)
+The outline must include:
+- An SEO-optimized H1 title
+- 4-6 H2 sections with H3 subsections when appropriate
+- Meta title (maximum 60 characters)
+- Meta description (maximum 160 characters)
+- List of primary keywords
+- Estimated word count (1500-2000)
 
-Responde en formato JSON válido.`;
+Respond in valid JSON format.`;
 
-	// Por ahora, retornamos un outline simulado
+	// For now, return a mock outline
 	return {
-		title: `Guía Completa: ${topic}`,
-		h1: `Todo lo que necesitas saber sobre ${topic} en 2024`,
+		title: `Complete Guide: ${topic}`,
+		h1: `Everything you need to know about ${topic} in 2024`,
 		h2s: [
 			{
-				title: `¿Qué es ${topic}?`,
-				h3s: ["Definición", "Importancia", "Beneficios"],
+				title: `What is ${topic}?`,
+				h3s: ["Definition", "Importance", "Benefits"],
 			},
 			{
-				title: `Cómo implementar ${topic}`,
-				h3s: ["Paso 1", "Paso 2", "Paso 3"],
+				title: `How to implement ${topic}`,
+				h3s: ["Step 1", "Step 2", "Step 3"],
 			},
 			{
-				title: "Mejores prácticas",
-				h3s: ["Consejo 1", "Consejo 2", "Errores comunes"],
+				title: "Best practices",
+				h3s: ["Tip 1", "Tip 2", "Common mistakes"],
 			},
 			{
-				title: "Conclusión",
+				title: "Conclusion",
 			},
 		],
-		metaTitle: `${topic}: Guía Completa 2024 | ${businessProfile?.businessName || "Blog"}`,
-		metaDescription: `Descubre todo sobre ${topic}. Guía completa con tips, mejores prácticas y ejemplos prácticos.`,
+		metaTitle: `${topic}: Complete Guide 2024 | ${businessProfile?.businessName || "Blog"}`,
+		metaDescription: `Discover everything about ${topic}. A complete guide with tips, best practices, and practical examples.`,
 		keywords: keywords.length > 0 ? keywords : [topic],
 		estimatedWords: 1800,
 	};
 }
 
 /**
- * Genera un blog post completo basado en el outline
+ * Generates a complete blog post based on the outline
  */
 export async function generateBlogPost(
 	outline: BlogPostOutline,
 	businessProfile?: any,
 ): Promise<BlogPost> {
-	// En producción, usarías Anthropic API para generar el contenido completo
-	const prompt = `Escribe un blog post completo en español basado en este outline:
+	// In production, you would use Anthropic API to generate the full content
+	const prompt = `Write a complete blog post in English based on this outline:
 
-Título: ${outline.h1}
+Title: ${outline.h1}
 Meta title: ${outline.metaTitle}
 Meta description: ${outline.metaDescription}
 
-Estructura:
+Structure:
 ${outline.h2s.map((h2, i) => `${i + 1}. ${h2.title}${h2.h3s ? `\n   ${h2.h3s.map((h3) => `   - ${h3}`).join("\n   ")}` : ""}`).join("\n")}
 
 Keywords: ${outline.keywords.join(", ")}
 
-${businessProfile ? `Tono: ${businessProfile.toneOfVoice || "profesional"}` : ""}
+${businessProfile ? `Tone: ${businessProfile.toneOfVoice || "professional"}` : ""}
 
-El artículo debe tener entre ${outline.estimatedWords - 200} y ${outline.estimatedWords + 200} palabras.
-Incluye las keywords de forma natural.
-Usa un tono ${businessProfile?.toneOfVoice || "profesional"} y ${businessProfile?.useEmojis ? "algunos emojis" : "sin emojis"}.
+The article should have between ${outline.estimatedWords - 200} and ${outline.estimatedWords + 200} words.
+Include the keywords naturally.
+Use a ${businessProfile?.toneOfVoice || "professional"} tone and ${businessProfile?.useEmojis ? "some emojis" : "no emojis"}.
 
-Responde en formato JSON:
+Respond in JSON format:
 {
-  "content": "texto markdown del artículo",
-  "html": "versión HTML del artículo",
+  "content": "article markdown text",
+  "html": "HTML version of the article",
   "metaTitle": "${outline.metaTitle}",
   "metaDescription": "${outline.metaDescription}",
   "keywords": ${JSON.stringify(outline.keywords)},
-  "wordCount": número
+  "wordCount": number
 }`;
 
-	// Por ahora, retornamos contenido simulado
+	// For now, return mock content
 	const mockContent = `# ${outline.h1}
 
-${outline.h2s.map((h2) => `## ${h2.title}\n\nContenido de la sección sobre ${h2.title}...\n\n${h2.h3s?.map((h3) => `### ${h3}\n\nContenido sobre ${h3}...\n\n`).join("") || ""}`).join("\n\n")}
+${outline.h2s.map((h2) => `## ${h2.title}\n\nSection content about ${h2.title}...\n\n${h2.h3s?.map((h3) => `### ${h3}\n\nContent about ${h3}...\n\n`).join("") || ""}`).join("\n\n")}
 
-## Conclusión
+## Conclusion
 
-Este artículo ha cubierto los aspectos más importantes sobre ${outline.h2s[0]?.title || "el tema"}.`;
+This article has covered the most important aspects of ${outline.h2s[0]?.title || "the topic"}.`;
 
 	return {
 		content: mockContent,
@@ -246,7 +246,7 @@ Este artículo ha cubierto los aspectos más importantes sobre ${outline.h2s[0]?
 }
 
 /**
- * Sugiere keywords basadas en el perfil del negocio
+ * Suggests keywords based on the business profile
  */
 export async function suggestKeywords(businessProfile: any): Promise<string[]> {
 	if (!businessProfile) {
@@ -255,42 +255,42 @@ export async function suggestKeywords(businessProfile: any): Promise<string[]> {
 
 	const suggestions: string[] = [];
 
-	// Basado en la industria
+	// Based on industry
 	if (businessProfile.industry) {
-		suggestions.push(`${businessProfile.industry} cerca de mí`);
-		suggestions.push(`mejor ${businessProfile.industry}`);
+		suggestions.push(`${businessProfile.industry} near me`);
+		suggestions.push(`best ${businessProfile.industry}`);
 		suggestions.push(`${businessProfile.industry} ${businessProfile.location || ""}`);
 	}
 
-	// Basado en productos/servicios
+	// Based on products/services
 	if (businessProfile.mainProducts && Array.isArray(businessProfile.mainProducts)) {
 		businessProfile.mainProducts.forEach((product: any) => {
 			if (product.name) {
 				suggestions.push(product.name);
-				suggestions.push(`precio ${product.name}`);
+				suggestions.push(`${product.name} price`);
 			}
 		});
 	}
 
-	// Basado en el nombre del negocio
+	// Based on business name
 	if (businessProfile.businessName) {
 		suggestions.push(businessProfile.businessName);
 	}
 
-	// Agregar keywords de la competencia si existen
+	// Add competitor keywords if available
 	if (businessProfile.competitors && Array.isArray(businessProfile.competitors)) {
 		businessProfile.competitors.forEach((competitor: any) => {
 			if (competitor.name) {
-				suggestions.push(`alternativa a ${competitor.name}`);
+				suggestions.push(`alternative to ${competitor.name}`);
 			}
 		});
 	}
 
-	return [...new Set(suggestions)].slice(0, 20); // Máximo 20 keywords únicas
+	return [...new Set(suggestions)].slice(0, 20); // Maximum 20 unique keywords
 }
 
 /**
- * Guarda o actualiza la configuración SEO
+ * Saves or updates SEO configuration
  */
 export async function saveSeoConfig(organizationId: string, data: {
 	websiteUrl: string;
@@ -317,7 +317,7 @@ export async function saveSeoConfig(organizationId: string, data: {
 }
 
 /**
- * Ejecuta un análisis completo y guarda los resultados
+ * Runs a full analysis and saves results
  */
 export async function runSeoAnalysis(organizationId: string) {
 	const config = await prisma.seoConfig.findUnique({
@@ -330,7 +330,7 @@ export async function runSeoAnalysis(organizationId: string) {
 
 	const analysis = await analyzeSite(config.websiteUrl);
 
-	// Guardar resultados
+	// Save results
 	await prisma.seoConfig.update({
 		where: { organizationId },
 		data: {
