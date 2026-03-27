@@ -26,6 +26,8 @@ import {
   Bookmark,
   Calendar,
   Check,
+  Copy,
+  Download,
   Heart,
   Info,
   Loader2,
@@ -83,6 +85,37 @@ const PLATFORM_DISPLAY: Record<string, string> = {
 };
 
 const TYPEWRITER_BASE = "AI is crafting your content";
+
+function buildCaptionWithHashtags(variation: GeneratedVariation): string {
+  const tags = (variation.hashtags ?? [])
+    .map((h) => (h.startsWith("#") ? h : `#${h}`))
+    .join(" ");
+  if (!tags) return variation.text;
+  return `${variation.text}\n\n${tags}`;
+}
+
+async function downloadImageFromUrl(
+  imageUrl: string,
+  filenameBase: string,
+): Promise<void> {
+  const res = await fetch(imageUrl, { mode: "cors" });
+  if (!res.ok) throw new Error("Failed to fetch image");
+  const blob = await res.blob();
+  const ext =
+    blob.type === "image/jpeg"
+      ? "jpg"
+      : blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+  const safeName = filenameBase.replace(/[^a-z0-9-_]+/gi, "-").slice(0, 80);
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = `${safeName || "image"}.${ext}`;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(objectUrl);
+}
 
 function getWhyThisWorksText(variation: GeneratedVariation): string {
   const style = variation.style?.toLowerCase().trim();
@@ -406,6 +439,35 @@ export default function CreateContentPage() {
       toast.error(error.message || 'Failed to schedule');
     }
   };
+
+  async function handleCopyCaption(variation: GeneratedVariation) {
+    const text = buildCaptionWithHashtags(variation);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Caption copied to clipboard!");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
+
+  async function handleDownloadVariationImage(
+    variation: GeneratedVariation,
+    variationIndex: number,
+  ) {
+    if (!variation.imageUrl) {
+      toast.error("No image to download");
+      return;
+    }
+    try {
+      await downloadImageFromUrl(
+        variation.imageUrl,
+        `content-variation-${variationIndex + 1}`,
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not download image");
+    }
+  }
 
   const handleSaveDraft = async (
     variation: GeneratedVariation,
@@ -756,6 +818,31 @@ export default function CreateContentPage() {
                           >
                             <Bookmark className="w-4 h-4 mr-2" />
                             Save draft
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleCopyCaption(variation);
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy caption
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!variation.imageUrl}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleDownloadVariationImage(variation, idx);
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download image
                           </Button>
                         </div>
                       </div>

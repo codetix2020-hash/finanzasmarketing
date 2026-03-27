@@ -36,6 +36,7 @@ import {
 	Instagram,
 	Facebook,
 	Copy,
+	Download,
 	ShoppingBag,
 	MessageSquare,
 	Star,
@@ -92,6 +93,29 @@ function formatSmartRelative(iso: string): string {
 		return "Yesterday";
 	}
 	return formatDistanceToNow(date, { addSuffix: true, locale: enUS });
+}
+
+async function downloadImageFromUrl(
+	imageUrl: string,
+	filenameBase: string,
+): Promise<void> {
+	const res = await fetch(imageUrl, { mode: "cors" });
+	if (!res.ok) throw new Error("Failed to fetch image");
+	const blob = await res.blob();
+	const ext =
+		blob.type === "image/jpeg"
+			? "jpg"
+			: blob.type.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+	const safeName = filenameBase.replace(/[^a-z0-9-_]+/gi, "-").slice(0, 80);
+	const objectUrl = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = objectUrl;
+	a.download = `${safeName || "image"}.${ext}`;
+	a.rel = "noopener";
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	URL.revokeObjectURL(objectUrl);
 }
 
 function getPostTimeLabel(post: GeneratedPost): string {
@@ -305,10 +329,28 @@ function PostCard({
 			? `${post.mainText.substring(0, 150)}...`
 			: post.mainText;
 
-	const copyToClipboard = () => {
-		const fullText = `${post.mainText}\n\n${post.hashtags.map((h) => `#${h}`).join(" ")}`;
-		navigator.clipboard.writeText(fullText);
-		toast.success("Copied to clipboard");
+	const copyCaption = async () => {
+		const tags = post.hashtags
+			.map((h) => (h.startsWith("#") ? h : `#${h}`))
+			.join(" ");
+		const fullText = tags ? `${post.mainText}\n\n${tags}` : post.mainText;
+		try {
+			await navigator.clipboard.writeText(fullText);
+			toast.success("Caption copied to clipboard!");
+		} catch {
+			toast.error("Could not copy to clipboard");
+		}
+	};
+
+	const downloadPostImage = async () => {
+		if (!post.selectedImageUrl) return;
+		try {
+			await downloadImageFromUrl(post.selectedImageUrl, `post-${post.id}`);
+			toast.success("Image downloaded");
+		} catch (e) {
+			console.error(e);
+			toast.error("Could not download image");
+		}
 	};
 
 	return (
@@ -360,9 +402,24 @@ function PostCard({
 								<DropdownMenuItem onClick={onEdit}>
 									<Edit className="h-4 w-4 mr-2" /> Edit
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={copyToClipboard}>
-									<Copy className="h-4 w-4 mr-2" /> Copy text
+								<DropdownMenuItem
+									onClick={() => {
+										void copyCaption();
+									}}
+								>
+									<Copy className="h-4 w-4 mr-2" /> Copy
+									caption
 								</DropdownMenuItem>
+								{post.selectedImageUrl ? (
+									<DropdownMenuItem
+										onClick={() => {
+											void downloadPostImage();
+										}}
+									>
+										<Download className="h-4 w-4 mr-2" />{" "}
+										Download image
+									</DropdownMenuItem>
+								) : null}
 							{post.status === "draft" && (
 								<>
 									<DropdownMenuSeparator />
