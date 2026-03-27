@@ -695,7 +695,7 @@ export default function OnboardingPage() {
                     disabled={isLoading || !createdOrg}
                     onClick={() => {
                       if (!createdOrg) return;
-                      router.push(`/app/${createdOrg.slug}/settings/social-accounts`);
+                      router.push(`/app/${createdOrg.slug}/settings/integrations`);
                     }}
                   >
                     Connect Instagram
@@ -706,7 +706,7 @@ export default function OnboardingPage() {
                     disabled={isLoading || !createdOrg}
                     onClick={() => {
                       if (!createdOrg) return;
-                      router.push(`/app/${createdOrg.slug}/settings/social-accounts`);
+                      router.push(`/app/${createdOrg.slug}/settings/integrations`);
                     }}
                   >
                     Connect Facebook
@@ -717,7 +717,7 @@ export default function OnboardingPage() {
                     disabled={isLoading || !createdOrg}
                     onClick={() => {
                       if (!createdOrg) return;
-                      router.push(`/app/${createdOrg.slug}/settings/social-accounts`);
+                      router.push(`/app/${createdOrg.slug}/settings/integrations`);
                     }}
                   >
                     Connect TikTok
