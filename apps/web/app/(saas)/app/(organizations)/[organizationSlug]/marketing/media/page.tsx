@@ -47,6 +47,10 @@ type MediaItem = {
 };
 
 export default function MediaLibraryPage() {
+	useEffect(() => {
+		document.title = "Media Library | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const orgSlug = params.organizationSlug as string;
 	const { activeOrganization } = useActiveOrganization();

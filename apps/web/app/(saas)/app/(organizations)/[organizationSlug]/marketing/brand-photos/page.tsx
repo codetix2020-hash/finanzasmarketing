@@ -30,6 +30,10 @@ type BrandPhoto = {
 };
 
 export default function BrandPhotosPage() {
+  useEffect(() => {
+    document.title = "Brand Photos | PilotSocials";
+  }, []);
+
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
   const { activeOrganization, loaded } = useActiveOrganization();

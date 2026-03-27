@@ -8,6 +8,10 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function AnalyticsPage() {
+	useEffect(() => {
+		document.title = "Analytics | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const orgSlug = params.organizationSlug as string;
 	const { activeOrganization, loaded } = useActiveOrganization();

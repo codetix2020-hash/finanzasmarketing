@@ -150,6 +150,10 @@ const PLATFORMS = [
 ];
 
 export default function CreateContentPage() {
+  useEffect(() => {
+    document.title = "Create Post | PilotSocials";
+  }, []);
+
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();

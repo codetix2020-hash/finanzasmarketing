@@ -73,6 +73,10 @@ const SENTIMENT_ICONS = {
 };
 
 export default function CommunityManagerPage() {
+	useEffect(() => {
+		document.title = "Community | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const orgSlug = params.organizationSlug as string;
 	const { activeOrganization, loaded } = useActiveOrganization();

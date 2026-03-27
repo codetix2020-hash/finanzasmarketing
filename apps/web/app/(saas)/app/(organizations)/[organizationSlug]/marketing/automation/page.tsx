@@ -86,6 +86,10 @@ function computeNextRun(lastExecutedAtIso: string | null): Date | null {
 }
 
 export default function MarketingAutomationPage() {
+	useEffect(() => {
+		document.title = "Automation | PilotSocials";
+	}, []);
+
 	const { activeOrganization, loaded } = useActiveOrganization();
 	const params = useParams<{ organizationSlug: string }>();
 

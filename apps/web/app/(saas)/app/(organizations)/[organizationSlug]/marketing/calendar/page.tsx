@@ -193,6 +193,10 @@ function DayCell({
 
 // Página principal del calendario
 export default function CalendarPage() {
+	useEffect(() => {
+		document.title = "Calendar | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const organizationSlug = params.organizationSlug as string;
 	const { activeOrganization } = useActiveOrganization();

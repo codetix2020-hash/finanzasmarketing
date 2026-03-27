@@ -519,6 +519,10 @@ function PostCard({
 
 // Página principal
 export default function ContentPage() {
+	useEffect(() => {
+		document.title = "Content | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const router = useRouter();
 	const searchParams = useSearchParams();
