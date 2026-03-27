@@ -18,7 +18,7 @@ import {
 	setHours,
 	setMinutes,
 } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Card, CardContent } from "@ui/components/card";
 import { Button } from "@ui/components/button";
 import { Badge } from "@ui/components/badge";
@@ -183,7 +183,7 @@ function DayCell({
 
 				{dayPosts.length > 3 && (
 					<button className="text-xs text-gray-500 hover:text-gray-700 w-full text-center py-1">
-						+{dayPosts.length - 3} más
+						+{dayPosts.length - 3} more
 					</button>
 				)}
 			</div>
@@ -205,8 +205,8 @@ export default function CalendarPage() {
 
 	// Calcular días del calendario
 	const calendarDays = useMemo(() => {
-		const start = startOfWeek(startOfMonth(currentMonth), { locale: es });
-		const end = endOfWeek(endOfMonth(currentMonth), { locale: es });
+		const start = startOfWeek(startOfMonth(currentMonth), { locale: enUS });
+		const end = endOfWeek(endOfMonth(currentMonth), { locale: enUS });
 		return eachDayOfInterval({ start, end });
 	}, [currentMonth]);
 
@@ -281,10 +281,10 @@ export default function CalendarPage() {
 			);
 
 			toast.success(
-				`Movido a ${format(newScheduledAt, "d 'de' MMMM", { locale: es })}`,
+				`Moved to ${format(newScheduledAt, "MMMM d", { locale: enUS })}`,
 			);
 		} catch (error) {
-			toast.error("Error al mover el post");
+			toast.error("Failed to move post");
 		} finally {
 			setUpdating(null);
 		}
@@ -312,7 +312,7 @@ export default function CalendarPage() {
 	};
 
 	// Días de la semana
-	const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+	const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
@@ -325,10 +325,10 @@ export default function CalendarPage() {
 						</div>
 						<div>
 							<h1 className="text-3xl font-bold text-gray-900">
-								Calendario
+								Calendar
 							</h1>
 							<p className="text-gray-500">
-								Arrastra los posts para reprogramarlos
+								Drag posts to reschedule them
 							</p>
 						</div>
 					</div>
@@ -337,7 +337,7 @@ export default function CalendarPage() {
 						href={`/app/${organizationSlug}/marketing/generate`}
 					>
 						<Button className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600">
-							<Plus className="h-4 w-4 mr-2" /> Crear post
+							<Plus className="h-4 w-4 mr-2" /> Create post
 						</Button>
 					</Link>
 				</div>
@@ -368,13 +368,13 @@ export default function CalendarPage() {
 									onClick={goToToday}
 									className="rounded-xl"
 								>
-									Hoy
+									Today
 								</Button>
 							</div>
 
 							<h2 className="text-2xl font-bold text-gray-900">
 								{format(currentMonth, "MMMM yyyy", {
-									locale: es,
+									locale: enUS,
 								})}
 							</h2>
 
@@ -441,7 +441,7 @@ export default function CalendarPage() {
 					<div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
 						<div className="bg-white rounded-2xl p-6 shadow-xl flex items-center gap-3">
 							<Loader2 className="h-5 w-5 animate-spin text-purple-600" />
-							<span>Moviendo post...</span>
+							<span>Moving post...</span>
 						</div>
 					</div>
 				)}
@@ -454,7 +454,7 @@ export default function CalendarPage() {
 								{posts.length}
 							</p>
 							<p className="text-sm text-gray-500">
-								Programados
+								Scheduled
 							</p>
 						</CardContent>
 					</Card>
@@ -494,7 +494,7 @@ export default function CalendarPage() {
 									).length
 								}
 							</p>
-							<p className="text-sm text-gray-500">Hoy</p>
+							<p className="text-sm text-gray-500">Today</p>
 						</CardContent>
 					</Card>
 				</div>

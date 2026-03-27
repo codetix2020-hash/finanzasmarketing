@@ -51,20 +51,20 @@ export default function ProfilePage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Error al guardar');
+      if (!response.ok) throw new Error('Failed to save');
       
       const result = await response.json();
       
       if (completed) {
-        toast.success('¡Perfil completado! Tu marketing automático está listo.');
+        toast.success('Profile complete! Your automated marketing is ready.');
         setProfile({ ...formData, isComplete: true });
         setIsEditing(false);
         router.push(`/app/${orgSlug}/marketing/dashboard`);
       } else {
-        toast.success('Perfil guardado');
+        toast.success('Profile saved');
       }
     } catch (error) {
-      toast.error('No se pudo guardar el perfil');
+      toast.error('Could not save profile');
     } finally {
       setIsSaving(false);
     }
@@ -93,16 +93,16 @@ export default function ProfilePage() {
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
-              Perfil de Empresa
+              Company profile
             </h1>
-            <p className="text-gray-500 mt-1">Tu configuración está completa</p>
+            <p className="text-gray-500 mt-1">Your setup is complete</p>
           </div>
           <button 
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
           >
             <Edit className="w-4 h-4" />
-            Editar perfil
+            Edit profile
           </button>
         </div>
 
@@ -111,13 +111,13 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4">
               <Building2 className="w-5 h-5 text-blue-500" />
-              Información Básica
+              Basic information
             </h3>
             <div className="space-y-3 text-sm">
-              <div><span className="text-gray-500">Nombre:</span> <span className="font-medium">{profile.businessName}</span></div>
-              <div><span className="text-gray-500">Industria:</span> <span className="font-medium">{profile.industry}</span></div>
-              <div><span className="text-gray-500">Ubicación:</span> <span className="font-medium">{profile.location}</span></div>
-              <div><span className="text-gray-500">Web:</span> <span className="font-medium">{profile.websiteUrl || profile.website}</span></div>
+              <div><span className="text-gray-500">Name:</span> <span className="font-medium">{profile.businessName}</span></div>
+              <div><span className="text-gray-500">Industry:</span> <span className="font-medium">{profile.industry}</span></div>
+              <div><span className="text-gray-500">Location:</span> <span className="font-medium">{profile.location}</span></div>
+              <div><span className="text-gray-500">Website:</span> <span className="font-medium">{profile.websiteUrl || profile.website}</span></div>
             </div>
           </div>
 
@@ -125,12 +125,12 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-purple-500" />
-              Tu Público
+              Your audience
             </h3>
             <div className="space-y-3 text-sm">
-              <div><span className="text-gray-500">Cliente ideal:</span> <span className="font-medium">{profile.targetAudience || 'No definido'}</span></div>
-              <div><span className="text-gray-500">Edad:</span> <span className="font-medium">{profile.ageRangeMin || profile.ageMin} - {profile.ageRangeMax || profile.ageMax} años</span></div>
-              <div><span className="text-gray-500">Ubicaciones:</span> <span className="font-medium">{Array.isArray(profile.targetLocations) ? profile.targetLocations.join(", ") : profile.targetLocations}</span></div>
+              <div><span className="text-gray-500">Ideal customer:</span> <span className="font-medium">{profile.targetAudience || 'Not set'}</span></div>
+              <div><span className="text-gray-500">Age:</span> <span className="font-medium">{profile.ageRangeMin || profile.ageMin} - {profile.ageRangeMax || profile.ageMax} years</span></div>
+              <div><span className="text-gray-500">Locations:</span> <span className="font-medium">{Array.isArray(profile.targetLocations) ? profile.targetLocations.join(", ") : profile.targetLocations}</span></div>
             </div>
           </div>
 
@@ -138,12 +138,12 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4">
               <Megaphone className="w-5 h-5 text-pink-500" />
-              Voz de Marca
+              Brand voice
             </h3>
             <div className="space-y-3 text-sm">
-              <div><span className="text-gray-500">Personalidad:</span> <span className="font-medium">{Array.isArray(profile.brandPersonality) ? profile.brandPersonality.join(", ") : profile.brandPersonality || 'No definida'}</span></div>
-              <div><span className="text-gray-500">Tono:</span> <span className="font-medium">{profile.toneOfVoice || 'No definido'}</span></div>
-              <div><span className="text-gray-500">Emojis:</span> <span className="font-medium">{profile.useEmojis ? 'Sí' : 'No'}</span></div>
+              <div><span className="text-gray-500">Personality:</span> <span className="font-medium">{Array.isArray(profile.brandPersonality) ? profile.brandPersonality.join(", ") : profile.brandPersonality || 'Not set'}</span></div>
+              <div><span className="text-gray-500">Tone:</span> <span className="font-medium">{profile.toneOfVoice || 'Not set'}</span></div>
+              <div><span className="text-gray-500">Emojis:</span> <span className="font-medium">{profile.useEmojis ? 'Yes' : 'No'}</span></div>
             </div>
           </div>
 
@@ -151,10 +151,10 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4">
               <Target className="w-5 h-5 text-red-500" />
-              Objetivos
+              Goals
             </h3>
             <div className="space-y-3 text-sm">
-              <div><span className="text-gray-500">Frecuencia:</span> <span className="font-medium">{profile.contentPreferences?.postingFrequency || profile.postingFrequency || profile.postFrequency || 'No definida'}</span></div>
+              <div><span className="text-gray-500">Frequency:</span> <span className="font-medium">{profile.contentPreferences?.postingFrequency || profile.postingFrequency || profile.postFrequency || 'Not set'}</span></div>
               {profile.marketingGoals?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {profile.marketingGoals.map((goal: string, i: number) => (
@@ -169,14 +169,14 @@ export default function ProfilePage() {
         <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold">¡Todo listo!</h3>
-              <p className="text-gray-600 text-sm">Tu marketing automático está configurado.</p>
+              <h3 className="font-semibold">All set</h3>
+              <p className="text-gray-600 text-sm">Your automated marketing is configured.</p>
             </div>
             <button 
               onClick={() => router.push(`/app/${orgSlug}/marketing/dashboard`)}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
-              Ir al Dashboard
+              Go to dashboard
             </button>
           </div>
         </div>
@@ -186,11 +186,11 @@ export default function ProfilePage() {
 
   // WIZARD (si no está completo o está editando)
   const steps = [
-    { id: 1, name: 'Información Básica', icon: Building2 },
-    { id: 2, name: 'Tu Público', icon: Users },
-    { id: 3, name: 'Voz de Marca', icon: Megaphone },
-    { id: 4, name: 'Productos', icon: Package },
-    { id: 5, name: 'Objetivos', icon: Target },
+    { id: 1, name: 'Basic information', icon: Building2 },
+    { id: 2, name: 'Your audience', icon: Users },
+    { id: 3, name: 'Brand voice', icon: Megaphone },
+    { id: 4, name: 'Products', icon: Package },
+    { id: 5, name: 'Goals', icon: Target },
   ];
 
   return (
@@ -198,9 +198,9 @@ export default function ProfilePage() {
       {/* Header */}
       {isEditing && (
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold">Editar perfil</h1>
+          <h1 className="text-xl font-bold">Edit profile</h1>
           <button onClick={() => { setIsEditing(false); setFormData(profile); }} className="text-gray-500 hover:text-gray-700">
-            Cancelar
+            Cancel
           </button>
         </div>
       )}
@@ -226,60 +226,60 @@ export default function ProfilePage() {
       {/* Form Card */}
       <div className="bg-white border rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-1">{steps[currentStep - 1].name}</h2>
-        <p className="text-gray-500 text-sm mb-6">Paso {currentStep} de 5</p>
+        <p className="text-gray-500 text-sm mb-6">Step {currentStep} of 5</p>
 
         {/* Step 1 */}
         {currentStep === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Nombre del negocio *</label>
+              <label className="block text-sm font-medium mb-1">Business name *</label>
               <input
                 type="text"
                 value={formData.businessName || ''}
                 onChange={(e) => updateField('businessName', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
-                placeholder="Tu empresa"
+                placeholder="Your company"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Industria *</label>
+              <label className="block text-sm font-medium mb-1">Industry *</label>
               <select
                 value={formData.industry || ''}
                 onChange={(e) => updateField('industry', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
               >
-                <option value="">Selecciona...</option>
-                <option value="Tecnología">Tecnología</option>
-                <option value="Restaurante">Restaurante</option>
+                <option value="">Select...</option>
+                <option value="Tecnología">Technology</option>
+                <option value="Restaurante">Restaurant</option>
                 <option value="Retail">Retail</option>
-                <option value="Servicios">Servicios</option>
-                <option value="Salud">Salud</option>
-                <option value="Educación">Educación</option>
-                <option value="Otro">Otro</option>
+                <option value="Servicios">Services</option>
+                <option value="Salud">Healthcare</option>
+                <option value="Educación">Education</option>
+                <option value="Otro">Other</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Descripción *</label>
+              <label className="block text-sm font-medium mb-1">Description *</label>
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => updateField('description', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 h-24"
-                placeholder="Describe tu negocio..."
+                placeholder="Describe your business..."
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Ubicación</label>
+                <label className="block text-sm font-medium mb-1">Location</label>
                 <input
                   type="text"
                   value={formData.location || ''}
                   onChange={(e) => updateField('location', e.target.value)}
                   className="w-full border rounded-lg px-3 py-2"
-                  placeholder="Barcelona, España"
+                  placeholder="Barcelona, Spain"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Sitio web</label>
+                <label className="block text-sm font-medium mb-1">Website</label>
                 <input
                   type="url"
                   value={formData.websiteUrl || formData.website || ''}
@@ -296,17 +296,17 @@ export default function ProfilePage() {
         {currentStep === 2 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">¿Quién es tu cliente ideal? *</label>
+              <label className="block text-sm font-medium mb-1">Who is your ideal customer? *</label>
               <textarea
                 value={formData.targetAudience || ''}
                 onChange={(e) => updateField('targetAudience', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 h-24"
-                placeholder="Describe a tu cliente ideal..."
+                placeholder="Describe your ideal customer..."
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Edad mínima</label>
+                <label className="block text-sm font-medium mb-1">Minimum age</label>
                 <input
                   type="number"
                   value={formData.ageRangeMin || formData.ageMin || 18}
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Edad máxima</label>
+                <label className="block text-sm font-medium mb-1">Maximum age</label>
                 <input
                   type="number"
                   value={formData.ageRangeMax || formData.ageMax || 65}
@@ -325,13 +325,13 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Ubicaciones objetivo</label>
+              <label className="block text-sm font-medium mb-1">Target locations</label>
               <input
                 type="text"
                 value={Array.isArray(formData.targetLocations) ? formData.targetLocations.join(", ") : formData.targetLocations || ''}
                 onChange={(e) => updateField('targetLocations', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
-                placeholder="España, Latinoamérica..."
+                placeholder="Spain, Latin America..."
               />
             </div>
           </div>
@@ -341,32 +341,32 @@ export default function ProfilePage() {
         {currentStep === 3 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Personalidad de marca</label>
+              <label className="block text-sm font-medium mb-1">Brand personality</label>
               <select
                 value={Array.isArray(formData.brandPersonality) ? formData.brandPersonality[0] : formData.brandPersonality || ''}
                 onChange={(e) => updateField('brandPersonality', e.target.value ? [e.target.value] : [])}
                 className="w-full border rounded-lg px-3 py-2"
               >
-                <option value="">Selecciona...</option>
-                <option value="Profesional">Profesional</option>
-                <option value="Amigable">Amigable</option>
-                <option value="Divertida">Divertida</option>
-                <option value="Seria">Seria</option>
-                <option value="Innovadora">Innovadora</option>
+                <option value="">Select...</option>
+                <option value="Profesional">Professional</option>
+                <option value="Amigable">Friendly</option>
+                <option value="Divertida">Playful</option>
+                <option value="Seria">Serious</option>
+                <option value="Innovadora">Innovative</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Tono de voz</label>
+              <label className="block text-sm font-medium mb-1">Tone of voice</label>
               <select
                 value={formData.toneOfVoice || ''}
                 onChange={(e) => updateField('toneOfVoice', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
               >
-                <option value="">Selecciona...</option>
+                <option value="">Select...</option>
                 <option value="Formal">Formal</option>
                 <option value="Casual">Casual</option>
-                <option value="Inspirador">Inspirador</option>
-                <option value="Educativo">Educativo</option>
+                <option value="Inspirador">Inspiring</option>
+                <option value="Educativo">Educational</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                 onChange={(e) => updateField('useEmojis', e.target.checked)}
                 className="rounded"
               />
-              <label htmlFor="useEmojis" className="text-sm">Usar emojis en publicaciones</label>
+              <label htmlFor="useEmojis" className="text-sm">Use emojis in posts</label>
             </div>
           </div>
         )}
@@ -385,14 +385,14 @@ export default function ProfilePage() {
         {/* Step 4 */}
         {currentStep === 4 && (
           <div className="space-y-4">
-            <p className="text-gray-500 text-sm">Lista tus productos o servicios principales (opcional)</p>
+            <p className="text-gray-500 text-sm">List your main products or services (optional)</p>
             <div>
-              <label className="block text-sm font-medium mb-1">Productos/Servicios</label>
+              <label className="block text-sm font-medium mb-1">Products / services</label>
               <textarea
                 value={formData.productsText || ''}
                 onChange={(e) => updateField('productsText', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 h-32"
-                placeholder="- Desarrollo web: €2000&#10;- Apps móviles: €5000&#10;- Consultoría: €100/hora"
+                placeholder="- Web development: €2000&#10;- Mobile apps: €5000&#10;- Consulting: €100/hr"
               />
             </div>
           </div>
@@ -402,9 +402,9 @@ export default function ProfilePage() {
         {currentStep === 5 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">¿Cuáles son tus objetivos?</label>
+              <label className="block text-sm font-medium mb-2">What are your goals?</label>
               <div className="space-y-2">
-                {['Aumentar seguidores', 'Generar leads', 'Vender más', 'Mejorar engagement', 'Branding'].map((goal) => (
+                {['Grow followers', 'Generate leads', 'Sell more', 'Improve engagement', 'Branding'].map((goal) => (
                   <label key={goal} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -425,16 +425,16 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Frecuencia de publicaciones</label>
+              <label className="block text-sm font-medium mb-1">Posting frequency</label>
               <select
                 value={formData.contentPreferences?.postingFrequency || formData.postingFrequency || ''}
                 onChange={(e) => updateField('postingFrequency', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2"
               >
-                <option value="">Selecciona...</option>
-                <option value="daily">1 por día</option>
-                <option value="3x-week">3-4 por semana</option>
-                <option value="weekly">1 por semana</option>
+                <option value="">Select...</option>
+                <option value="daily">Once per day</option>
+                <option value="3x-week">3–4 per week</option>
+                <option value="weekly">Once per week</option>
               </select>
             </div>
           </div>
@@ -448,7 +448,7 @@ export default function ProfilePage() {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
             >
               <ChevronLeft className="w-4 h-4" />
-              Anterior
+              Back
             </button>
           ) : (
             <div />
@@ -460,7 +460,7 @@ export default function ProfilePage() {
               disabled={isSaving}
               className="px-4 py-2 border rounded-lg hover:bg-gray-50"
             >
-              Guardar
+              Save
             </button>
 
             {currentStep < 5 ? (
@@ -468,7 +468,7 @@ export default function ProfilePage() {
                 onClick={() => setCurrentStep(currentStep + 1)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
-                Siguiente
+                Next
                 <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
@@ -480,12 +480,12 @@ export default function ProfilePage() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Guardando...
+                    Saving...
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    Completar
+                    Complete
                   </>
                 )}
               </button>

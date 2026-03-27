@@ -9,7 +9,7 @@ import {
 	isBefore,
 	startOfDay,
 } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import {
 	Dialog,
 	DialogContent,
@@ -54,39 +54,39 @@ interface ScheduleModalProps {
 const suggestedTimes = [
 	{
 		time: "09:00",
-		label: "Mañana",
+		label: "Morning",
 		icon: Sun,
-		description: "Inicio del día",
+		description: "Start of day",
 	},
 	{
 		time: "12:00",
-		label: "Mediodía",
+		label: "Midday",
 		icon: Sun,
-		description: "Pausa almuerzo",
+		description: "Lunch break",
 	},
 	{
 		time: "14:00",
-		label: "Tarde",
+		label: "Afternoon",
 		icon: Sunset,
-		description: "Post-almuerzo",
+		description: "Post-lunch",
 	},
 	{
 		time: "18:00",
-		label: "Fin del día",
+		label: "End of day",
 		icon: Sunset,
-		description: "Salida trabajo",
+		description: "After work",
 	},
 	{
 		time: "20:00",
-		label: "Noche",
+		label: "Evening",
 		icon: Moon,
-		description: "Máximo engagement",
+		description: "Peak engagement",
 	},
 	{
 		time: "21:00",
 		label: "Prime time",
 		icon: Moon,
-		description: "Hora pico redes",
+		description: "Social peak hours",
 	},
 ];
 
@@ -143,7 +143,7 @@ export function ScheduleModal({
 	// Programar
 	const handleSchedule = async () => {
 		if (!scheduledDateTime || !isValidDateTime) {
-			toast.error("Selecciona una fecha y hora válida");
+			toast.error("Select a valid date and time");
 			return;
 		}
 
@@ -168,14 +168,14 @@ export function ScheduleModal({
 			}
 
 			toast.success(
-				`Programado para ${format(scheduledDateTime, "d 'de' MMMM 'a las' HH:mm", { locale: es })}`,
+				`Scheduled for ${format(scheduledDateTime, "MMMM d, yyyy 'at' HH:mm", { locale: enUS })}`,
 			);
 
 			onScheduled?.(scheduledDateTime);
 			onOpenChange(false);
 		} catch (error) {
 			console.error(error);
-			toast.error("Error al programar");
+			toast.error("Failed to schedule");
 		} finally {
 			setIsScheduling(false);
 		}
@@ -191,10 +191,10 @@ export function ScheduleModal({
 					<DialogHeader>
 						<DialogTitle className="text-xl text-white flex items-center gap-2">
 							<CalendarIcon className="h-5 w-5" />
-							Programar publicación
+							Schedule post
 						</DialogTitle>
 						<DialogDescription className="text-blue-100">
-							Elige cuándo quieres que se publique tu contenido
+							Choose when your content should go live
 						</DialogDescription>
 					</DialogHeader>
 				</div>
@@ -212,7 +212,7 @@ export function ScheduleModal({
 									startOfDay(new Date()),
 								)
 							}
-							locale={es}
+							locale={enUS}
 							className="rounded-xl border"
 						/>
 					</div>
@@ -220,7 +220,7 @@ export function ScheduleModal({
 					{/* Selector de hora */}
 					<div className="space-y-3">
 						<Label className="text-sm font-medium">
-							Hora de publicación
+							Publish time
 						</Label>
 
 						<div className="flex gap-2 items-center">
@@ -268,8 +268,8 @@ export function ScheduleModal({
 									>
 										{format(
 											scheduledDateTime,
-											"EEEE d MMM",
-											{ locale: es },
+											"EEE, MMM d",
+											{ locale: enUS },
 										)}
 									</Badge>
 								)}
@@ -281,7 +281,7 @@ export function ScheduleModal({
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
 							<Label className="text-sm font-medium">
-								Horas sugeridas
+								Suggested times
 							</Label>
 							<div className="flex items-center gap-1 text-xs text-gray-500">
 								{platform === "instagram" && (
@@ -290,7 +290,7 @@ export function ScheduleModal({
 								{platform === "facebook" && (
 									<Facebook className="h-3 w-3" />
 								)}
-								Mejor para {platform}
+								Best for {platform}
 							</div>
 						</div>
 
@@ -343,7 +343,7 @@ export function ScheduleModal({
 					{/* Aviso si la hora ya pasó */}
 					{scheduledDateTime && !isValidDateTime && (
 						<div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-							⚠️ Esta hora ya pasó. Selecciona una hora futura.
+							⚠️ This time has passed. Choose a future time.
 						</div>
 					)}
 				</div>
@@ -354,7 +354,7 @@ export function ScheduleModal({
 						onClick={() => onOpenChange(false)}
 						className="rounded-xl"
 					>
-						Cancelar
+						Cancel
 					</Button>
 					<Button
 						onClick={handleSchedule}
@@ -364,12 +364,12 @@ export function ScheduleModal({
 						{isScheduling ? (
 							<>
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-								Programando...
+								Scheduling...
 							</>
 						) : (
 							<>
 								<Clock className="h-4 w-4 mr-2" />
-								Programar
+								Schedule
 							</>
 						)}
 					</Button>

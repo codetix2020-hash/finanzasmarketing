@@ -27,12 +27,12 @@ interface GeneratedVariation {
 }
 
 const CONTENT_TYPES = [
-  { id: "promotional", label: "🛍️ Promocionar", icon: "🛍️" },
-  { id: "educational", label: "📚 Educar", icon: "📚" },
-  { id: "entertaining", label: "🎉 Entretener", icon: "🎉" },
+  { id: "promotional", label: "🛍️ Promote", icon: "🛍️" },
+  { id: "educational", label: "📚 Educate", icon: "📚" },
+  { id: "entertaining", label: "🎉 Entertain", icon: "🎉" },
   { id: "behind-scenes", label: "🎬 Behind the scenes", icon: "🎬" },
   { id: "tips", label: "💡 Tips", icon: "💡" },
-  { id: "auto", label: "🎲 Sorpréndeme", icon: "🎲" },
+  { id: "auto", label: "🎲 Surprise me", icon: "🎲" },
 ];
 
 const PLATFORMS = [
@@ -81,7 +81,7 @@ export default function CreateContentPage() {
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data?.error || data?.message || "Error generando contenido");
+        throw new Error(data?.error || data?.message || "Failed to generate content");
       }
 
       if (data.variations && Array.isArray(data.variations)) {
@@ -91,7 +91,7 @@ export default function CreateContentPage() {
       setStep(3);
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : "Error generando contenido");
+      toast.error(error instanceof Error ? error.message : "Failed to generate content");
     } finally {
       setIsGenerating(false);
     }
@@ -103,7 +103,7 @@ export default function CreateContentPage() {
     scheduledAt?: string,
   ) => {
     if (!activeOrganization?.id) {
-      throw new Error("Organización no disponible");
+      throw new Error("Organization unavailable");
     }
 
     const createRes = await fetch("/api/marketing/generated-posts", {
@@ -124,7 +124,7 @@ export default function CreateContentPage() {
 
     const createData = await createRes.json();
     if (!createRes.ok || !createData?.post?.id) {
-      throw new Error(createData?.error || "No se pudo guardar el post");
+      throw new Error(createData?.error || "Could not save post");
     }
 
     return createData.post.id as string;
@@ -132,17 +132,17 @@ export default function CreateContentPage() {
 
   const handlePublishNow = async (variation: GeneratedVariation) => {
     if (!variation.imageUrl) {
-      toast.error('Se requiere una imagen para publicar.');
+      toast.error('An image is required to publish.');
       return;
     }
 
     if (platform !== "instagram") {
-      toast.error("Publicar ahora solo está disponible para Instagram.");
+      toast.error("Publish now is only available for Instagram.");
       return;
     }
 
     const confirmed = window.confirm(
-      "¿Publicar ahora en Instagram? Esta acción no se puede deshacer.",
+      "Publish to Instagram now? This cannot be undone.",
     );
     if (!confirmed) {
       return;
@@ -160,13 +160,13 @@ export default function CreateContentPage() {
       const publishData = await publishRes.json();
 
       if (!publishRes.ok || !publishData?.success) {
-        throw new Error(publishData?.error || "Error al publicar");
+        throw new Error(publishData?.error || "Failed to publish");
       }
 
-      toast.success("¡Publicado en Instagram!");
+      toast.success("Published to Instagram!");
       router.push(`/app/${organizationSlug}/marketing/content?tab=published`);
     } catch (error: any) {
-      toast.error(`Error al publicar: ${error.message || "Error desconocido"}`);
+      toast.error(`Failed to publish: ${error.message || "Unknown error"}`);
     } finally {
       setIsPublishing(false);
     }
@@ -174,7 +174,7 @@ export default function CreateContentPage() {
 
   const handleSchedule = async (variation: GeneratedVariation) => {
     if (!variation.imageUrl && platform === 'instagram') {
-      toast.error('Instagram requiere una imagen.');
+      toast.error('Instagram requires an image.');
       return;
     }
 
@@ -185,20 +185,20 @@ export default function CreateContentPage() {
         new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       );
 
-      toast.success('Post programado para mañana');
+      toast.success('Post scheduled for tomorrow');
       router.push(`/app/${organizationSlug}/marketing/content?tab=scheduled`);
     } catch (error: any) {
-      toast.error(error.message || 'Error al programar');
+      toast.error(error.message || 'Failed to schedule');
     }
   };
 
   const handleSaveDraft = async (variation: GeneratedVariation) => {
     try {
       await createGeneratedPost(variation, "draft");
-      toast.success("Borrador guardado");
+      toast.success("Draft saved");
       router.push(`/app/${organizationSlug}/marketing/content?tab=draft`);
     } catch (error: any) {
-      toast.error(error.message || "Error al guardar borrador");
+      toast.error(error.message || "Failed to save draft");
     }
   };
 
@@ -213,9 +213,9 @@ export default function CreateContentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Crear Contenido</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Create content</h1>
         <p className="text-muted-foreground mt-2">
-          Genera contenido personalizado basado en tu perfil de empresa
+          Generate tailored content from your company profile
         </p>
       </div>
 
@@ -244,14 +244,14 @@ export default function CreateContentPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {step === 1 && "¿Qué tipo de contenido quieres?"}
-            {step === 2 && "¿Sobre qué tema? (opcional)"}
-            {step === 3 && "Elige tu favorito"}
+            {step === 1 && "What kind of content do you want?"}
+            {step === 2 && "What topic? (optional)"}
+            {step === 3 && "Pick your favorite"}
           </CardTitle>
           <CardDescription>
-            {step === 1 && "Selecciona el tipo o deja que la IA decida"}
-            {step === 2 && "Añade un tema específico o déjalo vacío"}
-            {step === 3 && "Selecciona una variación y publica"}
+            {step === 1 && "Choose a type or let AI decide"}
+            {step === 2 && "Add a specific topic or leave it blank"}
+            {step === 3 && "Select a variation and publish"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -279,16 +279,16 @@ export default function CreateContentPage() {
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Tema específico (opcional)</Label>
+                <Label>Specific topic (optional)</Label>
                 <Textarea
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  placeholder="Ej: Lanzamiento de nueva app móvil... (déjalo vacío para que la IA decida basándose en tu perfil)"
+                  placeholder="e.g. New mobile app launch... (leave blank for AI to decide from your profile)"
                   className="min-h-[100px]"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Plataforma</Label>
+                <Label>Platform</Label>
                 <Select value={platform} onValueChange={setPlatform}>
                   <SelectTrigger>
                     <SelectValue />
@@ -311,9 +311,9 @@ export default function CreateContentPage() {
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                   <Sparkles className="h-12 w-12 animate-pulse text-primary" />
-                  <p className="font-medium">Generando contenido...</p>
+                  <p className="font-medium">Generating content...</p>
                   <p className="text-sm text-muted-foreground">
-                    Analizando tu perfil y creando variaciones...
+                    Analyzing your profile and creating variations...
                   </p>
                 </div>
               ) : variations.length > 0 ? (
@@ -384,7 +384,7 @@ export default function CreateContentPage() {
                             ) : (
                               <Send className="w-4 h-4 mr-2" />
                             )}
-                            Publicar ahora
+                            Publish now
                           </Button>
                           <Button
                             size="sm"
@@ -397,7 +397,7 @@ export default function CreateContentPage() {
                             disabled={!variation.imageUrl}
                           >
                             <Calendar className="w-4 h-4 mr-2" />
-                            Programar publicación
+                            Schedule post
                           </Button>
                           <Button
                             size="sm"
@@ -409,7 +409,7 @@ export default function CreateContentPage() {
                             }}
                           >
                             <Bookmark className="w-4 h-4 mr-2" />
-                            Guardar borrador
+                            Save draft
                           </Button>
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export default function CreateContentPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Click en "Generar" para crear contenido
+                  Click Generate to create content
                 </div>
               )}
             </div>
@@ -432,12 +432,12 @@ export default function CreateContentPage() {
               disabled={step === 1}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Anterior
+              Back
             </Button>
 
             {step === 1 && (
               <Button onClick={() => setStep(2)} disabled={!canProceedStep1}>
-                Siguiente
+                Next
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -447,12 +447,12 @@ export default function CreateContentPage() {
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generando...
+                    Generating...
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generar contenido
+                    Generate content
                   </>
                 )}
               </Button>
@@ -461,7 +461,7 @@ export default function CreateContentPage() {
             {step === 3 && variations.length === 0 && !isGenerating && (
               <Button onClick={handleGenerate}>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generar de nuevo
+                Generate again
               </Button>
             )}
           </div>

@@ -54,12 +54,12 @@ function formatRelativeDate(dateIso: string): string {
 	const dt = new Date(dateIso);
 	const diffMs = Date.now() - dt.getTime();
 	const diffMin = Math.round(diffMs / 60000);
-	if (diffMin < 1) return "Hace unos segundos";
-	if (diffMin < 60) return `Hace ${diffMin} min`;
+	if (diffMin < 1) return "A few seconds ago";
+	if (diffMin < 60) return `${diffMin} min ago`;
 	const diffH = Math.round(diffMin / 60);
-	if (diffH < 24) return `Hace ${diffH} h`;
+	if (diffH < 24) return `${diffH} h ago`;
 	const diffD = Math.round(diffH / 24);
-	return `Hace ${diffD} días`;
+	return `${diffD} days ago`;
 }
 
 function computeNextRun(lastExecutedAtIso: string | null): Date | null {
@@ -109,7 +109,7 @@ export default function MarketingAutomationPage() {
 			setScheduledPosts(postsJson?.posts || []);
 		} catch (error: any) {
 			console.error(error);
-			toast.error("Error al cargar el centro de automatización");
+			toast.error("Failed to load automation center");
 		} finally {
 			setIsLoading(false);
 		}
@@ -137,13 +137,13 @@ export default function MarketingAutomationPage() {
 			});
 
 			const json = await res.json();
-			if (!res.ok) throw new Error(json?.error || "No se pudo actualizar");
+			if (!res.ok) throw new Error(json?.error || "Could not update");
 
 			setConfig(json.config);
-			toast.success(nextIsPaused ? "Automatización pausada" : "Automatización activada");
+			toast.success(nextIsPaused ? "Automation paused" : "Automation enabled");
 		} catch (error: any) {
 			console.error(error);
-			toast.error("Error al actualizar la automatización");
+			toast.error("Failed to update automation");
 		} finally {
 			setIsToggling(false);
 		}
@@ -160,7 +160,7 @@ export default function MarketingAutomationPage() {
 	if (!loaded) {
 		return (
 			<>
-				<PageHeader title="Automatización" subtitle="Tu marketing funciona 24/7" />
+				<PageHeader title="Automation" subtitle="Your marketing runs 24/7" />
 				<div className="p-6">
 					<Skeleton className="h-24 w-full" />
 				</div>
@@ -170,16 +170,16 @@ export default function MarketingAutomationPage() {
 
 	return (
 		<div className="space-y-6">
-			<PageHeader title="Automatización" subtitle="Tu marketing funciona 24/7 automáticamente" />
+			<PageHeader title="Automation" subtitle="Your marketing runs automatically 24/7" />
 
 			{/* Header */}
 			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 				<div className="flex items-center gap-2">
 					<Bot className="h-5 w-5 text-muted-foreground" />
 					<div className="text-sm text-muted-foreground">
-						Estado:{" "}
+						Status:{" "}
 						<span className={isAutomationEnabled ? "text-green-600 font-medium" : "text-muted-foreground font-medium"}>
-							{isAutomationEnabled ? "Activa" : "Pausada"}
+							{isAutomationEnabled ? "Active" : "Paused"}
 						</span>
 					</div>
 				</div>
@@ -191,7 +191,7 @@ export default function MarketingAutomationPage() {
 						onClick={toggleAutomation}
 						disabled={isLoading || isToggling || !config}
 					>
-						{isAutomationEnabled ? "Pausar automatización" : "Activar automatización"}
+						{isAutomationEnabled ? "Pause automation" : "Enable automation"}
 					</Button>
 					<Button
 						variant="outline"
@@ -200,7 +200,7 @@ export default function MarketingAutomationPage() {
 						disabled={isLoading}
 					>
 						<RefreshCw className="mr-2 h-4 w-4" />
-						Actualizar
+						Refresh
 					</Button>
 				</div>
 			</div>
@@ -214,8 +214,8 @@ export default function MarketingAutomationPage() {
 								<Zap className={isAutomationEnabled ? "h-5 w-5 text-green-600" : "h-5 w-5 text-muted-foreground"} />
 							</div>
 							<div>
-								<p className="text-sm text-muted-foreground">Estado</p>
-								<p className="font-bold">{isAutomationEnabled ? "Funcionando" : "Pausado"}</p>
+								<p className="text-sm text-muted-foreground">Status</p>
+								<p className="font-bold">{isAutomationEnabled ? "Running" : "Paused"}</p>
 							</div>
 						</div>
 					</CardContent>
@@ -228,7 +228,7 @@ export default function MarketingAutomationPage() {
 								<Calendar className="h-5 w-5 text-blue-600" />
 							</div>
 							<div>
-								<p className="text-sm text-muted-foreground">Posts programados</p>
+								<p className="text-sm text-muted-foreground">Scheduled posts</p>
 								<p className="font-bold text-xl">{scheduledPosts.length}</p>
 							</div>
 						</div>
@@ -242,7 +242,7 @@ export default function MarketingAutomationPage() {
 								<Bot className="h-5 w-5 text-purple-600" />
 							</div>
 							<div>
-								<p className="text-sm text-muted-foreground">Generados por IA</p>
+								<p className="text-sm text-muted-foreground">AI-generated</p>
 								<p className="font-bold text-xl">{generatedByAiCount}</p>
 							</div>
 						</div>
@@ -256,7 +256,7 @@ export default function MarketingAutomationPage() {
 								<Clock className="h-5 w-5 text-orange-600" />
 							</div>
 							<div>
-								<p className="text-sm text-muted-foreground">Próxima ejecución</p>
+								<p className="text-sm text-muted-foreground">Next run</p>
 								<p className="font-bold">
 									{nextRun ? nextRun.toLocaleString() : "—"}
 								</p>
@@ -269,17 +269,17 @@ export default function MarketingAutomationPage() {
 			{/* Qué hace */}
 			<Card>
 				<CardHeader>
-					<CardTitle>¿Qué hace el sistema automáticamente?</CardTitle>
+					<CardTitle>What does the system do automatically?</CardTitle>
 					<CardDescription>
-						Se ejecuta cada 3 horas y mantiene tu marketing en piloto automático.
+						It runs every 3 hours and keeps your marketing on autopilot.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<FeatureRow title="Genera contenido" description="Crea posts personalizados basados en tu perfil de empresa." />
-						<FeatureRow title="Publica automáticamente" description="Publica posts programados cuando llega su hora." />
-						<FeatureRow title="Analiza tu SEO" description="Ejecuta PageSpeed Insights y actualiza el dashboard de SEO." />
-						<FeatureRow title="Responde comentarios" description="Genera respuestas con IA y marca comentarios como respondidos." />
+						<FeatureRow title="Generates content" description="Creates personalized posts based on your company profile." />
+						<FeatureRow title="Publishes automatically" description="Publishes scheduled posts when their time arrives." />
+						<FeatureRow title="Analyzes SEO" description="Runs PageSpeed Insights and updates the SEO dashboard." />
+						<FeatureRow title="Replies to comments" description="Generates AI replies and marks comments as answered." />
 					</div>
 				</CardContent>
 			</Card>
@@ -287,8 +287,8 @@ export default function MarketingAutomationPage() {
 			{/* Últimas ejecuciones */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Últimas ejecuciones</CardTitle>
-					<CardDescription>Histórico del job marketing-engine.</CardDescription>
+					<CardTitle>Recent runs</CardTitle>
+					<CardDescription>History for the marketing-engine job.</CardDescription>
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
@@ -299,7 +299,7 @@ export default function MarketingAutomationPage() {
 						</div>
 					) : cronLogs.length === 0 ? (
 						<p className="text-muted-foreground">
-							Aún no hay ejecuciones registradas.
+							No runs recorded yet.
 						</p>
 					) : (
 						<div className="space-y-3">
@@ -331,7 +331,7 @@ export default function MarketingAutomationPage() {
 											</div>
 											{r && (
 												<p className="text-muted-foreground mt-1">
-													{r.contentGenerated || 0} generados • {r.postsPublished || 0} publicados • {r.seoAnalyzed || 0} SEO • {r.commentsReplied || 0} replies
+													{r.contentGenerated || 0} generated • {r.postsPublished || 0} published • {r.seoAnalyzed || 0} SEO • {r.commentsReplied || 0} replies
 												</p>
 											)}
 											{log.error && (
@@ -349,8 +349,8 @@ export default function MarketingAutomationPage() {
 			{/* Próximos posts */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Próximos posts programados</CardTitle>
-					<CardDescription>Contenido que se publicará automáticamente.</CardDescription>
+					<CardTitle>Upcoming scheduled posts</CardTitle>
+					<CardDescription>Content that will publish automatically.</CardDescription>
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
@@ -361,7 +361,7 @@ export default function MarketingAutomationPage() {
 						</div>
 					) : scheduledPosts.length === 0 ? (
 						<p className="text-muted-foreground">
-							No hay posts programados todavía.
+							No scheduled posts yet.
 						</p>
 					) : (
 						<div className="space-y-3">
@@ -371,7 +371,7 @@ export default function MarketingAutomationPage() {
 										<p className="font-medium truncate">{post.content}</p>
 										<p className="text-sm text-muted-foreground">
 											{post.platform} •{" "}
-											{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : "sin fecha"}
+											{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : "No date"}
 										</p>
 									</div>
 									<Badge variant="secondary">{post.status}</Badge>

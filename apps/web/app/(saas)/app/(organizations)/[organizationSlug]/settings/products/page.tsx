@@ -77,10 +77,10 @@ interface Product {
 
 // Categorías genéricas que el usuario puede personalizar
 const defaultCategories = [
-  { value: "productos", label: "Productos" },
-  { value: "servicios", label: "Servicios" },
-  { value: "paquetes", label: "Paquetes / Combos" },
-  { value: "promociones", label: "Promociones especiales" },
+  { value: "productos", label: "Products" },
+  { value: "servicios", label: "Services" },
+  { value: "paquetes", label: "Packages / bundles" },
+  { value: "promociones", label: "Special promotions" },
 ];
 
 function emptyProduct(): Product {
@@ -311,7 +311,7 @@ function ProductModal({
 
   const handleSave = () => {
     if (!form.name.trim()) {
-      toast.error("El nombre es obligatorio");
+      toast.error("Name is required");
       return;
     }
     onSave({ ...form, id: form.id || crypto.randomUUID() });
@@ -323,35 +323,35 @@ function ProductModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {product ? "Editar" : "Nuevo"} producto/servicio
+            {product ? "Edit" : "New"} product or service
           </DialogTitle>
           <DialogDescription>
-            Añade toda la información para generar contenido específico
+            Add all details to generate specific content
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Información básica */}
           <div className="space-y-4">
-            <h4 className="font-medium">Información básica</h4>
+            <h4 className="font-medium">Basic information</h4>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nombre *</Label>
+                <Label>Name *</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Ej: Croissant de mantequilla, Corte degradado..."
+                  placeholder="E.g. Butter croissant, fade haircut..."
                 />
               </div>
               <div className="space-y-2">
-                <Label>Categoría</Label>
+                <Label>Category</Label>
                 <Select
                   value={form.category}
                   onValueChange={(v) => setForm({ ...form, category: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona categoría" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -365,13 +365,13 @@ function ProductModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Descripción corta (para posts)</Label>
+              <Label>Short description (for posts)</Label>
               <Input
                 value={form.shortDescription}
                 onChange={(e) =>
                   setForm({ ...form, shortDescription: e.target.value })
                 }
-                placeholder="Una línea que describe este producto"
+                placeholder="One line describing this product"
                 maxLength={100}
               />
               <p className="text-xs text-muted-foreground">
@@ -380,13 +380,13 @@ function ProductModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Descripción completa</Label>
+              <Label>Full description</Label>
               <Textarea
                 value={form.longDescription}
                 onChange={(e) =>
                   setForm({ ...form, longDescription: e.target.value })
                 }
-                placeholder="Descripción detallada con todos los detalles..."
+                placeholder="Detailed description with all the details..."
                 rows={3}
               />
             </div>
@@ -394,10 +394,10 @@ function ProductModal({
 
           {/* Precio */}
           <div className="space-y-4">
-            <h4 className="font-medium">Precio</h4>
+            <h4 className="font-medium">Price</h4>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Precio (€)</Label>
+                <Label>Price (€)</Label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -418,19 +418,19 @@ function ProductModal({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>O rango de precio</Label>
+                <Label>Or price range</Label>
                 <Select
                   value={form.priceRange}
                   onValueChange={(v) => setForm({ ...form, priceRange: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sin especificar" />
+                    <SelectValue placeholder="Not specified" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin especificar</SelectItem>
-                    <SelectItem value="€">€ - Económico</SelectItem>
-                    <SelectItem value="€€">€€ - Medio</SelectItem>
-                    <SelectItem value="€€€">€€€ - Premium</SelectItem>
+                    <SelectItem value="none">Not specified</SelectItem>
+                    <SelectItem value="€">€ — Budget</SelectItem>
+                    <SelectItem value="€€">€€ — Mid-range</SelectItem>
+                    <SelectItem value="€€€">€€€ — Premium</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -439,32 +439,32 @@ function ProductModal({
 
           {/* Características */}
           <div className="space-y-4">
-            <h4 className="font-medium">Características</h4>
+            <h4 className="font-medium">Details</h4>
 
             <div className="space-y-2">
-              <Label>Ingredientes / Componentes</Label>
+              <Label>Ingredients / components</Label>
               <TagInput
                 value={form.ingredients}
                 onChange={(v) => setForm({ ...form, ingredients: v })}
-                placeholder="Ej: harina ecológica, masa madre, sin gluten..."
+                placeholder="E.g. organic flour, sourdough, gluten-free..."
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Características especiales</Label>
+              <Label>Special features</Label>
               <TagInput
                 value={form.features}
                 onChange={(v) => setForm({ ...form, features: v })}
-                placeholder="Ej: vegano, artesanal, edición limitada, incluye X..."
+                placeholder="E.g. vegan, handmade, limited edition, includes X..."
               />
             </div>
           </div>
 
           {/* Estados especiales */}
           <div className="space-y-4">
-            <h4 className="font-medium">Estados especiales</h4>
+            <h4 className="font-medium">Special flags</h4>
             <p className="text-sm text-muted-foreground">
-              Marca los que apliquen a este producto
+              Check all that apply to this product
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -491,7 +491,7 @@ function ProductModal({
                   className="rounded"
                 />
                 <Sparkles className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Novedad</span>
+                <span className="text-sm">New</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -504,7 +504,7 @@ function ProductModal({
                   className="rounded"
                 />
                 <Clock className="h-4 w-4 text-orange-500" />
-                <span className="text-sm">De temporada</span>
+                <span className="text-sm">Seasonal</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -516,7 +516,7 @@ function ProductModal({
                   }
                   className="rounded"
                 />
-                <span className="text-sm">Edición limitada</span>
+                <span className="text-sm">Limited edition</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -529,18 +529,18 @@ function ProductModal({
                   className="rounded"
                 />
                 <Tag className="h-4 w-4 text-red-500" />
-                <span className="text-sm">En promoción</span>
+                <span className="text-sm">On promotion</span>
               </label>
             </div>
           </div>
 
           {/* Disponibilidad */}
           <div className="space-y-4">
-            <h4 className="font-medium">Disponibilidad</h4>
+            <h4 className="font-medium">Availability</h4>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>¿Cuándo está disponible?</Label>
+                <Label>When is it available?</Label>
                 <Select
                   value={form.availability}
                   onValueChange={(v) =>
@@ -551,18 +551,18 @@ function ProductModal({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="siempre">Siempre disponible</SelectItem>
+                    <SelectItem value="siempre">Always available</SelectItem>
                     <SelectItem value="fines_semana">
-                      Solo fines de semana
+                      Weekends only
                     </SelectItem>
                     <SelectItem value="entre_semana">
-                      Solo entre semana
+                      Weekdays only
                     </SelectItem>
-                    <SelectItem value="por_encargo">Por encargo</SelectItem>
+                    <SelectItem value="por_encargo">Made to order</SelectItem>
                     <SelectItem value="temporada">
-                      Solo en temporada
+                      Seasonal only
                     </SelectItem>
-                    <SelectItem value="limitado">Stock limitado</SelectItem>
+                    <SelectItem value="limitado">Limited stock</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -571,23 +571,23 @@ function ProductModal({
             {form.availability === "temporada" && (
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Inicio de temporada</Label>
+                  <Label>Season start</Label>
                   <Input
                     value={form.seasonStart}
                     onChange={(e) =>
                       setForm({ ...form, seasonStart: e.target.value })
                     }
-                    placeholder="Ej: marzo, primavera..."
+                    placeholder="E.g. March, spring..."
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Fin de temporada</Label>
+                  <Label>Season end</Label>
                   <Input
                     value={form.seasonEnd}
                     onChange={(e) =>
                       setForm({ ...form, seasonEnd: e.target.value })
                     }
-                    placeholder="Ej: mayo, verano..."
+                    placeholder="E.g. May, summer..."
                   />
                 </div>
               </div>
@@ -596,36 +596,36 @@ function ProductModal({
 
           {/* Marketing */}
           <div className="space-y-4">
-            <h4 className="font-medium">Para marketing</h4>
+            <h4 className="font-medium">For marketing</h4>
 
             <div className="space-y-2">
-              <Label>Frase gancho para promocionar</Label>
+              <Label>Promotional hook line</Label>
               <Textarea
                 value={form.promotionHook}
                 onChange={(e) =>
                   setForm({ ...form, promotionHook: e.target.value })
                 }
-                placeholder="Ej: El favorito de nuestros clientes, No podrás resistirte..."
+                placeholder="E.g. Our customers' favorite, Irresistible..."
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Hashtags específicos</Label>
+              <Label>Specific hashtags</Label>
               <TagInput
                 value={form.hashtags}
                 onChange={(v) => setForm({ ...form, hashtags: v })}
-                placeholder="Ej: #croissant #desayuno #artesanal"
+                placeholder="E.g. #croissant #breakfast #artisan"
               />
             </div>
           </div>
 
           {/* Imagen */}
           <div className="space-y-4">
-            <h4 className="font-medium">Imagen</h4>
+            <h4 className="font-medium">Image</h4>
 
             <div className="space-y-2">
-              <Label>URL de imagen principal</Label>
+              <Label>Main image URL</Label>
               <Input
                 value={form.mainImageUrl}
                 onChange={(e) =>
@@ -634,8 +634,7 @@ function ProductModal({
                 placeholder="https://..."
               />
               <p className="text-xs text-muted-foreground">
-                Puedes subir imágenes en la biblioteca de medios y copiar la URL
-                aquí
+                Upload images in the media library and paste the URL here
               </p>
             </div>
 
@@ -653,9 +652,9 @@ function ProductModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cancel
           </Button>
-          <Button onClick={handleSave}>Guardar</Button>
+          <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -748,7 +747,7 @@ export default function ProductsPage() {
         },
       ]);
       setNewCategory("");
-      toast.success("Categoría añadida");
+      toast.success("Category added");
     }
   };
 
@@ -769,9 +768,9 @@ export default function ProductsPage() {
         if (res.ok) {
           const result = await res.json();
           setProducts(products.map((p) => (p.id === id ? { ...product, ...result.data } : p)));
-          toast.success("Producto actualizado");
+          toast.success("Product updated");
         } else {
-          toast.error("Error al actualizar producto");
+          toast.error("Could not update product");
         }
       } else {
         // Crear producto nuevo
@@ -786,20 +785,20 @@ export default function ProductsPage() {
         if (res.ok) {
           const result = await res.json();
           setProducts([...products, { ...product, id: result.data.id, displayOrder: products.length }]);
-          toast.success("Producto añadido");
+          toast.success("Product added");
         } else {
-          toast.error("Error al crear producto");
+          toast.error("Could not create product");
         }
       }
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error("Error al guardar producto");
+      toast.error("Could not save product");
     }
     setEditingProduct(null);
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("¿Eliminar este producto?")) return;
+    if (!confirm("Delete this product?")) return;
 
     try {
       const res = await fetch("/api/marketing/products-delete", {
@@ -809,13 +808,13 @@ export default function ProductsPage() {
       });
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== id));
-        toast.success("Producto eliminado");
+        toast.success("Product deleted");
       } else {
-        toast.error("Error al eliminar producto");
+        toast.error("Could not delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      toast.error("Error al eliminar producto");
+      toast.error("Could not delete product");
     }
   };
 
@@ -852,20 +851,19 @@ export default function ProductsPage() {
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Package className="h-8 w-8" />
-          Catálogo de productos/servicios
+          Product and service catalog
         </h1>
         <p className="text-muted-foreground mt-2">
-          Añade tus productos o servicios para generar contenido específico
-          sobre ellos
+          Add your products or services to generate specific content about them
         </p>
       </div>
 
       {/* Categorías personalizadas */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Categorías</CardTitle>
+          <CardTitle className="text-lg">Categories</CardTitle>
           <CardDescription>
-            Organiza tus productos en categorías
+            Organize your products into categories
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -880,11 +878,11 @@ export default function ProductsPage() {
             <Input
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Nueva categoría..."
+              placeholder="New category..."
               onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
             />
             <Button variant="outline" onClick={handleAddCategory}>
-              <Plus className="h-4 w-4 mr-2" /> Añadir
+              <Plus className="h-4 w-4 mr-2" /> Add
             </Button>
           </div>
         </CardContent>
@@ -895,23 +893,23 @@ export default function ProductsPage() {
         <div className="flex gap-2">
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por..." />
+              <SelectValue placeholder="Filter by..." />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
-                Todos ({products.length})
+                All ({products.length})
               </SelectItem>
               <SelectItem value="active">
-                Activos ({products.filter((p) => p.isActive).length})
+                Active ({products.filter((p) => p.isActive).length})
               </SelectItem>
               <SelectItem value="inactive">
-                Inactivos ({products.filter((p) => !p.isActive).length})
+                Inactive ({products.filter((p) => !p.isActive).length})
               </SelectItem>
               <SelectItem value="bestseller">
                 Bestsellers ({products.filter((p) => p.isBestseller).length})
               </SelectItem>
               <SelectItem value="new">
-                Novedades ({products.filter((p) => p.isNew).length})
+                New ({products.filter((p) => p.isNew).length})
               </SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
@@ -929,7 +927,7 @@ export default function ProductsPage() {
             setIsModalOpen(true);
           }}
         >
-          <Plus className="h-4 w-4 mr-2" /> Añadir producto
+          <Plus className="h-4 w-4 mr-2" /> Add product
         </Button>
       </div>
 
@@ -938,10 +936,9 @@ export default function ProductsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-medium mb-2">No hay productos todavía</h3>
+            <h3 className="font-medium mb-2">No products yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Añade tus productos o servicios para empezar a generar contenido
-              específico
+              Add your products or services to start generating specific content
             </p>
             <Button
               onClick={() => {
@@ -949,7 +946,7 @@ export default function ProductsPage() {
                 setIsModalOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" /> Añadir primer producto
+              <Plus className="h-4 w-4 mr-2" /> Add your first product
             </Button>
           </CardContent>
         </Card>

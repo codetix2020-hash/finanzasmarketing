@@ -20,14 +20,14 @@ import { toast } from "sonner";
 import Image from "next/image";
 
 const CATEGORIES = [
-	{ id: "all", label: "Todas" },
-	{ id: "products", label: "Productos" },
-	{ id: "team", label: "Equipo" },
-	{ id: "location", label: "Local" },
-	{ id: "customers", label: "Clientes" },
+	{ id: "all", label: "All" },
+	{ id: "products", label: "Products" },
+	{ id: "team", label: "Team" },
+	{ id: "location", label: "Location" },
+	{ id: "customers", label: "Customers" },
 	{ id: "behind-scenes", label: "Behind the Scenes" },
 	{ id: "lifestyle", label: "Lifestyle" },
-	{ id: "other", label: "Otros" },
+	{ id: "other", label: "Other" },
 ];
 
 type MediaItem = {
@@ -78,7 +78,7 @@ export default function MediaLibraryPage() {
 			}
 		} catch (error) {
 			console.error("Error loading media:", error);
-			toast.error("Error cargando imágenes");
+			toast.error("Failed to load media");
 		} finally {
 			setIsLoading(false);
 		}
@@ -102,21 +102,21 @@ export default function MediaLibraryPage() {
 
 			const data = await res.json();
 			if (!res.ok) {
-				throw new Error(data.error || "Error subiendo archivos");
+				throw new Error(data.error || "Failed to upload files");
 			}
 
-			toast.success(`${files.length} archivo(s) subido(s) correctamente`);
+			toast.success(`${files.length} file(s) uploaded successfully`);
 			loadMedia();
 		} catch (error) {
 			console.error("Error uploading files:", error);
-			toast.error(error instanceof Error ? error.message : "Error subiendo archivos");
+			toast.error(error instanceof Error ? error.message : "Failed to upload files");
 		} finally {
 			setIsUploading(false);
 		}
 	}
 
 	async function deleteMedia(id: string) {
-		if (!confirm("¿Estás seguro de eliminar esta imagen?")) return;
+		if (!confirm("Delete this image?")) return;
 
 		try {
 			const res = await fetch(`/api/marketing/media/${id}`, {
@@ -124,10 +124,10 @@ export default function MediaLibraryPage() {
 			});
 
 			if (!res.ok) {
-				throw new Error("Error eliminando imagen");
+				throw new Error("Failed to delete image");
 			}
 
-			toast.success("Imagen eliminada");
+			toast.success("Image deleted");
 			loadMedia();
 			if (selectedMedia?.id === id) {
 				setIsDialogOpen(false);
@@ -135,7 +135,7 @@ export default function MediaLibraryPage() {
 			}
 		} catch (error) {
 			console.error("Error deleting media:", error);
-			toast.error("Error eliminando imagen");
+			toast.error("Failed to delete image");
 		}
 	}
 
@@ -151,7 +151,7 @@ export default function MediaLibraryPage() {
 			});
 
 			if (!res.ok) {
-				throw new Error("Error actualizando favorito");
+				throw new Error("Failed to update favorite");
 			}
 
 			setMediaItems((prev) =>
@@ -162,7 +162,7 @@ export default function MediaLibraryPage() {
 			}
 		} catch (error) {
 			console.error("Error toggling favorite:", error);
-			toast.error("Error actualizando favorito");
+			toast.error("Failed to update favorite");
 		}
 	}
 
@@ -173,18 +173,18 @@ export default function MediaLibraryPage() {
 			});
 
 			if (!res.ok) {
-				throw new Error("Error generando tags");
+				throw new Error("Failed to generate tags");
 			}
 
 			const data = await res.json();
-			toast.success("Tags generados con IA");
+			toast.success("AI tags generated");
 			loadMedia();
 			if (selectedMedia?.id === id) {
 				setSelectedMedia(data.media);
 			}
 		} catch (error) {
 			console.error("Error generating AI tags:", error);
-			toast.error("Error generando tags");
+			toast.error("Failed to generate tags");
 		}
 	}
 
@@ -204,9 +204,9 @@ export default function MediaLibraryPage() {
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Banco de Fotos</h1>
+					<h1 className="text-3xl font-bold tracking-tight">Photo library</h1>
 					<p className="text-muted-foreground mt-2">
-						Gestiona tu biblioteca de imágenes y videos
+						Manage your image and video library
 					</p>
 				</div>
 				<Button
@@ -216,12 +216,12 @@ export default function MediaLibraryPage() {
 					{isUploading ? (
 						<>
 							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-							Subiendo...
+							Uploading...
 						</>
 					) : (
 						<>
 							<Upload className="h-4 w-4 mr-2" />
-							Subir fotos
+							Upload photos
 						</>
 					)}
 				</Button>
@@ -242,7 +242,7 @@ export default function MediaLibraryPage() {
 						<div className="relative flex-1">
 							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 							<Input
-								placeholder="Buscar por nombre, tags o descripción..."
+								placeholder="Search by name, tags, or description..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 								className="pl-10"
@@ -273,8 +273,8 @@ export default function MediaLibraryPage() {
 							<ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
 							<p className="text-muted-foreground">
 								{searchQuery
-									? "No se encontraron resultados"
-									: "No hay imágenes en esta categoría"}
+									? "No results found"
+									: "No images in this category"}
 							</p>
 						</CardContent>
 					</Card>
@@ -349,7 +349,7 @@ export default function MediaLibraryPage() {
 							<DialogHeader>
 								<DialogTitle>{selectedMedia.fileName}</DialogTitle>
 								<DialogDescription>
-									{selectedMedia.category} • {selectedMedia.usageCount} usos
+									{selectedMedia.category} • {selectedMedia.usageCount} uses
 								</DialogDescription>
 							</DialogHeader>
 							<div className="grid grid-cols-2 gap-6">
@@ -383,7 +383,7 @@ export default function MediaLibraryPage() {
 									</div>
 									{selectedMedia.aiTags.length > 0 && (
 										<div>
-											<Label>Tags IA</Label>
+											<Label>AI tags</Label>
 											<div className="flex flex-wrap gap-2 mt-2">
 												{selectedMedia.aiTags.map((tag) => (
 													<span
@@ -398,7 +398,7 @@ export default function MediaLibraryPage() {
 									)}
 									{selectedMedia.description && (
 										<div>
-											<Label>Descripción</Label>
+											<Label>Description</Label>
 											<p className="text-sm text-muted-foreground mt-1">
 												{selectedMedia.description}
 											</p>
@@ -409,7 +409,7 @@ export default function MediaLibraryPage() {
 											variant="outline"
 											onClick={() => generateAiTags(selectedMedia.id)}
 										>
-											Generar tags IA
+											Generate AI tags
 										</Button>
 										<Button
 											variant="outline"
@@ -422,14 +422,14 @@ export default function MediaLibraryPage() {
 														: ""
 												}`}
 											/>
-											{selectedMedia.isFavorite ? "Quitar favorito" : "Marcar favorito"}
+											{selectedMedia.isFavorite ? "Remove favorite" : "Mark favorite"}
 										</Button>
 										<Button
 											variant="destructive"
 											onClick={() => deleteMedia(selectedMedia.id)}
 										>
 											<X className="h-4 w-4 mr-2" />
-											Eliminar
+											Delete
 										</Button>
 									</div>
 								</div>

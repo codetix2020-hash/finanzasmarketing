@@ -197,7 +197,7 @@ JSON (sin markdown, sin backticks):
       parsed = JSON.parse(cleanedResponse);
     } catch (parseError) {
       console.error('Error parsing Claude response:', parseError);
-      return NextResponse.json({ error: "Error al generar contenido" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to generate content" }, { status: 500 });
     }
 
     const variations = parsed.variations || [];

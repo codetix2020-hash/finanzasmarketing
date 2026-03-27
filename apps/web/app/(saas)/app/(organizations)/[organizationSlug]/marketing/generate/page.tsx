@@ -46,14 +46,14 @@ import { ScheduleModal } from "../components/schedule-modal";
 import { useSubscription } from "../hooks/use-subscription";
 import { Progress } from "@ui/components/progress";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 // Tipos de contenido D2C con gradientes y estilos premium
 const contentTypesD2C = [
   { 
     value: "producto", 
-    label: "Producto", 
-    description: "Destaca tu producto estrella",
+    label: "Product", 
+    description: "Showcase your flagship product",
     icon: ShoppingBag,
     gradient: "from-blue-500 to-cyan-400",
     bgLight: "bg-blue-50",
@@ -62,7 +62,7 @@ const contentTypesD2C = [
   { 
     value: "engagement", 
     label: "Engagement", 
-    description: "Genera interacción",
+    description: "Drive engagement",
     icon: MessageSquare,
     gradient: "from-purple-500 to-pink-400",
     bgLight: "bg-purple-50",
@@ -71,7 +71,7 @@ const contentTypesD2C = [
   { 
     value: "social_proof", 
     label: "Social Proof", 
-    description: "Reviews y testimonios",
+    description: "Reviews and testimonials",
     icon: Star,
     gradient: "from-amber-500 to-orange-400",
     bgLight: "bg-amber-50",
@@ -80,7 +80,7 @@ const contentTypesD2C = [
   { 
     value: "behind_scenes", 
     label: "Behind Scenes", 
-    description: "Tu día a día",
+    description: "Your day to day",
     icon: Camera,
     gradient: "from-pink-500 to-rose-400",
     bgLight: "bg-pink-50",
@@ -88,8 +88,8 @@ const contentTypesD2C = [
   },
   { 
     value: "urgencia", 
-    label: "Urgencia", 
-    description: "Stock limitado",
+    label: "Urgency", 
+    description: "Limited stock",
     icon: Clock,
     gradient: "from-red-500 to-orange-400",
     bgLight: "bg-red-50",
@@ -97,8 +97,8 @@ const contentTypesD2C = [
   },
   { 
     value: "educativo", 
-    label: "Educativo", 
-    description: "Tips y consejos",
+    label: "Educational", 
+    description: "Tips and advice",
     icon: BookOpen,
     gradient: "from-emerald-500 to-teal-400",
     bgLight: "bg-emerald-50",
@@ -106,8 +106,8 @@ const contentTypesD2C = [
   },
   { 
     value: "storytelling", 
-    label: "Historia", 
-    description: "Cuenta tu historia",
+    label: "Story", 
+    description: "Tell your story",
     icon: Heart,
     gradient: "from-rose-500 to-pink-400",
     bgLight: "bg-rose-50",
@@ -115,8 +115,8 @@ const contentTypesD2C = [
   },
   { 
     value: "oferta", 
-    label: "Oferta", 
-    description: "Descuentos y promos",
+    label: "Offer", 
+    description: "Discounts and promos",
     icon: Tag,
     gradient: "from-orange-500 to-yellow-400",
     bgLight: "bg-orange-50",
@@ -267,7 +267,7 @@ function ImageGallery({
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
           <ImageIcon className="h-8 w-8 text-gray-400" />
         </div>
-        <p className="text-gray-500">Buscando fotos perfectas...</p>
+        <p className="text-gray-500">Finding great photos...</p>
       </div>
     );
   }
@@ -320,7 +320,7 @@ function ImageGallery({
               if (img) window.open(img.url, "_blank");
             }}
           >
-            <ExternalLink className="h-4 w-4 mr-2" /> Ver HD
+            <ExternalLink className="h-4 w-4 mr-2" /> View HD
           </Button>
           <Button
             variant="outline"
@@ -330,11 +330,11 @@ function ImageGallery({
               const img = images.find((i) => i.id === selectedId);
               if (img) {
                 navigator.clipboard.writeText(img.url);
-                toast.success("URL copiada");
+                toast.success("URL copied");
               }
             }}
           >
-            <Copy className="h-4 w-4 mr-2" /> Copiar URL
+            <Copy className="h-4 w-4 mr-2" /> Copy URL
           </Button>
         </div>
       )}
@@ -475,7 +475,7 @@ export default function GenerateContentPage() {
         searchImages(result.imageSearchQuery);
       }
 
-      toast.success("Contenido generado!");
+      toast.success("Content generated!");
 
       // Refrescar contador de uso
       refreshSubscription();
@@ -483,10 +483,10 @@ export default function GenerateContentPage() {
       console.error(error);
       // Verificar si es error de límite
       if (error?.code === "LIMIT_EXCEEDED") {
-        toast.error("Has alcanzado el limite de posts de tu plan.");
+        toast.error("You have reached your plan's post limit.");
         refreshSubscription();
       } else {
-        toast.error("Error al generar contenido");
+        toast.error("Failed to generate content");
       }
     } finally {
       setIsGenerating(false);
@@ -495,7 +495,7 @@ export default function GenerateContentPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copiado al portapapeles");
+    toast.success("Copied to clipboard");
   };
 
   const copyFullPost = () => {
@@ -534,7 +534,7 @@ export default function GenerateContentPage() {
       const { post } = await response.json();
 
       if (asDraft) {
-        toast.success("✅ Guardado como borrador");
+        toast.success("✅ Saved as draft");
       } else {
         // Abrir modal de programación
         setSavedPostId(post.id);
@@ -543,7 +543,7 @@ export default function GenerateContentPage() {
 
       return post;
     } catch (error) {
-      toast.error("Error al guardar el post");
+      toast.error("Failed to save post");
     } finally {
       setIsSaving(false);
     }
@@ -562,10 +562,10 @@ export default function GenerateContentPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                Generador de Contenido
+                Content generator
               </h1>
               <p className="text-gray-500 mt-1">
-                Contenido que vende, creado por IA para tu marca
+                AI-powered content built to sell your brand
               </p>
             </div>
           </div>
@@ -580,15 +580,15 @@ export default function GenerateContentPage() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-amber-900">
-                  Configura tu marca para mejores resultados
+                  Set up your brand for better results
                 </h3>
                 <p className="text-amber-700 mt-1">
-                  El contenido será más personalizado con tu perfil D2C configurado.
+                  Content will be more tailored with your D2C profile set up.
                 </p>
               </div>
               <Link href={`/app/${organizationSlug}/marketing/onboarding/d2c`}>
                 <Button className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white">
-                  Configurar ahora
+                  Set up now
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
@@ -606,11 +606,11 @@ export default function GenerateContentPage() {
                     <Crown className={`h-4 w-4 ${plan === "free" ? "text-gray-400" : "text-purple-600"}`} />
                     <span className="font-medium capitalize">{plan}</span>
                     {plan === "free" && (
-                      <Badge variant="secondary" className="text-xs">Gratis</Badge>
+                      <Badge variant="secondary" className="text-xs">Free</Badge>
                     )}
                   </div>
                   <span className="text-sm text-gray-500">
-                    {postsUsed} / {postsLimit === -1 ? "ilimitados" : postsLimit} posts este mes
+                    {postsUsed} / {postsLimit === -1 ? "unlimited" : postsLimit} posts this month
                   </span>
                 </div>
 
@@ -624,7 +624,7 @@ export default function GenerateContentPage() {
                 {!canCreatePost && (
                   <div className="mt-3 flex items-center justify-between">
                     <p className="text-sm text-red-600">
-                      Has alcanzado el limite de posts de tu plan.
+                      You have reached your plan's post limit.
                     </p>
                     <Link href={`/app/${organizationSlug}/marketing/settings/billing`}>
                       <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
@@ -637,7 +637,7 @@ export default function GenerateContentPage() {
 
                 {canCreatePost && postsLimit !== -1 && postsUsed >= postsLimit * 0.8 && (
                   <p className="mt-2 text-sm text-amber-600">
-                    Te quedan {postsLimit - postsUsed} posts. Considera actualizar tu plan.
+                    {postsLimit - postsUsed} posts left. Consider upgrading your plan.
                   </p>
                 )}
               </CardContent>
@@ -651,8 +651,8 @@ export default function GenerateContentPage() {
             {/* Tipos de contenido */}
             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900">¿Qué quieres publicar?</h2>
-                <p className="text-gray-500 text-sm mt-1">Elige el tipo de contenido</p>
+                <h2 className="text-xl font-bold text-gray-900">What do you want to post?</h2>
+                <p className="text-gray-500 text-sm mt-1">Choose a content type</p>
               </div>
               <div className="p-4 grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto">
                 {contentTypesD2C.map((type) => (
@@ -668,7 +668,7 @@ export default function GenerateContentPage() {
 
             {/* Plataformas */}
             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Plataforma</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Platform</h2>
               <div className="flex gap-3">
                 {platforms.map((p) => (
                   <PlatformButton
@@ -684,14 +684,14 @@ export default function GenerateContentPage() {
             {/* Producto específico */}
             {products.length > 0 && (
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Producto</h2>
-                <p className="text-gray-500 text-sm mb-4">Opcional: si el post es sobre un producto específico</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Product</h2>
+                <p className="text-gray-500 text-sm mb-4">Optional: if the post is about a specific product</p>
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                   <SelectTrigger className="rounded-xl h-12">
-                    <SelectValue placeholder="Ninguno en particular" />
+                    <SelectValue placeholder="None in particular" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Ninguno en particular</SelectItem>
+                    <SelectItem value="">None in particular</SelectItem>
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
                     ))}
@@ -700,14 +700,14 @@ export default function GenerateContentPage() {
               </div>
             )}
 
-            {/* Indicaciones extra */}
+            {/* Extra notes */}
             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Indicaciones extra</h2>
-              <p className="text-gray-500 text-sm mb-4">¿Algo específico que mencionar?</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Extra notes</h2>
+              <p className="text-gray-500 text-sm mb-4">Anything specific to mention?</p>
               <Textarea
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Ej: Es nuestro aniversario, menciona el envío gratis, destaca que es edición limitada..."
+                placeholder="e.g. It's our anniversary, mention free shipping, highlight limited edition..."
                 rows={3}
                 className="rounded-xl resize-none border-gray-200 focus:border-purple-400 focus:ring-purple-400"
               />
@@ -727,17 +727,17 @@ export default function GenerateContentPage() {
               {!canCreatePost ? (
                 <>
                   <Lock className="h-5 w-5 mr-3" />
-                  Limite alcanzado
+                  Limit reached
                 </>
               ) : isGenerating ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                  Creando magia...
+                  Working magic...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-5 w-5 mr-3" />
-                  Generar contenido
+                  Generate content
                 </>
               )}
             </Button>
@@ -759,9 +759,9 @@ export default function GenerateContentPage() {
                           </div>
                         )}
                         <div>
-                          <h2 className="text-xl font-bold text-white">Tu post está listo</h2>
+                          <h2 className="text-xl font-bold text-white">Your post is ready</h2>
                           <p className="text-white/80 text-sm">
-                            {selectedTypeData?.label} para {platforms.find(p => p.value === platform)?.label}
+                            {selectedTypeData?.label} for {platforms.find(p => p.value === platform)?.label}
                           </p>
                         </div>
                       </div>
@@ -779,7 +779,7 @@ export default function GenerateContentPage() {
                           onClick={copyFullPost}
                           className="bg-white text-gray-900 hover:bg-white/90 rounded-xl"
                         >
-                          <Copy className="h-4 w-4 mr-2" /> Copiar todo
+                          <Copy className="h-4 w-4 mr-2" /> Copy all
                         </Button>
                       </div>
                     </div>
@@ -821,7 +821,7 @@ export default function GenerateContentPage() {
                     {generatedContent.suggestedCTA && (
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
                         <div>
-                          <p className="text-xs font-medium text-emerald-600 mb-1">CTA sugerido</p>
+                          <p className="text-xs font-medium text-emerald-600 mb-1">Suggested CTA</p>
                           <p className="font-semibold text-emerald-900">{generatedContent.suggestedCTA}</p>
                         </div>
                         <Button
@@ -844,8 +844,8 @@ export default function GenerateContentPage() {
                       <ImageIcon className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">Fotos sugeridas</h2>
-                      <p className="text-gray-500 text-sm">De Pexels, gratis para usar</p>
+                      <h2 className="text-xl font-bold text-gray-900">Suggested photos</h2>
+                      <p className="text-gray-500 text-sm">From Pexels, free to use</p>
                     </div>
                   </div>
                   <ImageGallery
@@ -864,17 +864,17 @@ export default function GenerateContentPage() {
                         <TrendingUp className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-blue-900">Mejor con tu propia foto</p>
+                        <p className="font-semibold text-blue-900">Works best with your own photo</p>
                         <p className="text-blue-700 text-sm mt-1">{generatedContent.imagePrompt}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Versión alternativa */}
+                {/* Alternate version */}
                 {generatedContent.alternativeVersion && (
                   <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Versión alternativa</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Alternate version</h2>
                     <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                       <p className="whitespace-pre-wrap text-sm text-gray-700">
                         {generatedContent.alternativeVersion}
@@ -886,7 +886,7 @@ export default function GenerateContentPage() {
                       className="mt-3 rounded-xl"
                       onClick={() => copyToClipboard(generatedContent.alternativeVersion!)}
                     >
-                      <Copy className="h-4 w-4 mr-2" /> Copiar esta versión
+                      <Copy className="h-4 w-4 mr-2" /> Copy this version
                     </Button>
                   </div>
                 )}
@@ -902,12 +902,12 @@ export default function GenerateContentPage() {
                       {isSaving ? (
                         <>
                           <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                          Guardando...
+                          Saving...
                         </>
                       ) : (
                         <>
                           <Calendar className="h-5 w-5 mr-2" />
-                          Programar publicacion
+                          Schedule post
                         </>
                       )}
                     </Button>
@@ -917,7 +917,7 @@ export default function GenerateContentPage() {
                         className="w-full h-14 rounded-2xl bg-gray-100 text-gray-400 cursor-not-allowed"
                         disabled
                       >
-                        <Lock className="h-5 w-5 mr-2" /> Programar publicacion
+                        <Lock className="h-5 w-5 mr-2" /> Schedule post
                       </Button>
                       <Link
                         href={`/app/${organizationSlug}/marketing/settings/billing`}
@@ -935,7 +935,7 @@ export default function GenerateContentPage() {
                     onClick={() => savePost(true)}
                     disabled={isSaving || !canCreatePost}
                   >
-                    <Heart className="h-5 w-5 mr-2" /> Guardar borrador
+                    <Heart className="h-5 w-5 mr-2" /> Save draft
                   </Button>
                 </div>
               </>
@@ -952,18 +952,18 @@ export default function GenerateContentPage() {
                   </div>
                   
                   <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                    Tu contenido aparecerá aquí
+                    Your content will appear here
                   </h2>
                   <p className="text-gray-500 mb-8">
-                    Selecciona el tipo de contenido y plataforma, luego haz clic en generar
+                    Pick a content type and platform, then click generate
                   </p>
 
                   {/* Steps */}
                   <div className="flex justify-center gap-8">
                     {[
-                      { num: 1, label: "Elige tipo", color: "from-blue-500 to-cyan-500" },
-                      { num: 2, label: "Plataforma", color: "from-purple-500 to-pink-500" },
-                      { num: 3, label: "¡Genera!", color: "from-orange-500 to-yellow-500" },
+                      { num: 1, label: "Pick type", color: "from-blue-500 to-cyan-500" },
+                      { num: 2, label: "Platform", color: "from-purple-500 to-pink-500" },
+                      { num: 3, label: "Generate!", color: "from-orange-500 to-yellow-500" },
                     ].map((step) => (
                       <div key={step.num} className="text-center">
                         <div className={`w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white font-bold shadow-lg`}>
@@ -988,7 +988,7 @@ export default function GenerateContentPage() {
         platform={platform}
         onScheduled={(date) => {
           toast.success(
-            `📅 Programado para ${format(date, "d MMM HH:mm", { locale: es })}`,
+            `📅 Scheduled for ${format(date, "MMM d, h:mm a", { locale: enUS })}`,
           );
           // Limpiar contenido generado
           setGeneratedContent(null);

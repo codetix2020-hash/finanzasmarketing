@@ -29,37 +29,37 @@ const ISSUE_TYPES = {
   'meta-title': { 
     icon: FileText, 
     color: 'text-red-500',
-    label: 'Títulos de Página'
+    label: 'Page titles'
   },
   'headings': { 
     icon: Code, 
     color: 'text-orange-500',
-    label: 'Estructura de Encabezados'
+    label: 'Heading structure'
   },
   'images': { 
     icon: Image, 
     color: 'text-yellow-500',
-    label: 'Optimización de Imágenes'
+    label: 'Image optimization'
   },
   'alt-text': { 
     icon: Image, 
     color: 'text-yellow-500',
-    label: 'Texto Alternativo'
+    label: 'Alt text'
   },
   'speed': { 
     icon: Clock, 
     color: 'text-orange-500',
-    label: 'Velocidad de Carga'
+    label: 'Load speed'
   },
   'links': { 
     icon: Link2, 
     color: 'text-blue-500',
-    label: 'Enlaces Rotos'
+    label: 'Broken links'
   },
   'mobile': { 
     icon: Eye, 
     color: 'text-purple-500',
-    label: 'Experiencia Móvil'
+    label: 'Mobile experience'
   },
 };
 
@@ -69,8 +69,8 @@ const PLATFORMS = [
   { value: 'shopify', label: 'Shopify', icon: '🟢' },
   { value: 'squarespace', label: 'Squarespace', icon: '⬛' },
   { value: 'webflow', label: 'Webflow', icon: '🔷' },
-  { value: 'html', label: 'HTML/Código', icon: '📄' },
-  { value: 'other', label: 'Otro', icon: '❓' },
+  { value: 'html', label: 'HTML / code', icon: '📄' },
+  { value: 'other', label: 'Other', icon: '❓' },
 ];
 
 export default function SeoPage() {
@@ -109,7 +109,7 @@ export default function SeoPage() {
 
   const handleAnalyze = async () => {
     if (!websiteUrl) {
-      toast.error('Ingresa la URL de tu sitio web');
+      toast.error('Enter your website URL');
       return;
     }
 
@@ -129,12 +129,12 @@ export default function SeoPage() {
         const data = await res.json();
         setSeoConfig(data.config);
         setIssues(data.issues);
-        toast.success('Análisis completado');
+        toast.success('Analysis complete');
       } else {
-        toast.error('Error al analizar');
+        toast.error('Analysis failed');
       }
     } catch (error) {
-      toast.error('Error de conexión');
+      toast.error('Connection error');
     } finally {
       setIsAnalyzing(false);
     }
@@ -149,9 +149,9 @@ export default function SeoPage() {
       setIssues(issues.map(i => 
         i.id === issueId ? { ...i, status: 'fixed', fixedAt: new Date() } : i
       ));
-      toast.success('Marcado como resuelto');
+      toast.success('Marked as resolved');
     } catch (error) {
-      toast.error('Error al actualizar');
+      toast.error('Could not update');
     }
   };
 
@@ -166,18 +166,18 @@ export default function SeoPage() {
         setIssues(issues.map(i => 
           i.id === issueId ? { ...i, status: 'fixed', verifiedAt: new Date() } : i
         ));
-        toast.success('¡Verificado! El problema está resuelto');
+        toast.success('Verified — issue is resolved');
       } else {
-        toast.error('El problema aún no está resuelto');
+        toast.error('Issue is not resolved yet');
       }
     } catch (error) {
-      toast.error('Error al verificar');
+      toast.error('Verification failed');
     }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copiado al portapapeles');
+    toast.success('Copied to clipboard');
   };
 
   const getScoreColor = (score: number) => {
@@ -202,9 +202,9 @@ export default function SeoPage() {
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Search className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold mb-3">Analiza el SEO de tu web</h1>
+          <h1 className="text-3xl font-bold mb-3">Analyze your website SEO</h1>
           <p className="text-gray-500 text-lg">
-            Te diremos exactamente qué mejorar y cómo hacerlo paso a paso
+            We will tell you exactly what to improve and how to do it step by step
           </p>
         </div>
 
@@ -212,11 +212,11 @@ export default function SeoPage() {
           <CardContent className="pt-6 space-y-6">
             <div>
               <Label htmlFor="url" className="text-base font-medium">
-                URL de tu sitio web
+                Website URL
               </Label>
               <Input
                 id="url"
-                placeholder="https://tusitio.com"
+                placeholder="https://yoursite.com"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 className="mt-2 h-12 text-lg"
@@ -225,10 +225,10 @@ export default function SeoPage() {
 
             <div>
               <Label className="text-base font-medium">
-                ¿En qué plataforma está tu web?
+                What platform is your site on?
               </Label>
               <p className="text-sm text-gray-500 mb-3">
-                Así te daremos instrucciones específicas para tu caso
+                We will tailor instructions to your setup
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {PLATFORMS.map((p) => (
@@ -256,12 +256,12 @@ export default function SeoPage() {
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Analizando...
+                  Analyzing...
                 </>
               ) : (
                 <>
                   <Zap className="w-5 h-5 mr-2" />
-                  Analizar mi sitio
+                  Analyze my site
                 </>
               )}
             </Button>
@@ -271,15 +271,15 @@ export default function SeoPage() {
         <div className="mt-8 grid grid-cols-3 gap-4 text-center text-sm text-gray-500">
           <div>
             <CheckCircle className="w-6 h-6 mx-auto mb-2 text-green-500" />
-            <p>Análisis completo</p>
+            <p>Full analysis</p>
           </div>
           <div>
             <Target className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <p>Guías paso a paso</p>
+            <p>Step-by-step guides</p>
           </div>
           <div>
             <TrendingUp className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-            <p>Mejora tu ranking</p>
+            <p>Improve your rankings</p>
           </div>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function SeoPage() {
         <div className="flex gap-3">
           <Button variant="outline" onClick={handleAnalyze} disabled={isAnalyzing}>
             <RefreshCw className={`w-4 h-4 mr-2 ${isAnalyzing ? 'animate-spin' : ''}`} />
-            Re-analizar
+            Re-analyze
           </Button>
         </div>
       </div>
@@ -324,9 +324,9 @@ export default function SeoPage() {
             <div className={`text-6xl font-bold ${getScoreColor(seoConfig.seoScore || 0)}`}>
               {seoConfig.seoScore || 0}
             </div>
-            <p className="text-gray-500 mt-2">Score SEO</p>
+            <p className="text-gray-500 mt-2">SEO score</p>
             <p className="text-xs text-gray-400 mt-1">
-              Último análisis: {seoConfig.lastScanAt ? new Date(seoConfig.lastScanAt).toLocaleDateString() : 'Nunca'}
+              Last scan: {seoConfig.lastScanAt ? new Date(seoConfig.lastScanAt).toLocaleDateString() : 'Never'}
             </p>
           </CardContent>
         </Card>
@@ -334,7 +334,7 @@ export default function SeoPage() {
         {/* Progreso de mejoras */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-lg">Tu progreso</CardTitle>
+            <CardTitle className="text-lg">Your progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 mb-4">
@@ -346,15 +346,15 @@ export default function SeoPage() {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="p-3 bg-red-50 rounded-lg">
                 <div className="text-2xl font-bold text-red-600">{criticalIssues.length}</div>
-                <div className="text-xs text-red-600">Críticos</div>
+                <div className="text-xs text-red-600">Critical</div>
               </div>
               <div className="p-3 bg-yellow-50 rounded-lg">
                 <div className="text-2xl font-bold text-yellow-600">{warningIssues.length}</div>
-                <div className="text-xs text-yellow-600">Advertencias</div>
+                <div className="text-xs text-yellow-600">Warnings</div>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">{fixedCount}</div>
-                <div className="text-xs text-green-600">Resueltos</div>
+                <div className="text-xs text-green-600">Resolved</div>
               </div>
             </div>
           </CardContent>
@@ -365,8 +365,8 @@ export default function SeoPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Performance', score: seoConfig.scanResults?.performance || 0 },
-          { label: 'Accesibilidad', score: seoConfig.scanResults?.accessibility || 0 },
-          { label: 'Mejores Prácticas', score: seoConfig.scanResults?.bestPractices || 0 },
+          { label: 'Accessibility', score: seoConfig.scanResults?.accessibility || 0 },
+          { label: 'Best practices', score: seoConfig.scanResults?.bestPractices || 0 },
           { label: 'SEO', score: seoConfig.scanResults?.seo || 0 },
         ].map((metric) => (
           <Card key={metric.label}>
@@ -393,11 +393,11 @@ export default function SeoPage() {
         <TabsList>
           <TabsTrigger value="pending" className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Pendientes ({criticalIssues.length + warningIssues.length})
+            Open ({criticalIssues.length + warningIssues.length})
           </TabsTrigger>
           <TabsTrigger value="fixed" className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
-            Resueltos ({fixedCount})
+            Resolved ({fixedCount})
           </TabsTrigger>
         </TabsList>
 
@@ -406,8 +406,8 @@ export default function SeoPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-green-700">¡Excelente!</h3>
-                <p className="text-gray-500">No hay problemas pendientes</p>
+                <h3 className="text-xl font-bold text-green-700">Great job</h3>
+                <p className="text-gray-500">No open issues</p>
               </CardContent>
             </Card>
           ) : (
@@ -443,7 +443,7 @@ export default function SeoPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Aún no has resuelto ningún problema</p>
+                <p className="text-gray-500">You have not resolved any issues yet</p>
               </CardContent>
             </Card>
           ) : (
@@ -506,19 +506,19 @@ function IssueCard({
             <div className="flex items-center gap-2 mb-1">
               <CardTitle className="text-lg">{issue.title}</CardTitle>
               <Badge variant={issue.severity === 'critical' ? 'destructive' : 'secondary'}>
-                {issue.severity === 'critical' ? 'CRÍTICO' : 'ADVERTENCIA'}
+                {issue.severity === 'critical' ? 'CRITICAL' : 'WARNING'}
               </Badge>
               {isFixed && (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                   <Check className="w-3 h-3 mr-1" />
-                  Resuelto
+                  Resolved
                 </Badge>
               )}
             </div>
             <p className="text-gray-500 text-sm">{issue.description}</p>
             {issue.affectedCount > 0 && (
               <p className="text-xs text-gray-400 mt-1">
-                Afecta a {issue.affectedCount} página{issue.affectedCount > 1 ? 's' : ''}
+                Affects {issue.affectedCount} page{issue.affectedCount > 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -526,7 +526,7 @@ function IssueCard({
           <div className="flex items-center gap-2">
             {issue.impactScore && (
               <div className="text-right">
-                <div className="text-xs text-gray-400">Impacto</div>
+                <div className="text-xs text-gray-400">Impact</div>
                 <div className={`font-bold ${
                   issue.impactScore >= 70 ? 'text-red-500' : 
                   issue.impactScore >= 40 ? 'text-yellow-500' : 'text-blue-500'
@@ -549,7 +549,7 @@ function IssueCard({
           {/* Páginas afectadas */}
           {issue.affectedUrls?.length > 0 && (
             <div className="mb-6">
-              <h4 className="font-medium text-sm text-gray-700 mb-2">Páginas afectadas:</h4>
+              <h4 className="font-medium text-sm text-gray-700 mb-2">Affected pages:</h4>
               <div className="flex flex-wrap gap-2">
                 {issue.affectedUrls.slice(0, 5).map((url: string, i: number) => (
                   <a 
@@ -565,7 +565,7 @@ function IssueCard({
                 ))}
                 {issue.affectedUrls.length > 5 && (
                   <span className="text-xs text-gray-400 px-2 py-1">
-                    +{issue.affectedUrls.length - 5} más
+                    +{issue.affectedUrls.length - 5} more
                   </span>
                 )}
               </div>
@@ -578,7 +578,7 @@ function IssueCard({
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-sm text-gray-700 flex items-center gap-2">
                   <Code className="w-4 h-4" />
-                  Código a usar:
+                  Code to use:
                 </h4>
                 <Button 
                   variant="ghost" 
@@ -586,7 +586,7 @@ function IssueCard({
                   onClick={() => onCopy(issue.solutionCode)}
                 >
                   <Copy className="w-4 h-4 mr-1" />
-                  Copiar
+                  Copy
                 </Button>
               </div>
               <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">
@@ -600,7 +600,7 @@ function IssueCard({
             <div className="mb-6">
               <h4 className="font-medium text-sm text-gray-700 mb-4 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                Guía paso a paso para {PLATFORMS.find(p => p.value === platform)?.label || 'tu plataforma'}:
+                Step-by-step guide for {PLATFORMS.find(p => p.value === platform)?.label || 'your platform'}:
               </h4>
               <div className="space-y-3">
                 {platformGuide.map((step: any, index: number) => (
@@ -622,7 +622,7 @@ function IssueCard({
                           className="text-sm text-blue-500 hover:underline flex items-center gap-1 mt-2"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          {step.urlLabel || 'Ir a esta página'}
+                          {step.urlLabel || 'Open this page'}
                         </a>
                       )}
                       
@@ -638,7 +638,7 @@ function IssueCard({
                             onClick={() => onCopy(step.code)}
                           >
                             <Copy className="w-3 h-3 mr-1" />
-                            Copiar
+                            Copy
                           </Button>
                         </div>
                       )}
@@ -657,7 +657,7 @@ function IssueCard({
                           className="mt-2 inline-flex items-center gap-2 text-sm text-red-600 hover:underline"
                         >
                           <Youtube className="w-4 h-4" />
-                          Ver video tutorial
+                          Watch tutorial video
                         </a>
                       )}
                     </div>
@@ -673,17 +673,17 @@ function IssueCard({
               <>
                 <Button onClick={() => onMarkFixed(issue.id)}>
                   <Check className="w-4 h-4 mr-2" />
-                  Ya lo arreglé
+                  I fixed it
                 </Button>
                 <Button variant="outline" onClick={() => onVerify(issue.id)}>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Verificar automáticamente
+                  Verify automatically
                 </Button>
               </>
             ) : (
               <Button variant="outline" onClick={() => onVerify(issue.id)}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Re-verificar
+                Re-verify
               </Button>
             )}
           </div>

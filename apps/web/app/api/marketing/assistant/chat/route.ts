@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 				return NextResponse.json(
 					{
 						error: 'rate_limit',
-						message: 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+						message: 'Service is busy. Please wait a few seconds and try again.',
 						retryAfter: 30
 					},
 					{ status: 429 }

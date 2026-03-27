@@ -87,7 +87,7 @@ export default function SeoSetupPage() {
 	const handleSave = async () => {
 		if (!activeOrganization?.id) return;
 		if (!websiteUrl.trim()) {
-			toast.error("La URL del sitio web es requerida");
+			toast.error("Website URL is required");
 			return;
 		}
 
@@ -110,10 +110,10 @@ export default function SeoSetupPage() {
 				throw new Error("Failed to save config");
 			}
 
-			toast.success("Configuración guardada");
+			toast.success("Settings saved");
 		} catch (error) {
 			console.error("Error saving config:", error);
-			toast.error("Error al guardar la configuración");
+			toast.error("Could not save settings");
 		} finally {
 			setSaving(false);
 		}
@@ -135,11 +135,11 @@ export default function SeoSetupPage() {
 				throw new Error("Failed to analyze");
 			}
 
-			toast.success("Análisis completado");
+			toast.success("Analysis complete");
 			router.push(`/app/${orgSlug}/marketing/seo`);
 		} catch (error) {
 			console.error("Error analyzing:", error);
-			toast.error("Error al analizar el sitio");
+			toast.error("Could not analyze site");
 		} finally {
 			setAnalyzing(false);
 		}
@@ -148,7 +148,7 @@ export default function SeoSetupPage() {
 	if (!loaded) {
 		return (
 			<>
-				<PageHeader title="Configurar SEO" subtitle="Configura tu sitio web para análisis SEO" />
+				<PageHeader title="SEO setup" subtitle="Configure your website for SEO analysis" />
 				<div className="flex items-center justify-center p-12">
 					<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 				</div>
@@ -159,24 +159,24 @@ export default function SeoSetupPage() {
 	return (
 		<>
 			<PageHeader
-				title="Configurar SEO"
-				subtitle="Configura tu sitio web para análisis SEO"
+				title="SEO setup"
+				subtitle="Configure your website for SEO analysis"
 			/>
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Información del Sitio Web</CardTitle>
+					<CardTitle>Website information</CardTitle>
 					<CardDescription>
-						Proporciona la URL de tu sitio web para comenzar el análisis
+						Provide your website URL to start the analysis
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
 					<div className="space-y-2">
-						<Label htmlFor="websiteUrl">URL del Sitio Web *</Label>
+						<Label htmlFor="websiteUrl">Website URL *</Label>
 						<Input
 							id="websiteUrl"
 							type="url"
-							placeholder="https://ejemplo.com"
+							placeholder="https://example.com"
 							value={websiteUrl}
 							onChange={(e) => setWebsiteUrl(e.target.value)}
 							disabled={loading || saving}
@@ -184,11 +184,11 @@ export default function SeoSetupPage() {
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="sitemapUrl">URL del Sitemap (opcional)</Label>
+						<Label htmlFor="sitemapUrl">Sitemap URL (optional)</Label>
 						<Input
 							id="sitemapUrl"
 							type="url"
-							placeholder="https://ejemplo.com/sitemap.xml"
+							placeholder="https://example.com/sitemap.xml"
 							value={sitemapUrl}
 							onChange={(e) => setSitemapUrl(e.target.value)}
 							disabled={loading || saving}
@@ -196,10 +196,10 @@ export default function SeoSetupPage() {
 					</div>
 
 					<div className="space-y-2">
-						<Label>Keywords Principales</Label>
+						<Label>Primary keywords</Label>
 						<div className="flex gap-2">
 							<Input
-								placeholder="Agregar keyword"
+								placeholder="Add keyword"
 								value={keywordInput}
 								onChange={(e) => setKeywordInput(e.target.value)}
 								onKeyDown={(e) => {
@@ -238,10 +238,10 @@ export default function SeoSetupPage() {
 					</div>
 
 					<div className="space-y-2">
-						<Label>URLs de Competidores</Label>
+						<Label>Competitor URLs</Label>
 						<div className="flex gap-2">
 							<Input
-								placeholder="https://competidor.com"
+								placeholder="https://competitor.com"
 								value={competitorInput}
 								onChange={(e) => setCompetitorInput(e.target.value)}
 								onKeyDown={(e) => {
@@ -280,7 +280,7 @@ export default function SeoSetupPage() {
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="frequency">Frecuencia de Análisis</Label>
+						<Label htmlFor="frequency">Analysis frequency</Label>
 						<select
 							id="frequency"
 							value={analysisFrequency}
@@ -290,9 +290,9 @@ export default function SeoSetupPage() {
 							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
 							disabled={loading || saving}
 						>
-							<option value="daily">Diario</option>
-							<option value="weekly">Semanal</option>
-							<option value="monthly">Mensual</option>
+							<option value="daily">Daily</option>
+							<option value="weekly">Weekly</option>
+							<option value="monthly">Monthly</option>
 						</select>
 					</div>
 
@@ -301,10 +301,10 @@ export default function SeoSetupPage() {
 							{saving ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Guardando...
+									Saving...
 								</>
 							) : (
-								"Guardar"
+								"Save"
 							)}
 						</Button>
 						<Button
@@ -315,12 +315,12 @@ export default function SeoSetupPage() {
 							{analyzing ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Analizando...
+									Analyzing...
 								</>
 							) : (
 								<>
 									<CheckCircle2 className="mr-2 h-4 w-4" />
-									Guardar y Analizar
+									Save and analyze
 								</>
 							)}
 						</Button>
