@@ -34,6 +34,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
@@ -128,6 +129,8 @@ export default function CreateContentPage() {
   const [platform, setPlatform] = useState<string>("instagram");
   const [topic, setTopic] = useState<string>("");
   const [variations, setVariations] = useState<GeneratedVariation[]>([]);
+  /** IDs de borradores creados al auto-guardar tras generar (índice = variación). */
+  const [draftPostIds, setDraftPostIds] = useState<(string | null)[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -223,6 +226,7 @@ export default function CreateContentPage() {
 
     setIsGenerating(true);
     setVariations([]);
+    setDraftPostIds([]);
     setSelectedVariation(null);
 
     try {
@@ -245,6 +249,7 @@ export default function CreateContentPage() {
 
       if (data.variations && Array.isArray(data.variations)) {
         setVariations(data.variations);
+        void persistAutoSavedDrafts(data.variations);
       }
     } catch (error) {
       console.error(error);
@@ -287,7 +292,35 @@ export default function CreateContentPage() {
     return createData.post.id as string;
   };
 
-  const handlePublishNow = async (variation: GeneratedVariation) => {
+  async function persistAutoSavedDrafts(vars: GeneratedVariation[]) {
+    if (!activeOrganization?.id) return;
+    const ids: (string | null)[] = [];
+    for (const v of vars) {
+      try {
+        const id = await createGeneratedPost(v, "draft");
+        ids.push(id);
+      } catch (e) {
+        console.error(e);
+        ids.push(null);
+      }
+    }
+    setDraftPostIds(ids);
+    const ok = ids.filter(Boolean).length;
+    if (ok === vars.length && vars.length > 0) {
+      toast.success("Drafts saved automatically");
+    } else if (ok > 0) {
+      toast.message("Drafts partially saved", {
+        description: "Some variations could not be saved. Check plan limits or try again.",
+      });
+    } else if (vars.length > 0) {
+      toast.error("Could not save drafts automatically");
+    }
+  }
+
+  const handlePublishNow = async (
+    variation: GeneratedVariation,
+    variationIndex: number,
+  ) => {
     if (!variation.imageUrl) {
       toast.error('An image is required to publish.');
       return;
@@ -308,7 +341,9 @@ export default function CreateContentPage() {
     setIsPublishing(true);
 
     try {
-      const postId = await createGeneratedPost(variation, "draft");
+      const existingId = draftPostIds[variationIndex] ?? null;
+      const postId =
+        existingId ?? (await createGeneratedPost(variation, "draft"));
       const publishRes = await fetch("/api/social/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -330,18 +365,40 @@ export default function CreateContentPage() {
     }
   };
 
-  const handleSchedule = async (variation: GeneratedVariation) => {
+  const handleSchedule = async (
+    variation: GeneratedVariation,
+    variationIndex: number,
+  ) => {
     if (!variation.imageUrl && platform === 'instagram') {
       toast.error('Instagram requires an image.');
       return;
     }
 
+    const scheduledAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000,
+    ).toISOString();
+
     try {
-      await createGeneratedPost(
-        variation,
-        "scheduled",
-        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      );
+      const existingId = draftPostIds[variationIndex] ?? null;
+      if (existingId) {
+        const patchRes = await fetch(
+          `/api/marketing/generated-posts/${existingId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "scheduled",
+              scheduledAt,
+            }),
+          },
+        );
+        const patchData = await patchRes.json();
+        if (!patchRes.ok) {
+          throw new Error(patchData?.error || "Could not schedule post");
+        }
+      } else {
+        await createGeneratedPost(variation, "scheduled", scheduledAt);
+      }
 
       toast.success('Post scheduled for tomorrow');
       router.push(`/app/${organizationSlug}/marketing/content?tab=scheduled`);
@@ -350,9 +407,23 @@ export default function CreateContentPage() {
     }
   };
 
-  const handleSaveDraft = async (variation: GeneratedVariation) => {
+  const handleSaveDraft = async (
+    variation: GeneratedVariation,
+    variationIndex: number,
+  ) => {
     try {
-      await createGeneratedPost(variation, "draft");
+      if (draftPostIds[variationIndex]) {
+        toast.success("Already saved as draft");
+        router.push(`/app/${organizationSlug}/marketing/content?tab=draft`);
+        return;
+      }
+      const id = await createGeneratedPost(variation, "draft");
+      setDraftPostIds((prev) => {
+        const next = [...prev];
+        while (next.length <= variationIndex) next.push(null);
+        next[variationIndex] = id;
+        return next;
+      });
       toast.success("Draft saved");
       router.push(`/app/${organizationSlug}/marketing/content?tab=draft`);
     } catch (error: any) {
@@ -574,6 +645,7 @@ export default function CreateContentPage() {
                   </div>
                 </div>
               ) : variations.length > 0 ? (
+                <div className="space-y-3">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {variations.map((variation, idx) => (
                     <div
@@ -649,7 +721,7 @@ export default function CreateContentPage() {
                             className="bg-violet-500 text-white hover:bg-violet-600"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handlePublishNow(variation);
+                              handlePublishNow(variation, idx);
                             }}
                             disabled={isPublishing || !variation.imageUrl}
                           >
@@ -666,7 +738,7 @@ export default function CreateContentPage() {
                             className="border-violet-300 text-violet-700 hover:bg-violet-50"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleSchedule(variation);
+                              handleSchedule(variation, idx);
                             }}
                             disabled={!variation.imageUrl}
                           >
@@ -679,7 +751,7 @@ export default function CreateContentPage() {
                             className="border-gray-300 text-gray-700 hover:bg-gray-50"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleSaveDraft(variation);
+                              handleSaveDraft(variation, idx);
                             }}
                           >
                             <Bookmark className="w-4 h-4 mr-2" />
@@ -689,6 +761,15 @@ export default function CreateContentPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+                <p className="text-center text-sm">
+                  <Link
+                    href={`/app/${organizationSlug}/marketing/content`}
+                    className="text-violet-600 underline-offset-4 hover:underline dark:text-violet-400"
+                  >
+                    View all drafts
+                  </Link>
+                </p>
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
