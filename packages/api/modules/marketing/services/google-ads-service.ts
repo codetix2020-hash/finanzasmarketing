@@ -14,7 +14,7 @@ function getAnthropicClient() {
 }
 
 // ============================================
-// TIPOS
+// TYPES
 // ============================================
 interface GoogleCampaignParams {
   productId: string
@@ -42,10 +42,10 @@ interface GoogleCampaignParams {
 }
 
 // ============================================
-// KEYWORD RESEARCH CON IA
+// KEYWORD RESEARCH WITH AI
 // ============================================
 export async function generateKeywordResearch(productId: string) {
-  console.log('🔍 Generando keyword research...')
+  console.log('🔍 Generating keyword research...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -57,24 +57,24 @@ export async function generateKeywordResearch(productId: string) {
   if (!product) throw new Error('Product not found')
 
   const prompt = `
-Genera un keyword research completo para Google Ads de este producto SaaS:
+Generate complete Google Ads keyword research for this SaaS product:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
 TARGET: ${product.targetAudience}
-CATEGORÍA: SaaS / Software
+CATEGORY: SaaS / Software
 
-Genera keywords organizadas por:
-1. Intención de búsqueda (informacional, navegacional, transaccional)
-2. Etapa del funnel (awareness, consideration, decision)
-3. Tipo (branded, competitor, generic, long-tail)
+Generate keywords organized by:
+1. Search intent (informational, navigational, transactional)
+2. Funnel stage (awareness, consideration, decision)
+3. Type (branded, competitor, generic, long-tail)
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "keywords": {
     "transactional": [
       {
-        "keyword": "keyword exacta",
+        "keyword": "exact keyword",
         "matchType": "exact | phrase | broad",
         "estimatedCPC": 2.5,
         "estimatedVolume": "1K-10K",
@@ -95,8 +95,8 @@ Responde SOLO con JSON:
   ],
   "adGroups": [
     {
-      "name": "nombre del ad group",
-      "theme": "tema principal",
+      "name": "ad group name",
+      "theme": "main theme",
       "keywords": ["keyword1", "keyword2"],
       "suggestedBudgetShare": "30%"
     }
@@ -119,7 +119,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const research = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar en BD
+  // Save in DB
   await prisma.marketingContent.create({
     data: {
       organizationId: product.organizationId,
@@ -136,16 +136,16 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Keyword research generado: ${Object.keys(research.keywords).length} categorías`)
+  console.log(`✅ Keyword research generated: ${Object.keys(research.keywords).length} categories`)
 
   return research
 }
 
 // ============================================
-// GENERAR ESTRATEGIA GOOGLE ADS
+// GENERATE GOOGLE ADS STRATEGY
 // ============================================
 export async function generateGoogleAdsStrategy(productId: string) {
-  console.log('🎯 Generando estrategia Google Ads...')
+  console.log('🎯 Generating Google Ads strategy...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -157,25 +157,25 @@ export async function generateGoogleAdsStrategy(productId: string) {
   if (!product) throw new Error('Product not found')
 
   const prompt = `
-Genera una estrategia completa de Google Ads para este producto SaaS:
+Generate a complete Google Ads strategy for this SaaS product:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
 TARGET: ${product.targetAudience}
 USP: ${product.usp}
 PRICING: ${JSON.stringify(product.pricing)}
 
-Crea una estrategia con:
-1. Campañas de Search (palabras clave de alta intención)
-2. Campañas de Display (remarketing + prospecting)
-3. Campañas de YouTube (si aplica)
-4. Performance Max (opcional)
+Create a strategy with:
+1. Search campaigns (high-intent keywords)
+2. Display campaigns (remarketing + prospecting)
+3. YouTube campaigns (if applicable)
+4. Performance Max (optional)
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "campaigns": [
     {
-      "name": "nombre de campaña",
+      "name": "campaign name",
       "type": "search | display | youtube | performance_max",
       "objective": "leads | sales | traffic | awareness",
       "budget": {
@@ -253,16 +253,16 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Estrategia Google Ads generada: ${strategy.campaigns.length} campañas`)
+  console.log(`✅ Google Ads strategy generated: ${strategy.campaigns.length} campaigns`)
 
   return strategy
 }
 
 // ============================================
-// CREAR CAMPAÑA EN GOOGLE ADS (REAL)
+// CREATE CAMPAIGN IN GOOGLE ADS (REAL)
 // ============================================
 export async function createGoogleCampaign(params: GoogleCampaignParams) {
-  console.log('📢 Creando campaña Google Ads...', params.campaignType)
+  console.log('📢 Creating Google Ads campaign...', params.campaignType)
 
   const product = await prisma.saasProduct.findUnique({
     where: { id: params.productId }
@@ -270,7 +270,7 @@ export async function createGoogleCampaign(params: GoogleCampaignParams) {
 
   if (!product) throw new Error('Product not found')
 
-  // Crear campaña en Google Ads API (mock o real)
+  // Create campaign in Google Ads API (mock or real)
   const googleClient = new GoogleAdsClient()
   const googleCampaign = await googleClient.createCampaign({
     name: `${product.name} - Google ${params.campaignType}`,
@@ -279,14 +279,14 @@ export async function createGoogleCampaign(params: GoogleCampaignParams) {
     targetLocation: params.targeting.locations?.[0],
   })
 
-  // Guardar en BD
+  // Save in DB
   const campaign = await prisma.marketingAdCampaign.create({
     data: {
       organizationId: product.organizationId,
       productId: params.productId,
       name: `${product.name} - Google ${params.campaignType} Campaign`,
       platform: 'google',
-      googleCampaignId: googleCampaign.id, // ID de Google Ads
+      googleCampaignId: googleCampaign.id, // Google Ads ID
       status: 'ACTIVE',
       budget: {
         daily: params.budget.daily,
@@ -310,20 +310,20 @@ export async function createGoogleCampaign(params: GoogleCampaignParams) {
     }
   })
 
-  console.log(`✅ Campaña Google creada: ${campaign.id} (Google ID: ${googleCampaign.id})`)
+  console.log(`✅ Google campaign created: ${campaign.id} (Google ID: ${googleCampaign.id})`)
 
   return campaign
 }
 
 // ============================================
-// GENERAR ANUNCIOS RESPONSIVE SEARCH
+// GENERATE RESPONSIVE SEARCH ADS
 // ============================================
 export async function generateResponsiveSearchAds(params: {
   productId: string
   keywords: string[]
   count?: number
 }) {
-  console.log('📝 Generando Responsive Search Ads...')
+  console.log('📝 Generating Responsive Search Ads...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -335,20 +335,20 @@ export async function generateResponsiveSearchAds(params: {
   if (!product) throw new Error('Product not found')
 
   const prompt = `
-Genera ${params.count || 3} Responsive Search Ads para Google Ads:
+Generate ${params.count || 3} Responsive Search Ads for Google Ads:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
 TARGET: ${product.targetAudience}
 KEYWORDS: ${params.keywords.join(', ')}
 
-Para cada RSA genera:
-- 15 headlines (máx 30 caracteres cada uno)
-- 4 descriptions (máx 90 caracteres cada uno)
-- Incluir keywords en headlines
-- Variedad de ángulos: beneficio, feature, social proof, urgency, question
+For each RSA generate:
+- 15 headlines (max 30 characters each)
+- 4 descriptions (max 90 characters each)
+- Include keywords in headlines
+- Variety of angles: benefit, feature, social proof, urgency, question
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "ads": [
     {
@@ -368,8 +368,8 @@ Responde SOLO con JSON:
       "path1": "path1",
       "path2": "path2",
       "pinning": {
-        "headline1": "Pin más importante en posición 1",
-        "headline2": "CTA en posición 2"
+        "headline1": "Most important pin in position 1",
+        "headline2": "CTA in position 2"
       }
     }
   ],
@@ -408,16 +408,16 @@ Responde SOLO con JSON:
     })
   }
 
-  console.log(`✅ ${ads.ads.length} RSAs generados`)
+  console.log(`✅ ${ads.ads.length} RSAs generated`)
 
   return ads
 }
 
 // ============================================
-// OPTIMIZAR CAMPAÑA GOOGLE
+// OPTIMIZE GOOGLE CAMPAIGN
 // ============================================
 export async function optimizeGoogleCampaign(campaignId: string) {
-  console.log('⚡ Optimizando campaña Google...')
+  console.log('⚡ Optimizing Google campaign...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -433,10 +433,10 @@ export async function optimizeGoogleCampaign(campaignId: string) {
   const budget = campaign.budget as any || {}
 
   const prompt = `
-Analiza esta campaña de Google Ads y sugiere optimizaciones:
+Analyze this Google Ads campaign and suggest optimizations:
 
-CAMPAÑA: ${campaign.name}
-PRODUCTO: ${campaign.product?.name}
+CAMPAIGN: ${campaign.name}
+PRODUCT: ${campaign.product?.name}
 PLATAFORMA: Google Ads (${campaign.platform})
 
 PERFORMANCE:
@@ -455,30 +455,30 @@ BUDGET:
 TARGETING:
 ${JSON.stringify(campaign.targeting)}
 
-Analiza y sugiere optimizaciones para:
-1. Keywords (añadir, pausar, negative keywords)
+Analyze and suggest optimizations for:
+1. Keywords (add, pause, negative keywords)
 2. Ad copy (headlines, descriptions)
-3. Bids y budget allocation
+3. Bids and budget allocation
 4. Quality Score improvements
 5. Audience refinement
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "analysis": {
     "qualityScoreIssues": ["landing page relevance", "ad relevance"],
     "wastedSpend": {
-      "keywords": ["keyword con bajo performance"],
+      "keywords": ["keyword with low performance"],
       "estimatedSavings": "€X/month"
     },
-    "missedOpportunities": ["expandir a Display", "añadir extensions"]
+    "missedOpportunities": ["expand to Display", "add extensions"]
   },
   "optimizations": [
     {
       "area": "keywords | ads | bids | targeting | extensions | landing_page",
-      "action": "acción específica",
+      "action": "specific action",
       "impact": "high | medium | low",
       "expectedResult": "+15% CTR",
-      "implementation": "instrucciones paso a paso"
+      "implementation": "step-by-step instructions"
     }
   ],
   "keywordsToAdd": ["new keyword 1", "new keyword 2"],
@@ -518,16 +518,16 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Optimización Google generada`)
+  console.log(`✅ Google optimization generated`)
 
   return optimization
 }
 
 // ============================================
-// SYNC METRICS (IMPLEMENTACIÓN REAL)
+// SYNC METRICS (REAL IMPLEMENTATION)
 // ============================================
 export async function syncGoogleMetrics(campaignId: string) {
-  console.log('📊 Sincronizando métricas Google Ads...')
+  console.log('📊 Syncing Google Ads metrics...')
 
   const campaign = await prisma.marketingAdCampaign.findUnique({
     where: { id: campaignId }
@@ -537,11 +537,11 @@ export async function syncGoogleMetrics(campaignId: string) {
     throw new Error('Campaign not found or no Google Campaign ID')
   }
 
-  // Obtener métricas de Google Ads API
+  // Fetch metrics from Google Ads API
   const googleClient = new GoogleAdsClient()
   const metrics = await googleClient.syncMetrics(campaign.googleCampaignId)
 
-  // Actualizar en BD
+  // Update in DB
   await prisma.marketingAdCampaign.update({
     where: { id: campaignId },
     data: {
@@ -552,15 +552,15 @@ export async function syncGoogleMetrics(campaignId: string) {
         ctr: metrics.ctr,
         cpc: metrics.cpc,
         cpa: metrics.cost / (metrics.conversions || 1),
-        roas: 0, // Calcular según revenue tracking
-        qualityScore: 0, // Obtener de Google Ads
+        roas: 0, // Calculate based on revenue tracking
+        qualityScore: 0, // Fetch from Google Ads
         spend: metrics.cost,
         lastSyncAt: new Date().toISOString()
       }
     }
   })
 
-  console.log(`✅ Métricas sincronizadas para campaña ${campaignId}`)
+  console.log(`✅ Metrics synced for campaign ${campaignId}`)
 
   return metrics
 }

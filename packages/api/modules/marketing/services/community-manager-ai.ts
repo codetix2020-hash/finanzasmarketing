@@ -1,11 +1,11 @@
 /**
- * Community Manager AI - Gestión automática de comunidad y comentarios
+ * Community Manager AI - Automatic community and comment management
  * 
- * Responde automáticamente a comentarios en redes sociales con IA
- * - Analiza sentiment y urgencia
- * - Genera respuestas contextuales
- * - Modera spam y contenido ofensivo
- * - Aumenta engagement automático
+ * Automatically responds to social media comments with AI
+ * - Analyzes sentiment and urgency
+ * - Generates contextual responses
+ * - Moderates spam and offensive content
+ * - Increases engagement automatically
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -33,7 +33,7 @@ export class CommunityManagerAI {
   private anthropic: Anthropic | null = null;
 
   constructor() {
-    // Lazy initialization - solo se crea cuando se usa
+    // Lazy initialization - only created when used
   }
 
   private getAnthropic(): Anthropic {
@@ -48,7 +48,7 @@ export class CommunityManagerAI {
   }
 
   /**
-   * Analiza un comentario para determinar su naturaleza
+   * Analyze a comment to determine its nature
    */
   async analyzeComment(comment: string, context?: {
     platform?: string;
@@ -58,27 +58,27 @@ export class CommunityManagerAI {
     logger.info('🔍 Analyzing comment', { commentLength: comment.length });
 
     try {
-      const prompt = `Analiza este comentario de redes sociales y determina su naturaleza.
+      const prompt = `Analyze this social media comment and determine its nature.
 
-COMENTARIO: "${comment}"
+COMMENT: "${comment}"
 ${context?.platform ? `PLATAFORMA: ${context.platform}` : ''}
-${context?.postTopic ? `TEMA DEL POST: ${context.postTopic}` : ''}
+${context?.postTopic ? `POST TOPIC: ${context.postTopic}` : ''}
 
-Analiza:
-1. Sentiment: ¿Es positivo, negativo, neutral o una pregunta?
-2. Urgencia: ¿Requiere respuesta rápida?
-3. Categoría: ¿Es soporte, venta, queja, elogio o spam?
-4. ¿Necesita intervención humana?
-5. ¿Cuál es la intención del usuario?
+Analyze:
+1. Sentiment: Is it positive, negative, neutral, or a question?
+2. Urgency: Does it require a fast response?
+3. Category: Is it support, sales, complaint, praise, or spam?
+4. Does it need human intervention?
+5. What is the user intent?
 
-Retorna JSON EXACTO:
+Return EXACT JSON:
 {
   "sentiment": "positive" | "negative" | "neutral" | "question",
   "urgency": "high" | "medium" | "low",
   "category": "support" | "sales" | "complaint" | "praise" | "spam",
   "needsHuman": boolean,
   "confidence": 0.85,
-  "detectedIntent": "Descripción breve de la intención"
+  "detectedIntent": "Brief intent description"
 }`;
 
       const response = await this.getAnthropic().messages.create({
@@ -108,7 +108,7 @@ Retorna JSON EXACTO:
       return analysis;
     } catch (error) {
       logger.error('Failed to analyze comment', error);
-      // Fallback conservador
+      // Conservative fallback
       return {
         sentiment: 'neutral',
         urgency: 'medium',
@@ -121,7 +121,7 @@ Retorna JSON EXACTO:
   }
 
   /**
-   * Genera respuesta apropiada para un comentario
+   * Generate an appropriate response for a comment
    */
   async generateResponse(
     comment: string,
@@ -137,35 +137,35 @@ Retorna JSON EXACTO:
       const analysis = context.analysis || await this.analyzeComment(comment);
 
       const toneMap = {
-        positive: 'entusiasta y agradecido',
-        negative: 'empático y solucionador',
-        neutral: 'amigable y profesional',
-        question: 'servicial y claro'
+        positive: 'enthusiastic and thankful',
+        negative: 'empathetic and solution-oriented',
+        neutral: 'friendly and professional',
+        question: 'helpful and clear'
       };
 
       const tone = toneMap[analysis.sentiment];
 
-      const prompt = `Genera una respuesta apropiada para este comentario en redes sociales.
+      const prompt = `Generate an appropriate response to this social media comment.
 
-COMENTARIO: "${comment}"
-PRODUCTO: ${context.productName}
+COMMENT: "${comment}"
+PRODUCT: ${context.productName}
 PLATAFORMA: ${context.platform}
 SENTIMENT: ${analysis.sentiment}
-CATEGORÍA: ${analysis.category}
+CATEGORY: ${analysis.category}
 
-REQUISITOS:
-- Tono: ${tone}
-- Máximo 280 caracteres
-- Incluir 1 emoji apropiado
-- Personalizada y genuina (no robótica)
-- Si es queja: empatía + solución
-- Si es pregunta: respuesta + CTA suave
-- Si es elogio: agradecimiento + engagement
+REQUIREMENTS:
+- Tone: ${tone}
+- Maximum 280 characters
+- Include 1 appropriate emoji
+- Personalized and genuine (not robotic)
+- If complaint: empathy + solution
+- If question: answer + soft CTA
+- If praise: gratitude + engagement
 
-${analysis.category === 'complaint' ? 'IMPORTANTE: Ofrece llevar la conversación a DM para resolver el problema.' : ''}
-${analysis.category === 'sales' ? 'IMPORTANTE: No seas pushy. Ofrece información, no vendas directamente.' : ''}
+${analysis.category === 'complaint' ? 'IMPORTANT: Offer to move the conversation to DM to solve the issue.' : ''}
+${analysis.category === 'sales' ? 'IMPORTANT: Do not be pushy. Offer information, do not sell directly.' : ''}
 
-Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
+Generate ONLY the response text, without quotes or extra formatting.`;
 
       const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
@@ -185,13 +185,13 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
       return responseText;
     } catch (error) {
       logger.error('Failed to generate response', error);
-      // Respuesta fallback genérica
-      return '¡Gracias por tu comentario! 😊 Te responderemos pronto.';
+      // Generic fallback response
+      return 'Thanks for your comment! 😊 We will reply soon.';
     }
   }
 
   /**
-   * Decide si responder automáticamente y genera respuesta
+   * Decides whether to auto-reply and generates a response
    */
   async autoReply(
     commentId: string,
@@ -205,10 +205,10 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
     logger.info('🤖 Processing auto-reply', { commentId });
 
     try {
-      // 1. Analizar comentario
+      // 1. Analyze comment
       const analysis = await this.analyzeComment(comment, context);
 
-      // 2. Decidir si responder automáticamente
+      // 2. Decide whether to auto-reply
       const shouldAutoReply = 
         analysis.confidence > 0.75 && 
         !analysis.needsHuman &&
@@ -226,18 +226,18 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
           confidence: analysis.confidence,
           escalate: analysis.needsHuman || analysis.urgency === 'high',
           reason: analysis.needsHuman ? 
-            'Requiere intervención humana' : 
-            'Confianza insuficiente para respuesta automática'
+            'Requires human intervention' : 
+            'Insufficient confidence for automatic reply'
         };
       }
 
-      // 3. Generar respuesta
+      // 3. Generate response
       const response = await this.generateResponse(comment, {
         ...context,
         analysis
       });
 
-      // 4. Guardar en DB para auditoría
+      // 4. Save in DB for auditing
       await prisma.marketingMemory.create({
         data: {
           key: `auto_reply_${commentId}_${Date.now()}`,
@@ -258,7 +258,7 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
         shouldReply: true,
         confidence: analysis.confidence,
         escalate: false,
-        reason: 'Respuesta automática generada con alta confianza'
+        reason: 'Automatic response generated with high confidence'
       };
     } catch (error) {
       logger.error('Failed to process auto-reply', error, { commentId });
@@ -268,13 +268,13 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
         shouldReply: false,
         confidence: 0,
         escalate: true,
-        reason: 'Error al procesar - requiere revisión manual'
+        reason: 'Processing error - requires manual review'
       };
     }
   }
 
   /**
-   * Modera comentarios para detectar spam y contenido ofensivo
+   * Moderates comments to detect spam and offensive content
    */
   async moderateComments(comments: Array<{
     id: string;
@@ -292,27 +292,27 @@ Genera SOLO el texto de la respuesta, sin comillas ni formato adicional.`;
 
     for (const comment of comments) {
       try {
-        const prompt = `Modera este comentario de redes sociales.
+        const prompt = `Moderate this social media comment.
 
-COMENTARIO: "${comment.text}"
+COMMENT: "${comment.text}"
 
-Determina si contiene:
+Determine if it contains:
 - Spam
-- Lenguaje ofensivo o hate speech
-- Contenido inapropiado
-- Phishing o links sospechosos
+- Offensive language or hate speech
+- Inappropriate content
+- Phishing or suspicious links
 
-Retorna JSON:
+Return JSON:
 {
   "action": "approve" | "hide" | "report" | "block_user",
-  "reason": "Explicación breve",
+  "reason": "Brief explanation",
   "confidence": 0.9
 }
 
-- approve: Comentario legítimo
-- hide: Spam suave, ocultar sin notificar
-- report: Contenido ofensivo, reportar a plataforma
-- block_user: Spammer/troll persistente, bloquear`;
+- approve: Legitimate comment
+- hide: Mild spam, hide without notifying
+- report: Offensive content, report to platform
+- block_user: Persistent spammer/troll, block`;
 
         const response = await this.getAnthropic().messages.create({
           model: 'claude-sonnet-4-20250514',
@@ -338,11 +338,11 @@ Retorna JSON:
         });
       } catch (error) {
         logger.error('Failed to moderate comment', error, { commentId: comment.id });
-        // Por defecto, aprobar y dejar que humano revise
+        // By default, approve and let a human review
         results.push({
           id: comment.id,
           action: 'approve' as const,
-          reason: 'Error en moderación automática',
+          reason: 'Automatic moderation error',
           confidence: 0.3
         });
       }
@@ -358,7 +358,7 @@ Retorna JSON:
   }
 
   /**
-   * Aumenta engagement con acciones automáticas
+   * Increases engagement with automatic actions
    */
   async engagementBoost(params: {
     organizationId: string;
@@ -372,8 +372,8 @@ Retorna JSON:
 
     const actions = [];
 
-    // En producción, esto se conectaría con APIs de social media
-    // Por ahora, retornamos estructura de lo que se haría
+    // In production, this would connect to social media APIs
+    // For now, return the structure of what would be done
 
     if (params.likePositiveComments) {
       actions.push({

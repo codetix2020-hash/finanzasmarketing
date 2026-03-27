@@ -1,16 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { d2cTemplates, getTemplatesForProductType, getTemplatesForPlatform } from "../templates/d2c-templates";
 
-// Tipos
+// Types
 interface D2CBusinessContext {
-  // Marca
+  // Brand
   brandName: string;
   tagline?: string;
   productCategory: string;
   brandStory?: string;
   yearFounded?: string;
 
-  // Producto
+  // Product
   priceRange: string;
   avgPrice?: string;
   uniqueSellingPoints: string[];
@@ -19,7 +19,7 @@ interface D2CBusinessContext {
   certifications?: string[];
   bestSellers?: string;
 
-  // Cliente
+  // Customer
   targetAge: string;
   targetGender: string;
   targetLocation: string[];
@@ -27,7 +27,7 @@ interface D2CBusinessContext {
   customerDesires: string[];
   competitors?: string[];
 
-  // Voz
+  // Voice
   brandPersonality: string;
   toneFormality: number;
   useEmojis: boolean;
@@ -40,7 +40,7 @@ interface D2CBusinessContext {
   photoStyle?: string;
   brandColors?: string[];
 
-  // Productos específicos (del catálogo)
+  // Specific products (from catalog)
   products?: Array<{
     name: string;
     shortDescription?: string;
@@ -51,7 +51,7 @@ interface D2CBusinessContext {
     promotionHook?: string;
   }>;
 
-  // Eventos activos
+  // Active events
   activeEvents?: Array<{
     eventType: string;
     title: string;
@@ -64,10 +64,10 @@ interface D2CBusinessContext {
 interface D2CContentRequest {
   contentType: "producto" | "engagement" | "social_proof" | "behind_scenes" | "urgencia" | "educativo" | "storytelling" | "oferta";
   platform: "instagram" | "facebook" | "tiktok" | "stories";
-  templateId?: string; // Template específico a usar
-  productId?: string; // Si es sobre un producto específico
-  eventId?: string; // Si es sobre un evento específico
-  customPrompt?: string; // Indicaciones adicionales
+  templateId?: string; // Specific template to use
+  productId?: string; // If this is about a specific product
+  eventId?: string; // If this is about a specific event
+  customPrompt?: string; // Additional instructions
   includeImageSuggestion?: boolean;
 }
 
@@ -76,7 +76,7 @@ interface GeneratedD2CContent {
   hashtags: string[];
   suggestedCTA: string;
   imagePrompt?: string;
-  imageSearchQuery?: string; // Para buscar en Pexels
+  imageSearchQuery?: string; // For searching in Pexels
   alternativeVersion?: string;
   templateUsed?: string;
   platform: string;
@@ -120,118 +120,118 @@ export class D2CContentGenerator {
   }
 
   private buildD2CSystemPrompt(context: D2CBusinessContext): string {
-    // Mapear personalidad de marca
+    // Map brand personality
     const personalityDescriptions: Record<string, string> = {
-      minimal_elegante: "Sofisticado, limpio, menos es más. Usa espacios, frases cortas, elegancia sin esfuerzo.",
-      fun_colorful: "Alegre, juvenil, atrevido. Usa exclamaciones, emojis coloridos, energía contagiosa.",
-      eco_conscious: "Consciente, natural, honesto. Habla de sostenibilidad sin ser preachy, conecta con valores.",
-      bold_edgy: "Rompedor, único, statement. Opiniones fuertes, lenguaje directo, no tienes miedo de destacar.",
-      romantic_soft: "Delicado, femenino, soñador. Usa palabras bonitas, metáforas suaves, crea atmósfera.",
-      urban_street: "Callejero, actual, real. Jerga moderna, referencias culturales, sin filtros.",
-      luxury_premium: "Exclusivo, aspiracional, selecto. Vocabulario elevado, crea deseo, menos es más.",
-      artesanal_handmade: "Hecho con amor, único, con historia. Habla del proceso, las manos detrás, la dedicación.",
+      minimal_elegante: "Sophisticated, clean, less is more. Use spacing, short lines, effortless elegance.",
+      fun_colorful: "Cheerful, youthful, bold. Use exclamations, colorful emojis, contagious energy.",
+      eco_conscious: "Conscious, natural, honest. Talk about sustainability without sounding preachy, connect with values.",
+      bold_edgy: "Disruptive, unique, statement-driven. Strong opinions, direct language, unafraid to stand out.",
+      romantic_soft: "Delicate, feminine, dreamy. Use beautiful words, soft metaphors, create atmosphere.",
+      urban_street: "Street, current, real. Modern slang, cultural references, unfiltered tone.",
+      luxury_premium: "Exclusive, aspirational, selective. Elevated vocabulary, create desire, less is more.",
+      artesanal_handmade: "Made with love, unique, with a story. Highlight the process, the hands behind it, the dedication.",
     };
 
-    // Mapear tono de formalidad
+    // Map formality tone
     const formalityDescriptions: Record<number, string> = {
-      1: "Muy cercano y casual. Hablas como a una amiga. Usa 'tú', expresiones coloquiales, incluso algo de jerga.",
-      2: "Cercano pero cuidado. Amigable, accesible, pero con un toque de profesionalidad.",
-      3: "Equilibrado. Ni muy formal ni muy casual. Profesional pero humano.",
-      4: "Profesional. Cuidas el lenguaje, evitas coloquialismos, pero sin ser frío.",
-      5: "Muy formal. Lenguaje elevado, trato de usted si aplica, máxima elegancia.",
+      1: "Very close and casual. Speak like to a friend. Use informal language and colloquial expressions.",
+      2: "Close but polished. Friendly and approachable, with a touch of professionalism.",
+      3: "Balanced. Neither too formal nor too casual. Professional but human.",
+      4: "Professional. Careful wording, avoid colloquialisms, but not cold.",
+      5: "Very formal. Elevated language and maximum elegance.",
     };
 
-    // Mapear rango de precios para el tono de venta
+    // Map price range to sales tone
     const priceStrategyDescriptions: Record<string, string> = {
-      low: "Enfatiza el value for money, la accesibilidad, el 'no te lo pienses'.",
-      mid: "Equilibrio entre calidad y precio. Justifica por qué vale lo que vale.",
-      high: "Enfatiza la calidad, la inversión a largo plazo, el 'compra menos pero mejor'.",
-      luxury: "Nunca hables de precio como argumento. Vende exclusividad, aspiración, pertenencia.",
+      low: "Emphasize value for money, accessibility, and low-friction buying.",
+      mid: "Balance quality and price. Justify why it is worth it.",
+      high: "Emphasize quality and long-term investment: buy less, buy better.",
+      luxury: "Never use price as the main argument. Sell exclusivity, aspiration, and belonging.",
     };
 
-    return `Eres el copywriter experto de "${context.brandName}", una marca D2C de ${this.getCategoryName(context.productCategory)}.
+    return `You are the expert copywriter for "${context.brandName}", a D2C brand in ${this.getCategoryName(context.productCategory)}.
 
-## IDENTIDAD DE MARCA
-- Nombre: ${context.brandName}
-- Tagline: ${context.tagline || "No definido"}
-- Categoría: ${this.getCategoryName(context.productCategory)}
-- Año fundación: ${context.yearFounded || "No especificado"}
-- Historia: ${context.brandStory || "No especificada"}
+## BRAND IDENTITY
+- Name: ${context.brandName}
+- Tagline: ${context.tagline || "Not defined"}
+- Category: ${this.getCategoryName(context.productCategory)}
+- Founding year: ${context.yearFounded || "Not specified"}
+- Story: ${context.brandStory || "Not specified"}
 
-## PERSONALIDAD DE MARCA
-${personalityDescriptions[context.brandPersonality] || "Personalidad equilibrada"}
+## BRAND PERSONALITY
+${personalityDescriptions[context.brandPersonality] || "Balanced personality"}
 
-## TONO DE COMUNICACIÓN
+## COMMUNICATION TONE
 ${formalityDescriptions[context.toneFormality] || formalityDescriptions[3]}
 
 ## EMOJIS
 ${context.useEmojis 
-  ? `Usa emojis con moderación (3-5 por post). Favoritos de la marca: ${context.favoriteEmojis?.join(" ") || "✨ 🤍 💫"}`
-  : "NO uses emojis. La marca prefiere un estilo limpio sin ellos."
+  ? `Use emojis in moderation (3-5 per post). Brand favorites: ${context.favoriteEmojis?.join(" ") || "✨ 🤍 💫"}`
+  : "DO NOT use emojis. The brand prefers a clean style without them."
 }
 
-## PRODUCTO
-- Rango de precio: ${context.priceRange} - ${priceStrategyDescriptions[context.priceRange]}
-- Precio medio: ${context.avgPrice ? `${context.avgPrice}€` : "No especificado"}
-- Lo que hace especiales los productos: ${context.uniqueSellingPoints?.join(", ") || "No especificado"}
-- Materiales: ${context.materials?.join(", ") || "No especificados"}
-- Fabricación: ${context.madeIn || "No especificado"}
-- Certificaciones: ${context.certifications?.join(", ") || "Ninguna"}
-- Bestseller: ${context.bestSellers || "No especificado"}
+## PRODUCT
+- Price range: ${context.priceRange} - ${priceStrategyDescriptions[context.priceRange]}
+- Average price: ${context.avgPrice ? `${context.avgPrice}€` : "Not specified"}
+- What makes the products special: ${context.uniqueSellingPoints?.join(", ") || "Not specified"}
+- Materials: ${context.materials?.join(", ") || "Not specified"}
+- Manufacturing: ${context.madeIn || "Not specified"}
+- Certifications: ${context.certifications?.join(", ") || "None"}
+- Bestseller: ${context.bestSellers || "Not specified"}
 
-## CLIENTE IDEAL
-- Edad: ${context.targetAge}
-- Género: ${context.targetGender}
-- Ubicación: ${context.targetLocation?.join(", ") || "No especificada"}
-- Problemas que tiene: ${context.customerPains?.join(", ") || "No especificados"}
-- Lo que desea: ${context.customerDesires?.join(", ") || "No especificado"}
-- Compite/se inspira en: ${context.competitors?.join(", ") || "No especificado"}
+## IDEAL CUSTOMER
+- Age: ${context.targetAge}
+- Gender: ${context.targetGender}
+- Location: ${context.targetLocation?.join(", ") || "Not specified"}
+- Pain points: ${context.customerPains?.join(", ") || "Not specified"}
+- Desires: ${context.customerDesires?.join(", ") || "Not specified"}
+- Competes with / inspired by: ${context.competitors?.join(", ") || "Not specified"}
 
-## VOCABULARIO
-- Palabras a usar: ${context.wordsToUse?.join(", ") || "Sin restricciones"}
-- Palabras PROHIBIDAS (nunca las uses): ${context.wordsToAvoid?.join(", ") || "Ninguna"}
+## VOCABULARY
+- Words to use: ${context.wordsToUse?.join(", ") || "No restrictions"}
+- FORBIDDEN words (never use): ${context.wordsToAvoid?.join(", ") || "None"}
 
-## EJEMPLO DE ESTILO DE LA MARCA
-${context.sampleCaption ? `Así escribe la marca normalmente:\n"${context.sampleCaption}"` : "No hay ejemplo disponible."}
+## BRAND STYLE EXAMPLE
+${context.sampleCaption ? `This is how the brand usually writes:\n"${context.sampleCaption}"` : "No example available."}
 
-## REGLAS CRÍTICAS
-1. NUNCA inventes datos de producto (precios, materiales) que no te haya dado
-2. Escribe SIEMPRE en primera persona del plural ("nosotras", "nuestra marca") o impersonal según el tono
-3. El contenido debe sonar AUTÉNTICO, como si lo escribiera el dueño de la marca
-4. Adapta el mensaje al cliente ideal específico de esta marca
-5. Los hashtags deben ser relevantes para el nicho de ${this.getCategoryName(context.productCategory)}
-6. Respeta ESTRICTAMENTE las preferencias de emojis y palabras prohibidas
-7. Si es marca de lujo, NUNCA menciones "barato", "oferta", "chollo"
-8. Si es marca eco/sostenible, incluye referencias a valores pero sin ser preachy
+## CRITICAL RULES
+1. NEVER invent product data (prices, materials) not provided to you
+2. ALWAYS write in first-person plural ("we", "our brand") or impersonal tone based on style
+3. Content must sound AUTHENTIC, as if written by the brand owner
+4. Adapt the message to this brand’s specific ideal customer
+5. Hashtags must be relevant to the ${this.getCategoryName(context.productCategory)} niche
+6. STRICTLY respect emoji and forbidden-word preferences
+7. If this is a luxury brand, NEVER mention "cheap", "deal", or bargain language
+8. If this is an eco/sustainable brand, reference values without sounding preachy
 
-## PLATAFORMA
-Adapta el contenido a la plataforma específica:
+## PLATFORM
+Adapt the content to the specific platform:
 - Instagram: Visual, aspiracional, hashtags al final, max 2200 chars
-- Facebook: Puede ser más largo, menos hashtags (3-5), más explicativo
+- Facebook: Can be longer, fewer hashtags (3-5), more explanatory
 - TikTok: Muy corto, directo, trending, max 150 chars
-- Stories: Una frase impactante, CTA directo, máximo 2 líneas`;
+- Stories: One impactful sentence, direct CTA, maximum 2 lines`;
   }
 
   private buildD2CUserPrompt(context: D2CBusinessContext, request: D2CContentRequest): string {
-    // Buscar template si se especificó o seleccionar uno apropiado
+    // Look up template if specified or pick a relevant one
     let templateInfo = "";
     if (request.templateId) {
       const template = d2cTemplates.find(t => t.id === request.templateId);
       if (template) {
         templateInfo = `
-## TEMPLATE A USAR
-Nombre: ${template.name}
-Estructura:
+## TEMPLATE TO USE
+Name: ${template.name}
+Structure:
 ${template.template}
 
-Ejemplo de referencia:
+Reference example:
 ${template.example}
 
 Tips: ${template.tips}
 `;
       }
     } else {
-      // Seleccionar templates relevantes
+      // Select relevant templates
       const relevantTemplates = d2cTemplates
         .filter(t => t.category === request.contentType)
         .filter(t => t.platforms.includes(request.platform))
@@ -239,110 +239,110 @@ Tips: ${template.tips}
       
       if (relevantTemplates.length > 0) {
         templateInfo = `
-## TEMPLATES DE REFERENCIA (elige el más apropiado o combina)
+## REFERENCE TEMPLATES (choose the most suitable one or combine them)
 ${relevantTemplates.map(t => `
 ### ${t.name}
 ${t.template}
 
-Ejemplo: ${t.example}
+Example: ${t.example}
 `).join("\n---\n")}
 `;
       }
     }
 
-    // Información de producto específico si aplica
+    // Specific product info if applicable
     let productInfo = "";
     if (request.productId && context.products) {
       const product = context.products.find(p => p.name === request.productId);
       if (product) {
         productInfo = `
-## PRODUCTO ESPECÍFICO PARA ESTE POST
-- Nombre: ${product.name}
-- Descripción: ${product.shortDescription || "No especificada"}
-- Precio: ${product.price ? `${product.price}€` : "No especificado"}
-- Características: ${product.features?.join(", ") || "No especificadas"}
-- Es bestseller: ${product.isBestseller ? "Sí" : "No"}
-- Es novedad: ${product.isNew ? "Sí" : "No"}
-- Hook promocional: ${product.promotionHook || "No tiene"}
+## SPECIFIC PRODUCT FOR THIS POST
+- Name: ${product.name}
+- Description: ${product.shortDescription || "Not specified"}
+- Price: ${product.price ? `${product.price}€` : "Not specified"}
+- Features: ${product.features?.join(", ") || "Not specified"}
+- Is bestseller: ${product.isBestseller ? "Yes" : "No"}
+- Is new: ${product.isNew ? "Yes" : "No"}
+- Promotional hook: ${product.promotionHook || "None"}
 `;
       }
     }
 
-    // Información de evento/oferta activa si aplica
+    // Active event/offer info if applicable
     let eventInfo = "";
     if (request.eventId && context.activeEvents) {
       const event = context.activeEvents.find(e => e.title === request.eventId);
       if (event) {
         eventInfo = `
-## EVENTO/OFERTA ACTIVA
-- Tipo: ${event.eventType}
-- Título: ${event.title}
-- Descuento: ${event.discountValue ? `${event.discountValue}%` : "No especificado"}
-- Código: ${event.discountCode || "No tiene"}
-- Fecha fin: ${event.endDate || "No especificada"}
+## ACTIVE EVENT/OFFER
+- Type: ${event.eventType}
+- Title: ${event.title}
+- Discount: ${event.discountValue ? `${event.discountValue}%` : "Not specified"}
+- Code: ${event.discountCode || "None"}
+- End date: ${event.endDate || "Not specified"}
 `;
       }
     }
 
-    // Descripción del tipo de contenido D2C
+    // D2C content type description
     const contentTypeDescriptions: Record<string, string> = {
-      producto: "Post destacando un producto. Enfoca en beneficios, lo que lo hace especial, por qué el cliente lo necesita.",
-      engagement: "Post diseñado para generar comentarios y interacción. Preguntas, debates, 'esto o esto'. El objetivo es que la gente comente.",
-      social_proof: "Post mostrando prueba social: reviews, testimonios, números de ventas, clientes satisfechas.",
-      behind_scenes: "Post mostrando el detrás de cámaras: packaging, proceso de creación, el equipo, el día a día.",
-      urgencia: "Post creando urgencia: stock limitado, tiempo limitado, última oportunidad. SOLO si es urgencia real.",
-      educativo: "Post de valor: tips, consejos, cómo usar el producto, mitos vs realidad. Posiciona como experto.",
-      storytelling: "Post contando una historia: origen de la marca, por qué hacemos esto, un momento especial.",
-      oferta: "Post promocionando una oferta, descuento o bundle. Claro, directo, con CTA fuerte.",
+      producto: "Post highlighting a product. Focus on benefits, what makes it special, and why the customer needs it.",
+      engagement: "Post designed to drive comments and interaction. Questions, debates, 'this or that'. The goal is to get people commenting.",
+      social_proof: "Post showing social proof: reviews, testimonials, sales numbers, satisfied customers.",
+      behind_scenes: "Post showing behind the scenes: packaging, creation process, team, day-to-day.",
+      urgencia: "Post creating urgency: limited stock, limited time, last chance. ONLY if urgency is real.",
+      educativo: "Value post: tips, advice, product usage, myths vs reality. Position the brand as an expert.",
+      storytelling: "Post telling a story: brand origin, why we do this, a special moment.",
+      oferta: "Post promoting an offer, discount, or bundle. Clear, direct, with a strong CTA.",
     };
 
-    return `Genera un post de tipo "${request.contentType}" para ${request.platform}.
+    return `Generate a "${request.contentType}" post for ${request.platform}.
 
-## TIPO DE CONTENIDO
+## CONTENT TYPE
 ${contentTypeDescriptions[request.contentType]}
 
 ${templateInfo}
 ${productInfo}
 ${eventInfo}
 
-${request.customPrompt ? `## INDICACIONES ADICIONALES DEL USUARIO\n${request.customPrompt}` : ""}
+${request.customPrompt ? `## USER ADDITIONAL INSTRUCTIONS\n${request.customPrompt}` : ""}
 
-## FORMATO DE RESPUESTA
-Responde EXACTAMENTE en este formato JSON:
+## RESPONSE FORMAT
+Respond EXACTLY in this JSON format:
 
 {
-  "mainText": "El texto principal del post completo, con saltos de línea (\\n) donde corresponda",
-  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "...hasta 10-15 para Instagram, 3-5 para Facebook"],
-  "suggestedCTA": "El call to action sugerido",
-  "imagePrompt": "Descripción detallada de qué imagen iría bien con este post",
-  "imageSearchQuery": "Términos de búsqueda para Pexels en inglés (ej: 'woman skincare morning routine')",
-  "alternativeVersion": "Una versión alternativa más corta o con diferente enfoque"
+  "mainText": "The full main post text, with line breaks (\\n) where needed",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "...up to 10-15 for Instagram, 3-5 for Facebook"],
+  "suggestedCTA": "Suggested call to action",
+  "imagePrompt": "Detailed description of the best matching image for this post",
+  "imageSearchQuery": "English search terms for Pexels (e.g.: 'woman skincare morning routine')",
+  "alternativeVersion": "A shorter alternative version or a different angle"
 }
 
-IMPORTANTE: 
-- Responde SOLO con el JSON, sin texto adicional
-- El mainText debe incluir emojis si la marca los usa
-- Los hashtags sin el símbolo #
-- imageSearchQuery debe ser en inglés para mejores resultados en Pexels`;
+IMPORTANT: 
+- Respond ONLY with JSON, no additional text
+- mainText must include emojis if the brand uses them
+- Hashtags must be returned without the # symbol
+- imageSearchQuery must be in English for better Pexels results`;
   }
 
   private getCategoryName(category: string): string {
     const categoryNames: Record<string, string> = {
-      moda_ropa: "moda y ropa",
-      moda_accesorios: "accesorios de moda",
-      joyeria: "joyería",
-      calzado: "calzado",
-      cosmetica: "cosmética y maquillaje",
-      skincare: "skincare y cuidado de la piel",
-      fitness: "productos fitness",
-      hogar: "decoración y hogar",
-      mascotas: "productos para mascotas",
-      bebes: "productos para bebés",
-      tech_accesorios: "accesorios tech",
-      arte: "arte y prints",
-      otro: "productos",
+      moda_ropa: "fashion and apparel",
+      moda_accesorios: "fashion accessories",
+      joyeria: "jewelry",
+      calzado: "footwear",
+      cosmetica: "cosmetics and makeup",
+      skincare: "skincare and skin care",
+      fitness: "fitness products",
+      hogar: "home and decor",
+      mascotas: "pet products",
+      bebes: "baby products",
+      tech_accesorios: "tech accessories",
+      arte: "art and prints",
+      otro: "products",
     };
-    return categoryNames[category] || "productos";
+    return categoryNames[category] || "products";
   }
 
   private parseResponse(text: string, request: D2CContentRequest): GeneratedD2CContent {
@@ -372,7 +372,7 @@ IMPORTANTE:
     }
   }
 
-  // Generar múltiples variantes
+  // Generate multiple variants
   async generateVariants(
     context: D2CBusinessContext,
     request: D2CContentRequest,
@@ -383,7 +383,7 @@ IMPORTANTE:
     for (let i = 0; i < count; i++) {
       const variant = await this.generateContent(context, {
         ...request,
-        customPrompt: `${request.customPrompt || ""}\n\nEsta es la variante ${i + 1} de ${count}. Hazla DIFERENTE a las anteriores: diferente hook, diferente enfoque, diferente estilo.`,
+        customPrompt: `${request.customPrompt || ""}\n\nThis is variant ${i + 1} of ${count}. Make it DIFFERENT from the previous ones: different hook, angle, and style.`,
       });
       variants.push(variant);
     }
@@ -391,19 +391,19 @@ IMPORTANTE:
     return variants;
   }
 
-  // Generar calendario semanal para D2C
+  // Generate weekly calendar for D2C
   async generateWeeklyCalendar(
     context: D2CBusinessContext
   ): Promise<Array<{ day: string; contentType: string; idea: string }>> {
-    // Calendario optimizado para marcas D2C
+    // Optimized calendar for D2C brands
     const weeklyPlan = [
-      { day: "Lunes", contentType: "producto", idea: "Producto estrella o nuevo" },
-      { day: "Martes", contentType: "educativo", idea: "Tips o cómo usar" },
-      { day: "Miércoles", contentType: "behind_scenes", idea: "Proceso o packaging" },
-      { day: "Jueves", contentType: "engagement", idea: "Pregunta o 'esto o esto'" },
-      { day: "Viernes", contentType: "social_proof", idea: "Review o testimonio" },
-      { day: "Sábado", contentType: "storytelling", idea: "Historia o valores" },
-      { day: "Domingo", contentType: "producto", idea: "Bestseller o favorito" },
+      { day: "Monday", contentType: "producto", idea: "Star product or new release" },
+      { day: "Tuesday", contentType: "educativo", idea: "Tips or how-to use" },
+      { day: "Wednesday", contentType: "behind_scenes", idea: "Process or packaging" },
+      { day: "Thursday", contentType: "engagement", idea: "Question or 'this or that'" },
+      { day: "Friday", contentType: "social_proof", idea: "Review or testimonial" },
+      { day: "Saturday", contentType: "storytelling", idea: "Story or values" },
+      { day: "Sunday", contentType: "producto", idea: "Bestseller or favorite" },
     ];
 
     return weeklyPlan;
