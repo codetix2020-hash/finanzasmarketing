@@ -17,9 +17,9 @@ interface LaunchParams {
   launchType: 'soft' | 'full' | 'beta'
 }
 
-// Orquestar lanzamiento de producto
+// Orchestrate product launch
 export async function orchestrateLaunch(params: LaunchParams) {
-  console.log('🚀 Orquestando lanzamiento de producto...')
+  console.log('🚀 Orchestrating product launch...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -34,41 +34,41 @@ export async function orchestrateLaunch(params: LaunchParams) {
   const daysUntilLaunch = Math.ceil((launchDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 
   const prompt = `
-Eres un experto en MARKETING DIGITAL y LANZAMIENTO DE PRODUCTOS.
-Tu objetivo es crear un plan de lanzamiento completo y coordinado.
+You are an expert in DIGITAL MARKETING and PRODUCT LAUNCHES.
+Your goal is to create a complete and coordinated launch plan.
 
-PRODUCTO:
-- Nombre: ${product.name}
-- Descripción: ${product.description}
+PRODUCT:
+- Name: ${product.name}
+- Description: ${product.description}
 - Target: ${product.targetAudience}
 - USP: ${product.usp}
 
-LANZAMIENTO:
-- Fecha: ${launchDate.toISOString().split('T')[0]}
-- Días hasta lanzamiento: ${daysUntilLaunch}
-- Tipo: ${params.launchType}
+LAUNCH:
+- Date: ${launchDate.toISOString().split('T')[0]}
+- Days until launch: ${daysUntilLaunch}
+- Type: ${params.launchType}
 
-Genera un plan de lanzamiento completo con contenido coordinado para:
+Generate a complete launch plan with coordinated content for:
 - T-7: Teaser campaign
 - T-3: Feature reveals
 - T-1: Final countdown
 - T+0: Launch day
 - T+7: Results & social proof
 
-Responde SOLO con JSON:
+Reply ONLY with JSON:
 {
   "timeline": [
     {
       "day": "T-7",
       "date": "YYYY-MM-DD",
-      "theme": "tema del día",
+      "theme": "theme of the day",
       "activities": [
         {
           "type": "post | email | ad | landing_page | blog",
-          "platform": "plataforma",
-          "title": "título del contenido",
-          "description": "qué crear",
-          "hook": "hook principal",
+          "platform": "platform",
+          "title": "content title",
+          "description": "what to create",
+          "hook": "main hook",
           "cta": "call to action",
           "time": "HH:MM",
           "priority": "high | medium"
@@ -87,34 +87,34 @@ Responde SOLO con JSON:
     }
   },
   "keyMessages": [
-    "mensaje clave 1",
-    "mensaje clave 2",
-    "mensaje clave 3"
+    "key message 1",
+    "key message 2",
+    "key message 3"
   ],
   "anticipationBuilders": [
-    "táctica de anticipación 1",
-    "táctica de anticipación 2"
+    "anticipation tactic 1",
+    "anticipation tactic 2"
   ],
   "launchDayPlan": {
     "schedule": [
       {
         "time": "08:00",
-        "action": "acción",
-        "channel": "canal"
+        "action": "action",
+        "channel": "channel"
       }
     ],
     "contingencies": [
-      "plan B si X falla"
+      "plan B if X fails"
     ]
   },
   "postLaunchPlan": {
-    "day1": ["acción 1", "acción 2"],
-    "week1": ["acción 1", "acción 2"]
+    "day1": ["action 1", "action 2"],
+    "week1": ["action 1", "action 2"]
   },
   "successMetrics": {
-    "signups": "objetivo",
-    "engagement": "objetivo",
-    "traffic": "objetivo"
+    "signups": "target",
+    "engagement": "target",
+    "traffic": "target"
   }
 }
 `
@@ -128,7 +128,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const launchPlan = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Crear jobs para cada pieza de contenido
+  // Create jobs for each content piece
   const jobs = []
   for (const day of launchPlan.timeline) {
     for (const activity of day.activities) {
@@ -160,7 +160,7 @@ Responde SOLO con JSON:
     }
   }
 
-  // Guardar plan de lanzamiento
+  // Save launch plan
   await prisma.marketingDecision.create({
     data: {
       organizationId: params.organizationId,
@@ -177,7 +177,7 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Plan de lanzamiento creado: ${jobs.length} jobs programados`)
+  console.log(`✅ Launch plan created: ${jobs.length} scheduled jobs`)
 
   return {
     launchPlan,
@@ -187,9 +187,9 @@ Responde SOLO con JSON:
   }
 }
 
-// Obtener estado del lanzamiento
+// Get launch status
 export async function getLaunchStatus(productId: string) {
-  console.log('📊 Obteniendo estado del lanzamiento...')
+  console.log('📊 Getting launch status...')
 
   const launchDecision = await prisma.marketingDecision.findFirst({
     where: {
@@ -200,7 +200,7 @@ export async function getLaunchStatus(productId: string) {
   })
 
   if (!launchDecision) {
-    return { status: 'no_launch_planned', message: 'No hay lanzamiento planificado' }
+    return { status: 'no_launch_planned', message: 'No launch is planned' }
   }
 
   const jobs = await prisma.marketingJob.findMany({
