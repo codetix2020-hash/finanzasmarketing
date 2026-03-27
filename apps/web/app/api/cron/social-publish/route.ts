@@ -8,12 +8,12 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 const CONTENT_TYPES = [
-  "educativo",
-  "problema_solucion",
-  "testimonio",
-  "oferta",
+  "educational",
+  "problem_solution",
+  "testimonial",
+  "offer",
   "carrusel_hook",
-  "urgencia"
+  "urgency"
 ];
 
 export async function GET(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const results: Array<{ organizationId: string; organizationName: string; status: string; detail?: string }> = [];
 
   try {
-    // Multi-tenant: obtener TODAS las organizaciones con productos marketingEnabled
+    // Multi-tenant: get ALL organizations with marketingEnabled products
     const products = await prisma.saasProduct.findMany({
       where: { marketingEnabled: true },
       include: {
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       const orgName = product.organization.name;
 
       try {
-        // Verificar cuántos posts se han generado hoy para este producto
+        // Check how many posts have been generated today for this product
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -59,48 +59,48 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        // Máximo 4 posts por día
+        // Maximum 4 posts per day
         if (postsToday >= 4) {
           results.push({ organizationId: orgId, organizationName: orgName, status: "skipped", detail: "Daily limit reached (4 posts)" });
           continue;
         }
 
-        // Seleccionar tipo de contenido (rota entre los tipos)
+        // Select content type (rotates through types)
         const contentType = CONTENT_TYPES[postsToday % CONTENT_TYPES.length];
 
-        // Generar contenido con Claude
-        const prompt = `Genera UN post para Instagram/TikTok.
+        // Generate content with Claude
+        const prompt = `Generate ONE post for Instagram/TikTok.
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description || "Sin descripción"}
-AUDIENCIA: ${product.targetAudience || "General"}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description || "No description"}
+AUDIENCE: ${product.targetAudience || "General"}
 USP: ${product.usp || "N/A"}
 
-TIPO DE POST: ${contentType}
+POST TYPE: ${contentType}
 
-${contentType === "educativo" ? "Enseña algo útil relacionado con el producto" : ""}
-${contentType === "problema_solucion" ? "Presenta un problema común y cómo el producto lo soluciona" : ""}
-${contentType === "testimonio" ? "Crea un testimonio ficticio pero realista" : ""}
-${contentType === "oferta" ? "Enfócate en una oferta o beneficio con urgencia" : ""}
-${contentType === "carrusel_hook" ? "Hook intrigante que haga querer ver más" : ""}
-${contentType === "urgencia" ? "Crea urgencia: plazas limitadas, oferta por tiempo limitado" : ""}
+${contentType === "educational" ? "Teach something useful related to the product" : ""}
+${contentType === "problem_solution" ? "Present a common problem and how the product solves it" : ""}
+${contentType === "testimonial" ? "Create a fictional but realistic testimonial" : ""}
+${contentType === "offer" ? "Focus on an offer or benefit with urgency" : ""}
+${contentType === "carrusel_hook" ? "Intriguing hook that makes people want to see more" : ""}
+${contentType === "urgency" ? "Create urgency: limited spots, time-limited offer" : ""}
 
-REGLAS:
-- MÁXIMO 200 caracteres (sin hashtags)
-- Hook potente al inicio
-- Emojis estratégicos (3-5 máximo)
-- Español de España
-- CTA claro
+RULES:
+- MAXIMUM 200 characters (without hashtags)
+- Strong hook at the beginning
+- Strategic emojis (3-5 max)
+- English (US)
+- Clear CTA
 
-FORMATO (JSON):
+FORMAT (JSON):
 {
-  "instagram": { "content": "texto", "hashtags": ["h1", "h2"] },
-  "tiktok": { "content": "texto corto (máx 150 chars)", "hashtags": ["h1", "h2", "h3"] },
-  "hook": "el hook usado",
+  "instagram": { "content": "text", "hashtags": ["h1", "h2"] },
+  "tiktok": { "content": "short text (max 150 chars)", "hashtags": ["h1", "h2", "h3"] },
+  "hook": "the hook used",
   "tipo": "${contentType}"
 }
 
-Responde SOLO con el JSON.`;
+Reply ONLY with the JSON.`;
 
         const response = await client.messages.create({
           model: "claude-sonnet-4-20250514",
@@ -125,7 +125,7 @@ Responde SOLO con el JSON.`;
           };
         }
 
-        // Guardar en base de datos
+        // Save to database
         const savedInstagram = await prisma.marketingContent.create({
           data: {
             type: "SOCIAL",
@@ -166,7 +166,7 @@ Responde SOLO con el JSON.`;
           },
         });
 
-        // Auto-publicación si está activada
+        // Auto-publish if enabled
         let autoPublishResult = null;
         if (product.autoPublish) {
           const instagramGuards = await validateContent({
@@ -231,7 +231,7 @@ Responde SOLO con el JSON.`;
         });
       }
 
-      // Delay entre organizaciones para no saturar APIs
+      // Delay between organizations to avoid overloading APIs
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
