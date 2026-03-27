@@ -2,12 +2,15 @@
 
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { PageHeader } from "@saas/shared/components/PageHeader";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Button } from "@ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/components/card";
 import { Badge } from "@ui/components/badge";
 import { Skeleton } from "@ui/components/skeleton";
-import { Bot, Calendar, Clock, RefreshCw, CheckCircle2, XCircle, Zap } from "lucide-react";
+import { Bot, Calendar, Clock, RefreshCw, CheckCircle2, XCircle, Zap, Shield } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 interface CronLog {
@@ -32,6 +35,20 @@ interface MarketingPost {
 	platform: string;
 	status: string;
 	scheduledAt?: string;
+}
+
+interface SocialConnection {
+	id: string;
+	isActive: boolean;
+}
+
+const JOB_LABELS: Record<string, string> = {
+	"marketing-engine": "Content Generation",
+	"sync-ads-metrics": "Analytics Sync",
+};
+
+function getJobLabel(jobName: string): string {
+	return JOB_LABELS[jobName] || "Automation Run";
 }
 
 function parseResults(results: string | null): {
@@ -70,12 +87,14 @@ function computeNextRun(lastExecutedAtIso: string | null): Date | null {
 
 export default function MarketingAutomationPage() {
 	const { activeOrganization, loaded } = useActiveOrganization();
+	const params = useParams<{ organizationSlug: string }>();
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [isToggling, setIsToggling] = useState(false);
 	const [config, setConfig] = useState<MarketingConfig | null>(null);
 	const [cronLogs, setCronLogs] = useState<CronLog[]>([]);
 	const [scheduledPosts, setScheduledPosts] = useState<MarketingPost[]>([]);
+	const [hasConnectedSocialAccounts, setHasConnectedSocialAccounts] = useState(false);
 
 	const isAutomationEnabled = useMemo(() => !config?.isPaused, [config?.isPaused]);
 
@@ -89,17 +108,21 @@ export default function MarketingAutomationPage() {
 		if (!activeOrganization?.id) return;
 		setIsLoading(true);
 		try {
-			const [settingsRes, logsRes, postsRes] = await Promise.all([
+			const [settingsRes, logsRes, postsRes, socialConnectionsRes] = await Promise.all([
 				fetch(`/api/marketing/automation/settings?organizationId=${activeOrganization.id}`),
-				fetch(`/api/marketing/automation/cron-logs?jobName=marketing-engine&take=10`),
+				fetch("/api/marketing/automation/cron-logs?take=10"),
 				fetch(
 					`/api/marketing/posts?organizationId=${activeOrganization.id}&status=scheduled`,
 				),
+				fetch(`/api/social/connections?organizationId=${activeOrganization.id}`),
 			]);
 
 			const settingsJson = await settingsRes.json();
 			const logsJson = await logsRes.json();
 			const postsJson = await postsRes.json();
+			const socialConnectionsJson = socialConnectionsRes.ok
+				? await socialConnectionsRes.json()
+				: { connections: [] };
 
 			if (!settingsRes.ok) throw new Error(settingsJson?.error || "Error cargando settings");
 			if (!logsRes.ok) throw new Error(logsJson?.error || "Error cargando logs");
@@ -107,6 +130,10 @@ export default function MarketingAutomationPage() {
 			setConfig(settingsJson.config);
 			setCronLogs((logsJson.logs || []).map((l: any) => ({ ...l, executedAt: String(l.executedAt) })));
 			setScheduledPosts(postsJson?.posts || []);
+			const activeConnections = (socialConnectionsJson.connections || []).filter(
+				(connection: SocialConnection) => connection.isActive,
+			);
+			setHasConnectedSocialAccounts(activeConnections.length > 0);
 		} catch (error: any) {
 			console.error(error);
 			toast.error("Failed to load automation center");
@@ -172,6 +199,34 @@ export default function MarketingAutomationPage() {
 		<div className="space-y-6">
 			<PageHeader title="Automation" subtitle="Your marketing runs automatically 24/7" />
 
+			<Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-white">
+				<CardHeader>
+					<CardTitle className="text-2xl">Marketing Autopilot</CardTitle>
+					<CardDescription className="text-base">
+						When enabled, PilotSocials automatically generates content every week and publishes at optimal times. You review and approve — the AI handles the rest.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+						<HeroFeatureCard
+							title="Weekly Content"
+							description="5 new posts generated every Monday"
+							icon={<Calendar className="h-5 w-5 text-violet-600" />}
+						/>
+						<HeroFeatureCard
+							title="Smart Scheduling"
+							description="Published at peak engagement times"
+							icon={<Clock className="h-5 w-5 text-violet-600" />}
+						/>
+						<HeroFeatureCard
+							title="Brand Consistent"
+							description="Every post matches your brand voice"
+							icon={<Shield className="h-5 w-5 text-violet-600" />}
+						/>
+					</div>
+				</CardContent>
+			</Card>
+
 			{/* Header */}
 			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
 				<div className="flex items-center gap-2">
@@ -204,6 +259,28 @@ export default function MarketingAutomationPage() {
 					</Button>
 				</div>
 			</div>
+
+			{!isLoading && !hasConnectedSocialAccounts && (
+				<Card className="border-amber-200 bg-amber-50">
+					<CardContent className="pt-6">
+						<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+							<div>
+								<p className="font-semibold text-amber-900">
+									Connect a social account to enable auto-publishing
+								</p>
+								<p className="text-sm text-amber-800">
+									Content generation still works without social connections. New posts will be saved as drafts for your review.
+								</p>
+							</div>
+							<Button asChild className="w-full md:w-auto">
+								<Link href={`/app/${params.organizationSlug}/marketing/settings/integrations`}>
+									Go to settings/integrations
+								</Link>
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Status Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -285,66 +362,64 @@ export default function MarketingAutomationPage() {
 			</Card>
 
 			{/* Últimas ejecuciones */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Recent runs</CardTitle>
-					<CardDescription>History for the marketing-engine job.</CardDescription>
-				</CardHeader>
-				<CardContent>
-					{isLoading ? (
-						<div className="space-y-3">
-							<Skeleton className="h-12 w-full" />
-							<Skeleton className="h-12 w-full" />
-							<Skeleton className="h-12 w-full" />
-						</div>
-					) : cronLogs.length === 0 ? (
-						<p className="text-muted-foreground">
-							No runs recorded yet.
-						</p>
-					) : (
-						<div className="space-y-3">
-							{cronLogs.map((log) => {
-								const ok = log.status === "completed";
-								const r = parseResults(log.results);
-								return (
-									<div key={log.id} className="flex items-center justify-between gap-4 p-3 border rounded-lg">
-										<div className="flex items-center gap-3">
-											{ok ? (
-												<CheckCircle2 className="h-5 w-5 text-green-600" />
-											) : (
-												<XCircle className="h-5 w-5 text-red-600" />
-											)}
-											<div>
-												<p className="font-medium">Marketing Engine</p>
-												<p className="text-sm text-muted-foreground">
-													{formatRelativeDate(log.executedAt)} • {new Date(log.executedAt).toLocaleString()}
-												</p>
+			{(isLoading || cronLogs.length > 0) && (
+				<Card>
+					<CardHeader>
+						<CardTitle>Recent runs</CardTitle>
+						<CardDescription>Latest automation activity.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						{isLoading ? (
+							<div className="space-y-3">
+								<Skeleton className="h-12 w-full" />
+								<Skeleton className="h-12 w-full" />
+								<Skeleton className="h-12 w-full" />
+							</div>
+						) : (
+							<div className="space-y-3">
+								{cronLogs.map((log) => {
+									const ok = log.status === "completed";
+									const r = parseResults(log.results);
+									return (
+										<div key={log.id} className="flex items-center justify-between gap-4 p-3 border rounded-lg">
+											<div className="flex items-center gap-3">
+												{ok ? (
+													<CheckCircle2 className="h-5 w-5 text-green-600" />
+												) : (
+													<XCircle className="h-5 w-5 text-red-600" />
+												)}
+												<div>
+													<p className="font-medium">{getJobLabel(log.jobName)}</p>
+													<p className="text-sm text-muted-foreground">
+														{formatRelativeDate(log.executedAt)} • {new Date(log.executedAt).toLocaleString()}
+													</p>
+												</div>
 											</div>
-										</div>
 
-										<div className="text-right text-sm">
-											<div className="flex justify-end gap-2 flex-wrap">
-												<Badge variant="outline">{log.status}</Badge>
-												{typeof log.duration === "number" && (
-													<Badge variant="secondary">{Math.round(log.duration / 1000)}s</Badge>
+											<div className="text-right text-sm">
+												<div className="flex justify-end gap-2 flex-wrap">
+													<Badge variant="outline">{log.status}</Badge>
+													{typeof log.duration === "number" && (
+														<Badge variant="secondary">{Math.round(log.duration / 1000)}s</Badge>
+													)}
+												</div>
+												{r && (
+													<p className="text-muted-foreground mt-1">
+														{r.contentGenerated || 0} generated • {r.postsPublished || 0} published • {r.seoAnalyzed || 0} SEO • {r.commentsReplied || 0} replies
+													</p>
+												)}
+												{log.error && (
+													<p className="text-red-600 mt-1 line-clamp-2">{log.error}</p>
 												)}
 											</div>
-											{r && (
-												<p className="text-muted-foreground mt-1">
-													{r.contentGenerated || 0} generated • {r.postsPublished || 0} published • {r.seoAnalyzed || 0} SEO • {r.commentsReplied || 0} replies
-												</p>
-											)}
-											{log.error && (
-												<p className="text-red-600 mt-1 line-clamp-2">{log.error}</p>
-											)}
 										</div>
-									</div>
-								);
-							})}
-						</div>
-					)}
-				</CardContent>
-			</Card>
+									);
+								})}
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Próximos posts */}
 			<Card>
@@ -393,6 +468,18 @@ function FeatureRow(props: { title: string; description: string }) {
 				<p className="font-medium">{props.title}</p>
 				<p className="text-sm text-muted-foreground">{props.description}</p>
 			</div>
+		</div>
+	);
+}
+
+function HeroFeatureCard(props: { title: string; description: string; icon: ReactNode }) {
+	return (
+		<div className="rounded-lg border bg-background p-4">
+			<div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-violet-100">
+				{props.icon}
+			</div>
+			<p className="font-semibold">{props.title}</p>
+			<p className="text-sm text-muted-foreground">{props.description}</p>
 		</div>
 	);
 }
