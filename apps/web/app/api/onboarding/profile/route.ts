@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 import { getAuthContext, unauthorizedResponse } from "@repo/api/lib/auth-guard";
+import { sendEmail } from "@repo/mail";
 
 interface OnboardingProfilePayload {
 	organizationId: string;
@@ -109,6 +110,47 @@ export async function POST(request: NextRequest) {
 				updatedAt: new Date(),
 			},
 		});
+
+		const isNewProfile =
+			profile.createdAt.getTime() === profile.updatedAt.getTime();
+
+		if (isNewProfile) {
+			try {
+				const [user, organization] = await Promise.all([
+					prisma.user.findUnique({
+						where: { id: authCtx.userId },
+						select: { email: true, name: true },
+					}),
+					prisma.organization.findUnique({
+						where: { id: authCtx.organizationId },
+						select: { name: true, slug: true },
+					}),
+				]);
+
+				if (user?.email && organization?.slug) {
+					const dashboardUrl = `${request.nextUrl.origin}/app/${organization.slug}`;
+					const brandTones =
+						payload.toneOfVoice || payload.brandPersonality.join(", ");
+
+					await sendEmail({
+						to: user.email,
+						templateId: "onboardingComplete",
+						context: {
+							name: user.name ?? "there",
+							industry: payload.industry,
+							brandTones,
+							orgName: organization.name ?? payload.businessName,
+							dashboardUrl,
+						},
+					});
+				}
+			} catch (emailError) {
+				console.error(
+					"Failed to send onboarding complete email:",
+					emailError,
+				);
+			}
+		}
 
 		return NextResponse.json({ profile });
 	} catch (error) {

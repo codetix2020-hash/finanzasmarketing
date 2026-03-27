@@ -3,12 +3,14 @@ import { ForgotPassword } from "../emails/ForgotPassword";
 import { MagicLink } from "../emails/MagicLink";
 import { NewsletterSignup } from "../emails/NewsletterSignup";
 import { NewUser } from "../emails/NewUser";
+import { OnboardingComplete } from "../emails/OnboardingComplete";
 import { OrganizationInvitation } from "../emails/OrganizationInvitation";
 
 export const mailTemplates = {
 	magicLink: MagicLink,
 	forgotPassword: ForgotPassword,
 	newUser: NewUser,
+	onboardingComplete: OnboardingComplete,
 	newsletterSignup: NewsletterSignup,
 	organizationInvitation: OrganizationInvitation,
 	emailVerification: EmailVerification,
