@@ -32,7 +32,7 @@ interface WeeklyReport {
 }
 
 /**
- * Genera un reporte semanal de marketing
+ * Generate a weekly marketing report
  */
 export async function generateWeeklyReport(
 	organizationId: string,
@@ -43,7 +43,7 @@ export async function generateWeeklyReport(
 	end.setDate(end.getDate() + 6);
 	end.setHours(23, 59, 59, 999);
 
-	// Obtener posts publicados en la semana
+	// Get posts published during the week
 	const posts = await prisma.marketingPost.findMany({
 		where: {
 			organizationId,
@@ -56,12 +56,12 @@ export async function generateWeeklyReport(
 		orderBy: { publishedAt: "desc" },
 	});
 
-	// Calcular métricas
+	// Calculate metrics
 	const totalReach = posts.reduce((sum, post) => sum + (post.reach || 0), 0);
 	const totalEngagement =
 		posts.reduce((sum, post) => sum + (post.likes || 0) + (post.comments || 0) + (post.shares || 0), 0);
 
-	// Top posts por engagement
+	// Top posts by engagement
 	const topPosts = posts
 		.map((post) => ({
 			id: post.id,
@@ -73,7 +73,7 @@ export async function generateWeeklyReport(
 		.sort((a, b) => b.engagement - a.engagement)
 		.slice(0, 5);
 
-	// Top comentarios
+	// Top comments
 	const comments = await prisma.socialComment.findMany({
 		where: {
 			organizationId,
@@ -95,14 +95,14 @@ export async function generateWeeklyReport(
 		}))
 		.slice(0, 5);
 
-	// Calcular crecimiento (simulado por ahora)
+	// Calculate growth (simulated for now)
 	const growth = {
 		followers: Math.floor(Math.random() * 100) + 10, // Mock
 		engagementRate: totalReach > 0 ? (totalEngagement / totalReach) * 100 : 0,
 		reach: totalReach,
 	};
 
-	// Generar recomendaciones con IA
+	// Generate recommendations with AI
 	const businessProfile = await getBusinessProfile(organizationId);
 	const recommendations = await generateRecommendations(
 		posts.length,
@@ -128,7 +128,7 @@ export async function generateWeeklyReport(
 }
 
 /**
- * Genera recomendaciones basadas en el performance
+ * Generate performance-based recommendations
  */
 async function generateRecommendations(
 	postsCount: number,
@@ -139,12 +139,12 @@ async function generateRecommendations(
 	const recommendations: string[] = [];
 
 	if (postsCount < 5) {
-		recommendations.push("Publica más contenido esta semana. Intenta publicar al menos 5 posts.");
+		recommendations.push("Publish more content this week. Try to publish at least 5 posts.");
 	}
 
 	if (engagement < 100) {
 		recommendations.push(
-			"El engagement está bajo. Prueba con contenido más interactivo, preguntas o encuestas.",
+			"Engagement is low. Try more interactive content, questions, or polls.",
 		);
 	}
 
@@ -152,20 +152,20 @@ async function generateRecommendations(
 		const bestPlatform = topPosts[0]?.platform;
 		if (bestPlatform) {
 			recommendations.push(
-				`${bestPlatform} está funcionando bien. Considera aumentar la frecuencia de publicación en esta plataforma.`,
+				`${bestPlatform} is performing well. Consider increasing your posting frequency on this platform.`,
 			);
 		}
 	}
 
 	recommendations.push(
-		"Responde a todos los comentarios para aumentar el engagement y construir comunidad.",
+		"Reply to all comments to increase engagement and build community.",
 	);
 
 	if (businessProfile?.contentPreferences) {
 		const prefs = businessProfile.contentPreferences as any;
 		if (prefs.bestTimes && prefs.bestTimes.length > 0) {
 			recommendations.push(
-				`Publica en los horarios óptimos: ${prefs.bestTimes.join(", ")}`,
+				`Post at optimal times: ${prefs.bestTimes.join(", ")}`,
 			);
 		}
 	}
@@ -174,23 +174,23 @@ async function generateRecommendations(
 }
 
 /**
- * Obtiene el último lunes
+ * Get the last Monday
  */
 function getLastMonday(): Date {
 	const today = new Date();
 	const day = today.getDay();
-	const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Ajustar cuando es domingo
+	const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when it's Sunday
 	const monday = new Date(today.setDate(diff));
 	monday.setHours(0, 0, 0, 0);
 	return monday;
 }
 
 /**
- * Guarda un reporte en la base de datos
+ * Save a report to the database
  */
 export async function saveWeeklyReport(organizationId: string, report: WeeklyReport) {
-	// Por ahora, guardamos en un campo JSON en MarketingConfig o creamos un modelo nuevo
-	// Por simplicidad, retornamos el reporte sin guardarlo
+	// For now, store in a JSON field in MarketingConfig or create a new model
+	// For simplicity, return the report without saving
 	return report;
 }
 
