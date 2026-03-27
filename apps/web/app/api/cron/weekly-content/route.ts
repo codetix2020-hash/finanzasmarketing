@@ -21,7 +21,7 @@ interface BusinessProfileLike {
 	description: string;
 }
 
-/** Campos del BusinessProfile usados para generación en lote */
+/** BusinessProfile fields used for batch generation */
 interface WeeklyGenerationProfile {
 	businessName: string;
 	industry: string;
@@ -107,31 +107,31 @@ async function generateWeeklyBatch(params: {
 }): Promise<BatchPost[]> {
 	const { profile, client } = params;
 
-	const prompt = `Eres un Social Media Manager. Genera exactamente 5 posts para Instagram (uno por tipo, en este orden).
+	const prompt = `You are a Social Media Manager. Generate exactly 5 Instagram posts (one per type, in this order).
 
-EMPRESA:
-- Nombre: ${profile.businessName}
-- Qué hacen: ${profile.description}
-- Industria: ${profile.industry}
-- Público: ${profile.targetAudience || "No especificado"}
-- Tono de marca: ${profile.toneOfVoice || "Profesional y cercano"}
-- Emojis: ${profile.useEmojis ? "Sí, con moderación" : "Muy pocos"}
-- Propuesta única: ${profile.uniqueSellingPoint || "No especificada"}
-- Productos/servicios: ${profile.mainProducts ? JSON.stringify(profile.mainProducts) : profile.services ? JSON.stringify(profile.services) : "No especificado"}
+COMPANY:
+- Name: ${profile.businessName}
+- What they do: ${profile.description}
+- Industry: ${profile.industry}
+- Audience: ${profile.targetAudience || "Not specified"}
+- Brand tone: ${profile.toneOfVoice || "Professional and approachable"}
+- Emojis: ${profile.useEmojis ? "Yes, in moderation" : "Very few"}
+- Unique value proposition: ${profile.uniqueSellingPoint || "Not specified"}
+- Products/services: ${profile.mainProducts ? JSON.stringify(profile.mainProducts) : profile.services ? JSON.stringify(profile.services) : "Not specified"}
 
-TIPOS (en orden, exactamente uno de cada uno):
-1. promotional — promoción de marca/oferta suave
-2. educational — enseña algo útil del sector
-3. entertaining — entretenimiento ligado al negocio
-4. tips — consejos prácticos cortos
-5. behind-scenes — detrás de cámaras / proceso / equipo
+TYPES (in order, exactly one of each):
+1. promotional — soft brand/offer promotion
+2. educational — teach something useful from the industry
+3. entertaining — entertainment connected to the business
+4. tips — short practical tips
+5. behind-scenes — behind the scenes / process / team
 
-Reglas:
-- Texto principal sin hashtags (van aparte)
-- Párrafos cortos, tono humano, sin clichés de IA
-- Español
+Rules:
+- Main text without hashtags (they go separately)
+- Short paragraphs, human tone, no AI cliches
+- English
 
-Responde SOLO con JSON válido (sin markdown):
+Reply ONLY with valid JSON (no markdown):
 {
   "posts": [
     {
@@ -139,7 +139,7 @@ Responde SOLO con JSON válido (sin markdown):
       "mainText": "...",
       "hashtags": ["sin#", "max5"],
       "suggestedCTA": "...",
-      "alternativeText": "texto alt corto para la imagen",
+      "alternativeText": "short alt text for the image",
       "imageSearchQuery": "english 3-4 words for stock photo, specific to this business"
     }
   ]
@@ -156,10 +156,10 @@ Responde SOLO con JSON válido (sin markdown):
 	const parsed = parseClaudeJson(responseText) as { posts?: BatchPost[] };
 	const posts = parsed.posts;
 	if (!Array.isArray(posts) || posts.length === 0) {
-		throw new Error("Claude no devolvió posts válidos");
+		throw new Error("Claude did not return valid posts");
 	}
 
-	// Alinear tipos esperados si el modelo devolvió menos de 5
+	// Align expected types if the model returned fewer than 5
 	const normalized: BatchPost[] = [];
 	for (let i = 0; i < CONTENT_TYPES.length; i++) {
 		const expected = CONTENT_TYPES[i];
@@ -176,11 +176,11 @@ Responde SOLO con JSON válido (sin markdown):
 	}
 	if (normalized.length < 5) {
 		console.warn(
-			`[weekly-content] Solo ${normalized.length}/5 posts; se guardan los disponibles`,
+			`[weekly-content] Only ${normalized.length}/5 posts; saving available ones`,
 		);
 	}
 	if (normalized.length === 0) {
-		throw new Error("No se pudo normalizar ningún post a partir de la respuesta");
+		throw new Error("Could not normalize any post from the response");
 	}
 	return normalized;
 }
@@ -245,7 +245,7 @@ export async function GET(request: NextRequest) {
 
 				if (recentDraftCount >= 5) {
 					console.log(
-						`[weekly-content] Skip org ${org.id}: ${recentDraftCount} drafts en 7 días`,
+						`[weekly-content] Skip org ${org.id}: ${recentDraftCount} drafts in 7 days`,
 					);
 					continue;
 				}
