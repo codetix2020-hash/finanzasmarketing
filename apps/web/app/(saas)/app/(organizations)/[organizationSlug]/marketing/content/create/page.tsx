@@ -34,7 +34,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
@@ -118,6 +118,8 @@ const PLATFORMS = [
 export default function CreateContentPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isFromOnboarding = searchParams.get("from") === "onboarding";
   const organizationSlug = params.organizationSlug as string;
   const { activeOrganization, loaded } = useActiveOrganization();
 
@@ -173,6 +175,13 @@ export default function CreateContentPage() {
     localStorage.setItem(key, "1");
     setHeroDismissed(true);
   }, [activeOrganization?.id]);
+
+  useEffect(() => {
+    if (!isFromOnboarding) return;
+    if (isGenerating) return;
+    if (variations.length === 0) return;
+    dismissHeroBanner();
+  }, [isFromOnboarding, isGenerating, variations.length, dismissHeroBanner]);
 
   const showFirstTimeHero =
     statsLoaded &&
@@ -386,6 +395,11 @@ export default function CreateContentPage() {
             >
               Powered by your brand profile
             </Badge>
+            {isFromOnboarding && (
+              <p className="mb-3 text-sm font-medium text-violet-50/95 sm:text-base">
+                Your brand profile is ready! Now let us create your first post.
+              </p>
+            )}
             <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
               Create your first AI post ✨
             </h2>
