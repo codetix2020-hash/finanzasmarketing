@@ -22,7 +22,7 @@ export async function GET(
 		});
 
 		if (!post) {
-			return notFoundResponse("Post no encontrado");
+			return notFoundResponse("Post not found");
 		}
 
 		// ✅ VERIFICAR que el usuario pertenece a la org del post
@@ -56,7 +56,7 @@ export async function PATCH(
 		});
 
 		if (!existingPost) {
-			return notFoundResponse("Post no encontrado");
+			return notFoundResponse("Post not found");
 		}
 
 		// ✅ VERIFICAR AUTORIZACIÓN
@@ -141,7 +141,7 @@ export async function DELETE(
 		});
 
 		if (!existingPost) {
-			return notFoundResponse("Post no encontrado");
+			return notFoundResponse("Post not found");
 		}
 
 		// ✅ VERIFICAR AUTORIZACIÓN

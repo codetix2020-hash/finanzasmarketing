@@ -20,14 +20,14 @@ export async function POST(
 
 		if (!scheduledAt) {
 			return NextResponse.json(
-				{ error: "scheduledAt es requerido" },
+				{ error: "scheduledAt is required" },
 				{ status: 400 },
 			);
 		}
 
 		const post = await getMarketingPost(id);
 		if (!post) {
-			return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
+			return NextResponse.json({ error: "Post not found" }, { status: 404 });
 		}
 
 		const scheduledDate = new Date(scheduledAt);

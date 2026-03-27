@@ -22,7 +22,7 @@ export async function GET(
 		const post = await getMarketingPost(id);
 
 		if (!post) {
-			return NextResponse.json({ error: "Post no encontrado" }, { status: 404 });
+			return NextResponse.json({ error: "Post not found" }, { status: 404 });
 		}
 
 		return NextResponse.json({

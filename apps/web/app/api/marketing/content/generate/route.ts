@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (!profile) {
       return NextResponse.json({ 
-        error: "Primero debes completar el perfil de tu empresa",
+        error: "Please complete your business profile first",
         redirectTo: `/app/${organizationSlug}/marketing/profile`
       }, { status: 400 });
     }

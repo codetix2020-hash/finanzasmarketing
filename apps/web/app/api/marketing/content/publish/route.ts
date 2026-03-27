@@ -113,14 +113,14 @@ export async function POST(request: Request) {
 
 		if (!organizationId || !platform || !contentType || !topic) {
 			return NextResponse.json(
-				{ success: false, error: "organizationId, platform, contentType y topic son requeridos" },
+				{ success: false, error: "organizationId, platform, contentType and topic are required" },
 				{ status: 400 },
 			);
 		}
 
 		if (!text.trim()) {
 			return NextResponse.json(
-				{ success: false, error: "text es requerido" },
+				{ success: false, error: "text is required" },
 				{ status: 400 },
 			);
 		}
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
 			}
 			if (!imageUrl) {
 				return NextResponse.json(
-					{ success: false, error: "imageUrl es requerida para publicar en Instagram" },
+					{ success: false, error: "imageUrl is required for publishing to Instagram" },
 					{ status: 400 },
 				);
 			}
