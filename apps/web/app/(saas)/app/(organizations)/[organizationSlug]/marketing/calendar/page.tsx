@@ -334,7 +334,7 @@ export default function CalendarPage() {
 					</div>
 
 					<Link
-						href={`/app/${organizationSlug}/marketing/generate`}
+						href={`/app/${organizationSlug}/marketing/content/create`}
 					>
 						<Button className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600">
 							<Plus className="h-4 w-4 mr-2" /> Create post
