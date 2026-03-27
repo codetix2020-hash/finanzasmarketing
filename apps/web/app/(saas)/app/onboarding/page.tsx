@@ -318,7 +318,7 @@ export default function OnboardingPage() {
     setIsLoading(true);
     try {
       await authClient.updateUser({ onboardingComplete: true });
-      router.push(`/app/${createdOrg.slug}/marketing/dashboard`);
+      router.push(`/app/${createdOrg.slug}/marketing/content/create?from=onboarding`);
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Could not complete onboarding. Please try again.");
