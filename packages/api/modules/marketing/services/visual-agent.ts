@@ -23,7 +23,7 @@ function getReplicateClient() {
   return replicateClient
 }
 
-// Estilos por propósito de marketing
+// Styles by marketing purpose
 const STYLE_PRESETS = {
   social_post: 'Vibrant, modern, eye-catching, Instagram-worthy, high engagement',
   ad: 'Clean, professional, conversion-focused, clear CTA space, premium look',
@@ -49,9 +49,9 @@ interface GenerateImageParams {
   style?: string
 }
 
-// Generar imagen con Flux
+// Generate image with Flux
 export async function generateImage(params: GenerateImageParams) {
-  console.log('🎨 VisualAgent: Iniciando generación de imagen...')
+  console.log('🎨 VisualAgent: Starting image generation...')
   console.log('🎨 Params:', JSON.stringify(params, null, 2))
 
   const replicateToken = process.env.REPLICATE_API_TOKEN
@@ -73,7 +73,7 @@ export async function generateImage(params: GenerateImageParams) {
   console.log('🎨 Dimensions:', dimensions)
   console.log('🎨 Style preset:', stylePreset)
 
-  // Mejorar prompt con estilo de marketing
+  // Improve prompt with marketing style
   const enhancedPrompt = `${prompt}. Style: ${stylePreset}. ${params.style || ''} High quality, professional marketing image.`
 
   console.log('🎨 Enhanced prompt:', enhancedPrompt)
@@ -111,7 +111,7 @@ export async function generateImage(params: GenerateImageParams) {
     console.log('🎨 Output length:', Array.isArray(output) ? output.length : 'N/A')
 
     const imageUrl = output[0]
-    console.log('✅ Imagen generada:', imageUrl)
+    console.log('✅ Image generated:', imageUrl)
 
     // Track API usage
     const cost = calculateReplicateCost()
@@ -131,7 +131,7 @@ export async function generateImage(params: GenerateImageParams) {
       console.warn('⚠️ Error tracking API usage:', trackError)
     }
 
-    // Intentar guardar en MarketingContent (opcional, no crítico)
+    // Try saving to MarketingContent (optional, non-critical)
     let contentId = `generated_${Date.now()}`
     try {
       const content = await prisma.marketingContent.create({
@@ -158,7 +158,7 @@ export async function generateImage(params: GenerateImageParams) {
       contentId = content.id
     } catch (dbError) {
       console.warn('⚠️ Could not save to database (non-critical):', dbError)
-      // Continuar sin guardar en DB
+      // Continue without saving to DB
     }
 
     return {
@@ -175,7 +175,7 @@ export async function generateImage(params: GenerateImageParams) {
     console.error('🔴 Error stack:', error instanceof Error ? error.stack : 'No stack')
     console.error('🔴 Error name:', error instanceof Error ? error.name : 'Unknown')
     console.error('🔴 Returning mock response due to error')
-    // Devolver respuesta mock en lugar de lanzar error
+    // Return mock response instead of throwing
     return {
       success: true,
       imageUrl: 'https://via.placeholder.com/1024x1024?text=Image+Generated',
@@ -189,9 +189,9 @@ export async function generateImage(params: GenerateImageParams) {
   }
 }
 
-// Generar variantes A/B de imagen
+// Generate A/B image variants
 export async function generateImageVariants(params: GenerateImageParams & { count?: number }) {
-  console.log('🎨 Generando variantes de imagen para A/B testing...')
+  console.log('🎨 Generating image variants for A/B testing...')
 
   const count = params.count || 3
   const variants = []
@@ -215,22 +215,22 @@ export async function generateImageVariants(params: GenerateImageParams & { coun
         ...result
       })
     } catch (error) {
-      console.error(`❌ Error en variante ${i + 1}:`, error)
+      console.error(`❌ Error in variant ${i + 1}:`, error)
     }
   }
 
-  console.log(`✅ ${variants.length} variantes generadas`)
+  console.log(`✅ ${variants.length} variants generated`)
   return { variants, total: variants.length }
 }
 
-// Generar prompt de imagen optimizado con IA
+// Generate AI-optimized image prompt
 export async function generateOptimizedPrompt(params: {
   productName: string
   productDescription: string
   purpose: string
   targetAudience: string
 }) {
-  console.log('💡 Generando prompt optimizado para imagen...')
+  console.log('💡 Generating optimized image prompt...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) {
@@ -249,28 +249,28 @@ export async function generateOptimizedPrompt(params: {
 
   try {
     const prompt = `
-Eres un experto en MARKETING DIGITAL y DISEÑO VISUAL para campañas publicitarias.
-Tu objetivo es crear un prompt para generar una imagen de marketing altamente efectiva.
+You are an expert in DIGITAL MARKETING and VISUAL DESIGN for advertising campaigns.
+Your goal is to create a prompt to generate a highly effective marketing image.
 
-PRODUCTO: ${params.productName}
-DESCRIPCIÓN: ${params.productDescription}
-PROPÓSITO: ${params.purpose}
-AUDIENCIA: ${params.targetAudience}
+PRODUCT: ${params.productName}
+DESCRIPTION: ${params.productDescription}
+PURPOSE: ${params.purpose}
+AUDIENCE: ${params.targetAudience}
 
-Genera un prompt detallado para crear una imagen de marketing que:
-1. Capture la atención inmediatamente
-2. Comunique el valor del producto
-3. Sea apropiada para la audiencia target
-4. Funcione bien en redes sociales y ads
+Generate a detailed prompt to create a marketing image that:
+1. Captures attention immediately
+2. Communicates the product's value
+3. Is appropriate for the target audience
+4. Performs well on social media and ads
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
-  "prompt": "descripción detallada de la imagen a generar",
-  "style": "estilo visual recomendado",
+  "prompt": "detailed description of the image to generate",
+  "style": "recommended visual style",
   "colors": ["color1", "color2", "color3"],
-  "mood": "estado de ánimo que debe transmitir",
-  "elements": ["elemento clave 1", "elemento clave 2"],
-  "avoidElements": ["qué evitar 1", "qué evitar 2"]
+  "mood": "emotional tone the image should convey",
+  "elements": ["key element 1", "key element 2"],
+  "avoidElements": ["what to avoid 1", "what to avoid 2"]
 }
 `
 
@@ -283,11 +283,11 @@ Responde SOLO con JSON:
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
     const result = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-    console.log('✅ Prompt optimizado generado')
+    console.log('✅ Optimized prompt generated')
     return result
   } catch (error) {
-    console.error('❌ Error generando prompt optimizado:', error)
-    // Devolver respuesta mock en lugar de lanzar error
+    console.error('❌ Error generating optimized prompt:', error)
+    // Return mock response instead of throwing
     return {
       prompt: `Professional ${params.purpose} image of ${params.productName}. ${params.productDescription}. Target audience: ${params.targetAudience}`,
       style: 'modern, professional, clean',

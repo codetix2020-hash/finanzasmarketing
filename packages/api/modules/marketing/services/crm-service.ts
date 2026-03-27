@@ -37,7 +37,7 @@ const SCORING_WEIGHTS = {
 }
 
 // ============================================
-// CREAR LEAD
+// CREATE LEAD
 // ============================================
 export async function createLead(params: {
   organizationId: string
@@ -51,7 +51,7 @@ export async function createLead(params: {
   campaign?: string
   medium?: string
 }) {
-  console.log('👤 Creando lead:', params.email)
+  console.log('👤 Creating lead:', params.email)
 
   // Check if lead exists
   const existing = await prisma.marketingLead.findFirst({
@@ -62,7 +62,7 @@ export async function createLead(params: {
   })
 
   if (existing) {
-    console.log('Lead ya existe, actualizando...')
+    console.log('Lead already exists, updating...')
     return updateLead(existing.id, params)
   }
 
@@ -84,13 +84,13 @@ export async function createLead(params: {
   // Log activity
   await logActivity(lead.id, 'lead_created', { source: params.source })
 
-  console.log(`✅ Lead creado: ${lead.id} (score: ${score})`)
+  console.log(`✅ Lead created: ${lead.id} (score: ${score})`)
 
   return lead
 }
 
 // ============================================
-// ACTUALIZAR LEAD
+// UPDATE LEAD
 // ============================================
 export async function updateLead(leadId: string, data: any) {
   const lead = await prisma.marketingLead.update({
@@ -105,10 +105,10 @@ export async function updateLead(leadId: string, data: any) {
 }
 
 // ============================================
-// LEAD SCORING AUTOMÁTICO
+// AUTOMATIC LEAD SCORING
 // ============================================
 export async function calculateLeadScore(leadId: string) {
-  console.log('📊 Calculando score del lead...')
+  console.log('📊 Calculating lead score...')
 
   const lead = await prisma.marketingLead.findUnique({
     where: { id: leadId },
@@ -186,7 +186,7 @@ export async function calculateLeadScore(leadId: string) {
     }
   })
 
-  console.log(`✅ Score actualizado: ${score} (${temperature})`)
+  console.log(`✅ Score updated: ${score} (${temperature})`)
 
   return { score, temperature }
 }
@@ -195,7 +195,7 @@ export async function calculateLeadScore(leadId: string) {
 // AI QUALIFICATION
 // ============================================
 export async function qualifyLeadWithAI(leadId: string) {
-  console.log('🤖 Qualificando lead con IA...')
+  console.log('🤖 Qualifying lead with AI...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -214,46 +214,46 @@ export async function qualifyLeadWithAI(leadId: string) {
   if (!lead) throw new Error('Lead not found')
 
   const prompt = `
-Analiza este lead y determina su nivel de calificación:
+Analyze this lead and determine its qualification level:
 
 LEAD INFO:
 - Email: ${lead.email}
-- Nombre: ${lead.name || 'No proporcionado'}
-- Empresa: ${lead.company || 'No proporcionada'}
-- Teléfono: ${lead.phone ? 'Sí' : 'No'}
+- Name: ${lead.name || 'Not provided'}
+- Company: ${lead.company || 'Not provided'}
+- Phone: ${lead.phone ? 'Yes' : 'No'}
 - Website: ${lead.website || 'No'}
-- Score actual: ${lead.score}
-- Temperatura: ${lead.temperature}
-- Fuente: ${lead.source || 'Desconocida'}
+- Current score: ${lead.score}
+- Temperature: ${lead.temperature}
+- Source: ${lead.source || 'Unknown'}
 
-PRODUCTO INTERESADO:
-${lead.product ? `${lead.product.name} - ${lead.product.description}` : 'No especificado'}
+INTERESTED PRODUCT:
+${lead.product ? `${lead.product.name} - ${lead.product.description}` : 'Not specified'}
 
-ACTIVIDAD RECIENTE:
+RECENT ACTIVITY:
 ${lead.activities.slice(0, 20).map(a => 
   `- ${a.type}: ${JSON.stringify(a.data)} (${a.createdAt})`
 ).join('\n')}
 
-Analiza y responde SOLO con JSON:
+Analyze and respond ONLY with JSON:
 {
   "qualification": {
     "isQualified": true/false,
     "stage": "mql | sql | opportunity",
     "confidence": 0.85,
-    "reasoning": "Por qué está o no calificado"
+    "reasoning": "Why it is or is not qualified"
   },
   "analysis": {
     "buyIntent": "high | medium | low",
     "budget": "enterprise | mid-market | smb | unknown",
     "timeline": "immediate | 1-3 months | 3-6 months | 6+ months | unknown",
     "authority": "decision_maker | influencer | user | unknown",
-    "painPoints": ["pain point detectado 1", "pain point 2"]
+    "painPoints": ["detected pain point 1", "pain point 2"]
   },
   "nextBestAction": {
     "action": "send_email | schedule_call | send_case_study | offer_demo | nurture",
     "timing": "immediate | 24h | 48h | 1 week",
-    "message": "Mensaje o approach sugerido",
-    "template": "template_id si aplica"
+    "message": "Suggested message or approach",
+    "template": "template_id if applicable"
   },
   "predictedConversion": {
     "probability": 0.35,
@@ -286,16 +286,16 @@ Analiza y responde SOLO con JSON:
   // Log activity
   await logActivity(leadId, 'ai_qualification', analysis)
 
-  console.log(`✅ Lead qualificado: ${analysis.qualification.stage}`)
+  console.log(`✅ Lead qualified: ${analysis.qualification.stage}`)
 
   return analysis
 }
 
 // ============================================
-// GENERAR FOLLOW-UP AUTOMÁTICO
+// GENERATE AUTOMATIC FOLLOW-UP
 // ============================================
 export async function generateFollowUp(leadId: string) {
-  console.log('📧 Generando follow-up...')
+  console.log('📧 Generating follow-up...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -314,39 +314,39 @@ export async function generateFollowUp(leadId: string) {
   if (!lead) throw new Error('Lead not found')
 
   const prompt = `
-Genera un email de follow-up personalizado para este lead:
+Generate a personalized follow-up email for this lead:
 
 LEAD:
-- Nombre: ${lead.name || 'there'}
-- Empresa: ${lead.company || 'your company'}
+- Name: ${lead.name || 'there'}
+- Company: ${lead.company || 'your company'}
 - Score: ${lead.score}
-- Temperatura: ${lead.temperature}
+- Temperature: ${lead.temperature}
 - Stage: ${lead.stage}
 
-PRODUCTO:
-${lead.product ? `${lead.product.name} - ${lead.product.description}` : 'Nuestro producto'}
+PRODUCT:
+${lead.product ? `${lead.product.name} - ${lead.product.description}` : 'Our product'}
 
-ANÁLISIS PREVIO:
-${lead.aiAnalysis ? JSON.stringify(lead.aiAnalysis) : 'No disponible'}
+PREVIOUS ANALYSIS:
+${lead.aiAnalysis ? JSON.stringify(lead.aiAnalysis) : 'Not available'}
 
-ÚLTIMA ACTIVIDAD:
+LATEST ACTIVITY:
 ${lead.activities.slice(0, 5).map(a => `- ${a.type}`).join('\n')}
 
-Genera un email de follow-up que:
-1. Sea personalizado y relevante
-2. Ofrezca valor (no solo vender)
-3. Tenga un CTA claro
-4. Sea conciso (máximo 150 palabras)
+Generate a follow-up email that:
+1. Is personalized and relevant
+2. Provides value (not just selling)
+3. Has a clear CTA
+4. Is concise (maximum 150 words)
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "email": {
-    "subject": "Subject line personalizado",
-    "subjectB": "Variante B para A/B test",
-    "body": "Cuerpo del email en HTML simple",
+    "subject": "Personalized subject line",
+    "subjectB": "Variant B for A/B test",
+    "body": "Email body in simple HTML",
     "cta": {
-      "text": "Texto del CTA",
-      "url": "URL del CTA"
+      "text": "CTA text",
+      "url": "CTA URL"
     },
     "sendAt": "best_time | morning | afternoon | evening",
     "followUpIn": "3 days | 1 week | 2 weeks"
@@ -354,7 +354,7 @@ Responde SOLO con JSON:
   "alternativeActions": [
     {
       "action": "linkedin_connection | call | send_resource",
-      "reason": "Por qué esta acción"
+      "reason": "Why this action"
     }
   ]
 }
@@ -372,7 +372,7 @@ Responde SOLO con JSON:
   // Log activity
   await logActivity(leadId, 'followup_generated', followUp)
 
-  console.log(`✅ Follow-up generado`)
+  console.log(`✅ Follow-up generated`)
 
   return followUp
 }
@@ -381,7 +381,7 @@ Responde SOLO con JSON:
 // BULK OPERATIONS
 // ============================================
 export async function scoreAllLeads(organizationId: string) {
-  console.log('📊 Scoring todos los leads...')
+  console.log('📊 Scoring all leads...')
 
   const leads = await prisma.marketingLead.findMany({
     where: { organizationId },
@@ -400,13 +400,13 @@ export async function scoreAllLeads(organizationId: string) {
 }
 
 export async function qualifyHotLeads(organizationId: string) {
-  console.log('🔥 Qualificando leads calientes...')
+  console.log('🔥 Qualifying hot leads...')
 
   const hotLeads = await prisma.marketingLead.findMany({
     where: {
       organizationId,
       temperature: { in: ['warm', 'hot'] },
-      // aiAnalysis: { equals: null } // COMENTADO - arreglar después
+      // aiAnalysis: { equals: null } // COMMENTED - fix later
     },
     take: 10
   })
@@ -417,7 +417,7 @@ export async function qualifyHotLeads(organizationId: string) {
 
   const successful = results.filter(r => r.status === 'fulfilled').length
 
-  console.log(`✅ ${successful}/${hotLeads.length} leads qualificados`)
+  console.log(`✅ ${successful}/${hotLeads.length} leads qualified`)
 
   return { total: hotLeads.length, successful }
 }

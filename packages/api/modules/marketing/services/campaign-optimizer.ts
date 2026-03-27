@@ -1,14 +1,14 @@
 /**
- * Campaign Optimizer - Optimización automática de campañas publicitarias
+ * Campaign Optimizer - Automatic optimization of ad campaigns
  * 
- * Analiza performance y toma decisiones automáticas para maximizar ROI:
- * - Budget reallocation (aumentar/reducir presupuesto)
- * - Bid adjustments (ajustar pujas)
- * - Audience expansion (crear lookalikes, excluir audiencias)
- * - Creative rotation (pausar creatividades bajas, escalar ganadoras)
- * - Schedule optimization (dayparting automático)
+ * Analyzes performance and makes automatic decisions to maximize ROI:
+ * - Budget reallocation (increase/reduce budget)
+ * - Bid adjustments (adjust bids)
+ * - Audience expansion (create lookalikes, exclude audiences)
+ * - Creative rotation (pause low performers, scale winners)
+ * - Schedule optimization (automatic dayparting)
  * 
- * Se ejecuta cada 6 horas vía cron job
+ * Runs every 6 hours via cron job
  */
 
 import { prisma } from '@repo/database';
@@ -57,7 +57,7 @@ export class CampaignOptimizer {
   private facebookClient: FacebookAdsClient | null = null;
 
   constructor() {
-    // Lazy initialization - solo se crean cuando se usan
+    // Lazy initialization - clients are only created when needed
   }
 
   private getGoogleClient(): GoogleAdsClient {
@@ -75,7 +75,7 @@ export class CampaignOptimizer {
   }
 
   /**
-   * Analiza performance de una campaña
+   * Analyze campaign performance
    */
   async analyzeCampaignPerformance(campaignId: string): Promise<CampaignAnalysis> {
     logger.info('📊 Analyzing campaign performance', { campaignId });
@@ -97,29 +97,29 @@ export class CampaignOptimizer {
       const issues: string[] = [];
       const opportunities: string[] = [];
 
-      // Análisis de ROI
+      // ROI analysis
       if (roi < 1) {
-        issues.push(`ROI crítico: ${roi.toFixed(2)}x (objetivo: 2x+)`);
+        issues.push(`Critical ROI: ${roi.toFixed(2)}x (target: 2x+)`);
       } else if (roi < 2) {
-        issues.push(`ROI bajo: ${roi.toFixed(2)}x (objetivo: 2x+)`);
+        issues.push(`Low ROI: ${roi.toFixed(2)}x (target: 2x+)`);
       } else if (roi > 3) {
-        opportunities.push(`ROI excelente: ${roi.toFixed(2)}x - considerar aumentar budget`);
+        opportunities.push(`Excellent ROI: ${roi.toFixed(2)}x - consider increasing budget`);
       }
 
-      // Análisis de CTR
+      // CTR analysis
       if (ctr < 0.01) {
-        issues.push(`CTR muy bajo: ${(ctr * 100).toFixed(2)}% - revisar creatividades`);
+        issues.push(`Very low CTR: ${(ctr * 100).toFixed(2)}% - review creatives`);
       } else if (ctr < 0.02) {
-        issues.push(`CTR bajo: ${(ctr * 100).toFixed(2)}% - optimizar copy`);
+        issues.push(`Low CTR: ${(ctr * 100).toFixed(2)}% - optimize ad copy`);
       }
 
-      // Análisis de CPA
-      const targetCPA = 50; // €50 objetivo
+      // CPA analysis
+      const targetCPA = 50; // €50 target
       if (cpa > targetCPA * 2) {
-        issues.push(`CPA alto: €${cpa.toFixed(2)} (objetivo: €${targetCPA})`);
+        issues.push(`High CPA: €${cpa.toFixed(2)} (target: €${targetCPA})`);
       }
 
-      // Determinar status
+      // Determine status
       let status: CampaignAnalysis['status'];
       if (roi >= 3 && ctr >= 0.03) {
         status = 'excellent';
@@ -160,7 +160,7 @@ export class CampaignOptimizer {
   }
 
   /**
-   * Optimiza automáticamente una campaña
+   * Automatically optimize a campaign
    */
   async autoOptimize(campaignId: string): Promise<OptimizationResult> {
     logger.info('🎯 Auto-optimizing campaign', { campaignId });
@@ -178,14 +178,14 @@ export class CampaignOptimizer {
       const decisions: OptimizationDecision[] = [];
       const budget = (campaign.budget as any)?.daily || 100;
 
-      // DECISIÓN 1: Budget Reallocation
+      // DECISION 1: Budget Reallocation
       if (analysis.performance.roi > 3) {
         decisions.push({
           action: 'increase_budget',
           currentValue: budget,
           newValue: budget * 1.2,
-          reason: `ROI ${analysis.performance.roi.toFixed(2)}x justifica +20% budget`,
-          expectedImpact: '+20-30% conversiones',
+          reason: `ROI ${analysis.performance.roi.toFixed(2)}x justifies +20% budget`,
+          expectedImpact: '+20-30% conversions',
           confidence: 0.85
         });
       } else if (analysis.performance.roi < 1 && analysis.performance.spend > 100) {
@@ -193,8 +193,8 @@ export class CampaignOptimizer {
           action: 'decrease_budget',
           currentValue: budget,
           newValue: budget * 0.5,
-          reason: `ROI ${analysis.performance.roi.toFixed(2)}x requiere -50% budget`,
-          expectedImpact: 'Reducir pérdidas, mantener aprendizaje',
+          reason: `ROI ${analysis.performance.roi.toFixed(2)}x requires -50% budget`,
+          expectedImpact: 'Reduce losses while preserving learning',
           confidence: 0.9
         });
       } else if (analysis.performance.roi < 0.5) {
@@ -202,49 +202,49 @@ export class CampaignOptimizer {
           action: 'pause_campaign',
           currentValue: 'ACTIVE',
           newValue: 'PAUSED',
-          reason: `ROI ${analysis.performance.roi.toFixed(2)}x es crítico - pausar para evitar pérdidas`,
-          expectedImpact: 'Detener sangrado de budget',
+          reason: `ROI ${analysis.performance.roi.toFixed(2)}x is critical - pause to avoid losses`,
+          expectedImpact: 'Stop budget bleed',
           confidence: 0.95
         });
       }
 
-      // DECISIÓN 2: Bid Adjustments
+      // DECISION 2: Bid Adjustments
       if (analysis.performance.ctr < 0.015 && campaign.platform === 'google') {
         decisions.push({
           action: 'optimize_bids',
           currentValue: 'current_bids',
           newValue: 'reduced_by_15%',
-          reason: `CTR ${(analysis.performance.ctr * 100).toFixed(2)}% indica baja relevancia - reducir bids`,
-          expectedImpact: 'Reducir CPA 10-15%',
+          reason: `CTR ${(analysis.performance.ctr * 100).toFixed(2)}% indicates low relevance - reduce bids`,
+          expectedImpact: 'Reduce CPA by 10-15%',
           confidence: 0.7
         });
       }
 
-      // DECISIÓN 3: Creative Rotation
+      // DECISION 3: Creative Rotation
       if (analysis.performance.ctr < 0.02) {
         decisions.push({
           action: 'refresh_creatives',
           currentValue: 'current_creatives',
           newValue: 'new_variations',
-          reason: `CTR ${(analysis.performance.ctr * 100).toFixed(2)}% sugiere fatiga de anuncios`,
-          expectedImpact: 'Aumentar CTR 30-50%',
+          reason: `CTR ${(analysis.performance.ctr * 100).toFixed(2)}% suggests ad fatigue`,
+          expectedImpact: 'Increase CTR by 30-50%',
           confidence: 0.75
         });
       }
 
-      // DECISIÓN 4: Audience Expansion
+      // DECISION 4: Audience Expansion
       if (analysis.performance.roi > 2.5 && analysis.performance.conversions > 10) {
         decisions.push({
           action: 'expand_audience',
           currentValue: 'current_targeting',
           newValue: 'lookalike_1%',
-          reason: 'Performance sólida permite escalar con lookalikes',
-          expectedImpact: '+40-60% volumen manteniendo ROI',
+          reason: 'Strong performance allows scaling with lookalikes',
+          expectedImpact: '+40-60% volume while maintaining ROI',
           confidence: 0.8
         });
       }
 
-      // Aplicar decisiones automáticamente (solo las de alta confianza)
+      // Apply decisions automatically (only high-confidence ones)
       let applied = 0;
       let skipped = 0;
 
@@ -257,7 +257,7 @@ export class CampaignOptimizer {
         }
       }
 
-      // Guardar optimización en DB
+      // Save optimization in DB
       await prisma.marketingMemory.create({
         data: {
           key: `optimization_${campaignId}_${Date.now()}`,
@@ -267,13 +267,13 @@ export class CampaignOptimizer {
         }
       });
 
-      // Notificar cambios importantes
+      // Notify major changes
       if (decisions.length > 0) {
         await notificationService.sendSlackNotification(
-          `🎯 *Campaña optimizada automáticamente*\n` +
+          `🎯 *Campaign auto-optimized*\n` +
           `📢 ${campaign.name}\n` +
           `✅ ${applied} decisiones aplicadas\n` +
-          `⏸️ ${skipped} decisiones pendientes revisión\n\n` +
+          `⏸️ ${skipped} decisions pending review\n\n` +
           decisions.slice(0, 3).map(d => `• ${d.action}: ${d.reason}`).join('\n')
         );
       }
@@ -303,7 +303,7 @@ export class CampaignOptimizer {
   }
 
   /**
-   * Aplica una decisión de optimización
+   * Apply an optimization decision
    */
   private async applyDecision(
     campaignId: string,
@@ -354,14 +354,14 @@ export class CampaignOptimizer {
           break;
 
         case 'optimize_bids':
-          // En modo real, llamaría a google-ads-client o facebook-ads-client
+          // In real mode, call google-ads-client or facebook-ads-client
           if (campaign.platform === 'google' && campaign.googleCampaignId) {
             // await this.googleClient.updateBids(campaign.googleCampaignId, newBids);
           }
           break;
 
         case 'refresh_creatives':
-          // Marcar para que se generen nuevas creatividades
+          // Mark to generate new creatives
           await prisma.marketingMemory.create({
             data: {
               key: `refresh_creatives_${campaignId}`,
@@ -373,7 +373,7 @@ export class CampaignOptimizer {
           break;
 
         case 'expand_audience':
-          // Marcar para expansión de audiencia
+          // Mark for audience expansion
           await prisma.marketingMemory.create({
             data: {
               key: `expand_audience_${campaignId}`,
@@ -392,7 +392,7 @@ export class CampaignOptimizer {
   }
 
   /**
-   * Genera recomendaciones priorizadas
+   * Generate prioritized recommendations
    */
   async generateRecommendations(campaignId: string): Promise<Array<{
     title: string;
@@ -408,47 +408,47 @@ export class CampaignOptimizer {
 
     if (analysis.performance.roi < 2) {
       recommendations.push({
-        title: 'Mejorar segmentación de audiencia',
-        description: 'El ROI bajo sugiere que no estamos llegando a la audiencia correcta',
+        title: 'Improve audience targeting',
+        description: 'Low ROI suggests we are not reaching the right audience',
         priority: 'high',
         effort: 'medium',
-        expectedImpact: 'Aumento de ROI del 50-100%'
+        expectedImpact: 'ROI increase of 50-100%'
       });
     }
 
     if (analysis.performance.ctr < 0.02) {
       recommendations.push({
-        title: 'Actualizar creatividades',
-        description: 'CTR bajo indica que los anuncios no son atractivos',
+        title: 'Refresh creatives',
+        description: 'Low CTR indicates ads are not engaging',
         priority: 'high',
         effort: 'low',
-        expectedImpact: 'Aumento de CTR del 30-60%'
+        expectedImpact: 'CTR increase of 30-60%'
       });
     }
 
     if (analysis.performance.cpa > 50) {
       recommendations.push({
-        title: 'Optimizar landing page',
-        description: 'CPA alto puede indicar problemas en la conversión',
+        title: 'Optimize landing page',
+        description: 'High CPA may indicate conversion issues',
         priority: 'medium',
         effort: 'high',
-        expectedImpact: 'Reducción de CPA del 20-40%'
+        expectedImpact: 'CPA reduction of 20-40%'
       });
     }
 
     recommendations.push({
-      title: 'Implementar retargeting',
-      description: 'Captura usuarios que visitaron pero no convirtieron',
+        title: 'Implement retargeting',
+        description: 'Capture users who visited but did not convert',
       priority: 'medium',
       effort: 'low',
-      expectedImpact: 'ROI típicamente 3-5x'
+      expectedImpact: 'Typically 3-5x ROI'
     });
 
     return recommendations;
   }
 
   /**
-   * Predice impacto de cambios propuestos
+   * Predict impact of proposed changes
    */
   async predictPerformance(
     campaignId: string,
@@ -466,7 +466,7 @@ export class CampaignOptimizer {
 
     const analysis = await this.analyzeCampaignPerformance(campaignId);
 
-    // Modelo predictivo simplificado (en producción usar ML)
+    // Simplified predictive model (use ML in production)
     const currentProjection = {
       conversions: analysis.performance.conversions,
       spend: analysis.performance.spend,
@@ -478,22 +478,22 @@ export class CampaignOptimizer {
 
     if (changes.budgetMultiplier) {
       newSpend *= changes.budgetMultiplier;
-      // Ley de rendimientos decrecientes
+      // Law of diminishing returns
       newConversions *= Math.pow(changes.budgetMultiplier, 0.7);
     }
 
     if (changes.newCreatives) {
-      // Mejora típica de 30% en conversiones con mejores creatividades
+      // Typical 30% improvement in conversions with better creatives
       newConversions *= 1.3;
     }
 
     if (changes.targetingExpansion) {
-      // Expansión aumenta volumen pero reduce ligeramente ROI
+      // Expansion increases volume but slightly lowers ROI
       newConversions *= 1.5;
       newSpend *= 1.1;
     }
 
-    const newRoi = (newConversions * 50) / newSpend; // Asumiendo €50 valor por conversión
+    const newRoi = (newConversions * 50) / newSpend; // Assuming €50 value per conversion
 
     return {
       currentProjection,

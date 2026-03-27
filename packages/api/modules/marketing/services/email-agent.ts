@@ -29,14 +29,14 @@ export class EmailAgent {
   }
 
   /**
-   * Crear campaña de email
+   * Create email campaign
    */
   async createCampaign(params: {
     name: string;
     segment: string;
     goal: string;
   }): Promise<EmailCampaign> {
-    // Generar contenido con IA
+    // Generate content with AI
     const { subject, content } = await this.generateEmailContent({
       segment: params.segment,
       goal: params.goal,
@@ -55,26 +55,26 @@ export class EmailAgent {
   }
 
   /**
-   * Generar contenido de email con IA
+   * Generate email content with AI
    */
   async generateEmailContent(params: {
     segment: string;
     goal: string;
     tone?: string;
   }): Promise<{ subject: string; content: string }> {
-    const prompt = `Genera un email marketing para:
+    const prompt = `Generate a marketing email for:
 
-SEGMENTO: ${params.segment}
-OBJETIVO: ${params.goal}
-TONO: ${params.tone || 'profesional y amigable'}
+SEGMENT: ${params.segment}
+GOAL: ${params.goal}
+TONE: ${params.tone || 'professional and friendly'}
 
-Genera:
+Generate:
 
-1. Subject line atractivo (max 60 caracteres)
+1. Attractive subject line (max 60 characters)
 
-2. Contenido del email en HTML
+2. Email content in HTML
 
-Responde en JSON:
+Respond in JSON:
 
 {
   "subject": "string",
@@ -102,14 +102,14 @@ Responde en JSON:
     } catch (error) {
       console.error("Error generating email content:", error);
       return {
-        subject: `¡Descubre ${params.goal}!`,
-        content: `<h1>Hola!</h1><p>Contenido sobre ${params.goal}</p>`,
+        subject: `Discover ${params.goal}!`,
+        content: `<h1>Hello!</h1><p>Content about ${params.goal}</p>`,
       };
     }
   }
 
   /**
-   * Enviar campaña
+   * Send campaign
    */
   async sendCampaign(campaign: EmailCampaign, recipients: string[]): Promise<{
     sent: number;
@@ -137,7 +137,7 @@ Responde en JSON:
   }
 
   /**
-   * Segmentar audiencia
+   * Segment audience
    */
   async segmentAudience(leads: Array<{ email: string; tags: string[]; score: number }>): Promise<{
     hot: string[];
@@ -162,7 +162,7 @@ Responde en JSON:
   }
 
   /**
-   * A/B Testing de emails
+   * A/B testing for emails
    */
   async runABTest(params: {
     variantA: { subject: string; content: string };
@@ -175,8 +175,8 @@ Responde en JSON:
       B: { sent: number; opened: number; clicked: number };
     };
   }> {
-    // En producción, enviarías realmente los emails y trackearías
-    // Por ahora, simulamos
+    // In production, you would actually send emails and track results
+    // For now, we simulate
     const statsA = {
       sent: Math.floor(params.recipients.length / 2),
       opened: Math.floor(params.recipients.length / 2 * 0.25),
