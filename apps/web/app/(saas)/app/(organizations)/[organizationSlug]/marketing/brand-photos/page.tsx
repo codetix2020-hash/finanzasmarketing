@@ -9,12 +9,12 @@ import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 const CATEGORIES = [
-  { value: "product", label: "Productos", icon: "📦" },
-  { value: "team", label: "Equipo", icon: "👥" },
-  { value: "location", label: "Local/Oficina", icon: "🏢" },
-  { value: "process", label: "Proceso/Behind-scenes", icon: "🎬" },
+  { value: "product", label: "Products", icon: "📦" },
+  { value: "team", label: "Team", icon: "👥" },
+  { value: "location", label: "Store / office", icon: "🏢" },
+  { value: "process", label: "Process / behind the scenes", icon: "🎬" },
   { value: "lifestyle", label: "Lifestyle", icon: "✨" },
-  { value: "event", label: "Eventos", icon: "🎉" },
+  { value: "event", label: "Events", icon: "🎉" },
 ];
 
 type BrandPhoto = {
@@ -56,7 +56,7 @@ export default function BrandPhotosPage() {
       }
     } catch (error) {
       console.error('Error loading photos:', error);
-      toast.error('Error al cargar las fotos');
+      toast.error('Failed to load photos');
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function BrandPhotosPage() {
 
   const handleFileSelect = useCallback(async (files: File[]) => {
     if (!activeOrganization?.id) {
-      toast.error('Organización no encontrada');
+      toast.error('Organization not found');
       return;
     }
 
@@ -73,7 +73,7 @@ export default function BrandPhotosPage() {
     try {
       // TODO: Subir a Cloudinary/S3/etc
       // Por ahora, crear un placeholder
-      toast.info('Funcionalidad de subida en desarrollo. Por ahora puedes agregar URLs manualmente.');
+      toast.info('Upload is still in development. For now you can add URLs manually.');
       
       // Aquí iría la lógica de upload real
       // const formData = new FormData();
@@ -82,7 +82,7 @@ export default function BrandPhotosPage() {
       
     } catch (error) {
       console.error('Error uploading:', error);
-      toast.error('Error al subir la foto');
+      toast.error('Failed to upload photo');
     } finally {
       setUploading(false);
     }
@@ -115,9 +115,9 @@ export default function BrandPhotosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Banco de Fotos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Photo library</h1>
         <p className="text-muted-foreground mt-2">
-          Sube fotos reales de tu negocio. El sistema las usará automáticamente en tus posts.
+          Upload real photos of your business. The system will use them automatically in your posts.
         </p>
       </div>
 
@@ -139,10 +139,10 @@ export default function BrandPhotosPage() {
         <div className="text-center">
           <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-lg font-medium">
-            Arrastra fotos o haz clic para subir
+            Drag photos here or click to upload
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            JPG, PNG o WebP. Máximo 10MB por imagen.
+            JPG, PNG, or WebP. Max 10MB per image.
           </p>
         </div>
       </Card>
@@ -173,7 +173,7 @@ export default function BrandPhotosPage() {
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <Button size="sm" variant="secondary">
-                  <Tag className="h-4 w-4 mr-1" /> Editar
+                  <Tag className="h-4 w-4 mr-1" /> Edit
                 </Button>
                 <Button size="sm" variant="destructive">
                   <Trash2 className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function BrandPhotosPage() {
         <Card className="p-12 text-center">
           <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
-            No tienes fotos aún. Sube tu primera foto para comenzar.
+            No photos yet. Upload your first one to get started.
           </p>
         </Card>
       )}

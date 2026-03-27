@@ -52,7 +52,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { formatDistanceToNow, format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { ScheduleModal } from "../components/schedule-modal";
 
 // Tipos
@@ -102,22 +102,22 @@ const statusConfig: Record<
 	{ label: string; color: string; icon: any }
 > = {
 	draft: {
-		label: "Borrador",
+		label: "Draft",
 		color: "bg-gray-100 text-gray-700",
 		icon: FileText,
 	},
 	scheduled: {
-		label: "Programado",
+		label: "Scheduled",
 		color: "bg-blue-100 text-blue-700",
 		icon: Clock,
 	},
 	published: {
-		label: "Publicado",
+		label: "Published",
 		color: "bg-green-100 text-green-700",
 		icon: CheckCircle,
 	},
 	failed: {
-		label: "Error",
+		label: "Failed",
 		color: "bg-red-100 text-red-700",
 		icon: XCircle,
 	},
@@ -153,7 +153,7 @@ function PostCard({
 	const copyToClipboard = () => {
 		const fullText = `${post.mainText}\n\n${post.hashtags.map((h) => `#${h}`).join(" ")}`;
 		navigator.clipboard.writeText(fullText);
-		toast.success("Copiado al portapapeles");
+		toast.success("Copied to clipboard");
 	};
 
 	return (
@@ -203,22 +203,21 @@ function PostCard({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-48">
 								<DropdownMenuItem onClick={onEdit}>
-									<Edit className="h-4 w-4 mr-2" /> Editar
+									<Edit className="h-4 w-4 mr-2" /> Edit
 								</DropdownMenuItem>
 								<DropdownMenuItem onClick={copyToClipboard}>
-									<Copy className="h-4 w-4 mr-2" /> Copiar
-									texto
+									<Copy className="h-4 w-4 mr-2" /> Copy text
 								</DropdownMenuItem>
 							{post.status === "draft" && (
 								<>
 									<DropdownMenuSeparator />
 									<DropdownMenuItem onClick={onSchedule}>
 										<Calendar className="h-4 w-4 mr-2" />{" "}
-										Programar
+										Schedule
 									</DropdownMenuItem>
 									<DropdownMenuItem onClick={onPublish}>
 										<Send className="h-4 w-4 mr-2" />{" "}
-										Publicar ahora
+										Publish now
 									</DropdownMenuItem>
 								</>
 							)}
@@ -227,7 +226,7 @@ function PostCard({
 									<DropdownMenuSeparator />
 									<DropdownMenuItem onClick={onRetry}>
 										<RefreshCw className="h-4 w-4 mr-2" />{" "}
-										Reintentar publicación
+										Retry publish
 									</DropdownMenuItem>
 								</>
 							)}
@@ -237,7 +236,7 @@ function PostCard({
 									className="text-red-600"
 								>
 									<Trash2 className="h-4 w-4 mr-2" />{" "}
-									Eliminar
+									Delete
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
@@ -275,7 +274,7 @@ function PostCard({
 									))}
 									{post.hashtags.length > 3 && (
 										<span className="text-xs text-gray-400">
-											+{post.hashtags.length - 3} más
+											+{post.hashtags.length - 3} more
 										</span>
 									)}
 								</div>
@@ -287,8 +286,8 @@ function PostCard({
 					<div className="mt-4 pt-3 border-t flex items-center justify-between text-xs text-gray-500">
 						<span>
 							{post.scheduledAt
-								? `Programado: ${format(new Date(post.scheduledAt), "d MMM, HH:mm", { locale: es })}`
-								: `Creado ${formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: es })}`}
+								? `Scheduled: ${format(new Date(post.scheduledAt), "d MMM, HH:mm", { locale: enUS })}`
+								: `Created ${formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: enUS })}`}
 						</span>
 
 						{post.status === "published" && (
@@ -353,7 +352,7 @@ export default function ContentPage() {
 			}
 		} catch (error) {
 			console.error("Error loading posts:", error);
-			toast.error("Error al cargar el contenido");
+			toast.error("Failed to load content");
 		} finally {
 			setLoading(false);
 		}
@@ -372,12 +371,12 @@ export default function ContentPage() {
 
 			if (response.ok) {
 				setPosts(posts.filter((p) => p.id !== postToDelete));
-				toast.success("Post eliminado");
+				toast.success("Post deleted");
 			} else {
 				throw new Error("Failed to delete");
 			}
 		} catch (error) {
-			toast.error("Error al eliminar");
+			toast.error("Failed to delete");
 		} finally {
 			setDeleteDialogOpen(false);
 			setPostToDelete(null);
@@ -417,12 +416,12 @@ export default function ContentPage() {
 				),
 			);
 
-			toast.success("¡Publicado correctamente!");
+			toast.success("Published successfully!");
 		} catch (error) {
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Error al reintentar",
+					: "Failed to retry",
 			);
 		}
 	};
@@ -463,11 +462,11 @@ export default function ContentPage() {
 				<div className="flex items-center justify-between mb-8">
 					<div>
 						<h1 className="text-3xl font-bold text-gray-900">
-							Tu Contenido
+							Your content
 						</h1>
 						<p className="text-gray-500 mt-1">
-							Gestiona tus posts generados, borradores y
-							programados
+							Manage generated posts, drafts, and
+							scheduled items
 						</p>
 					</div>
 
@@ -475,7 +474,7 @@ export default function ContentPage() {
 						href={`/app/${organizationSlug}/marketing/generate`}
 					>
 						<Button className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-							<Plus className="h-4 w-4 mr-2" /> Crear nuevo
+							<Plus className="h-4 w-4 mr-2" /> Create new
 						</Button>
 					</Link>
 				</div>
@@ -498,28 +497,28 @@ export default function ContentPage() {
 							value="all"
 							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
 						>
-							Todos ({counts.all})
+							All ({counts.all})
 						</TabsTrigger>
 						<TabsTrigger
 							value="draft"
 							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
 						>
 							<FileText className="h-4 w-4 mr-2" />
-							Borradores ({counts.draft})
+							Drafts ({counts.draft})
 						</TabsTrigger>
 						<TabsTrigger
 							value="scheduled"
 							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
 						>
 							<Clock className="h-4 w-4 mr-2" />
-							Programados ({counts.scheduled})
+							Scheduled ({counts.scheduled})
 						</TabsTrigger>
 						<TabsTrigger
 							value="published"
 							className="rounded-xl px-4 py-2 data-[state=active]:bg-gray-900 data-[state=active]:text-white"
 						>
 							<CheckCircle className="h-4 w-4 mr-2" />
-							Publicados ({counts.published})
+							Published ({counts.published})
 						</TabsTrigger>
 					</TabsList>
 
@@ -535,19 +534,26 @@ export default function ContentPage() {
 								</div>
 								<h3 className="text-xl font-semibold text-gray-900 mb-2">
 									{activeTab === "all"
-										? "No tienes contenido todavía"
-										: `No tienes ${statusConfig[activeTab]?.label.toLowerCase() || "posts"}`}
+										? "No content yet"
+										: (
+												{
+													draft: "No drafts yet",
+													scheduled: "No scheduled posts yet",
+													published: "No published posts yet",
+													failed: "No failed posts yet",
+												} as Record<string, string>
+											)[activeTab] ?? "Nothing here yet"}
 								</h3>
 								<p className="text-gray-500 mb-6">
-									Genera tu primer post con IA y empieza a
-									crear contenido increíble
+									Generate your first post with AI and start
+									creating great content
 								</p>
 								<Link
 									href={`/app/${organizationSlug}/marketing/generate`}
 								>
 									<Button className="rounded-xl bg-violet-500 text-white hover:bg-violet-600">
 										<Sparkles className="h-4 w-4 mr-2" />{" "}
-										Generar contenido
+										Generate content
 									</Button>
 								</Link>
 							</div>
@@ -590,20 +596,20 @@ export default function ContentPage() {
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							¿Eliminar este post?
+							Delete this post?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Esta acción no se puede deshacer. El post será
-							eliminado permanentemente.
+							This cannot be undone. The post will be
+							permanently deleted.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleDelete}
 							className="bg-red-600 hover:bg-red-700"
 						>
-							Eliminar
+							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

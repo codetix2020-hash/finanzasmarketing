@@ -87,13 +87,13 @@ function UploadZone({
 				)}
 				<p className="font-medium text-gray-700">
 					{isDragActive
-						? "Suelta las fotos aquí"
+						? "Drop photos here"
 						: isUploading
-							? "Subiendo..."
-							: "Arrastra fotos o haz clic para subir"}
+							? "Uploading..."
+							: "Drag photos here or click to upload"}
 				</p>
 				<p className="text-sm text-gray-500 mt-1">
-					JPG, PNG, WebP o GIF. Máx 10MB.
+					JPG, PNG, WebP, or GIF. Max 10MB.
 				</p>
 			</div>
 		</div>
@@ -116,7 +116,7 @@ function ImageCard({
 
 	const copyUrl = () => {
 		navigator.clipboard.writeText(file.url);
-		toast.success("URL copiada");
+		toast.success("URL copied");
 	};
 
 	const formatSize = (bytes: number) => {
@@ -175,21 +175,21 @@ function ImageCard({
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={copyUrl}>
-							<Copy className="h-4 w-4 mr-2" /> Copiar URL
+							<Copy className="h-4 w-4 mr-2" /> Copy URL
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() =>
 								window.open(file.url, "_blank")
 							}
 						>
-							<Download className="h-4 w-4 mr-2" /> Abrir
+							<Download className="h-4 w-4 mr-2" /> Open
 							original
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={onDelete}
 							className="text-red-600"
 						>
-							<Trash2 className="h-4 w-4 mr-2" /> Eliminar
+							<Trash2 className="h-4 w-4 mr-2" /> Delete
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -306,11 +306,11 @@ export default function PhotosPage() {
 			setUploading(false);
 
 			if (successCount > 0) {
-				toast.success(`${successCount} foto(s) subida(s)`);
+				toast.success(`${successCount} photo(s) uploaded`);
 				loadFiles();
 			}
 			if (errorCount > 0) {
-				toast.error(`${errorCount} foto(s) fallaron`);
+				toast.error(`${errorCount} photo(s) failed`);
 			}
 		},
 		[organizationId, activeFolder],
@@ -330,12 +330,12 @@ export default function PhotosPage() {
 					next.delete(fileId);
 					return next;
 				});
-				toast.success("Foto eliminada");
+				toast.success("Photo deleted");
 			} else {
 				throw new Error("Failed to delete");
 			}
 		} catch {
-			toast.error("Error al eliminar");
+			toast.error("Failed to delete");
 		} finally {
 			setDeleteDialog(null);
 		}
@@ -358,7 +358,7 @@ export default function PhotosPage() {
 		}
 
 		if (successCount > 0) {
-			toast.success(`${successCount} foto(s) eliminada(s)`);
+			toast.success(`${successCount} photo(s) deleted`);
 			setSelectedFiles(new Set());
 			loadFiles();
 		}
@@ -393,11 +393,11 @@ export default function PhotosPage() {
 						</div>
 						<div>
 							<h1 className="text-3xl font-bold text-gray-900">
-								Banco de Fotos
+								Photo library
 							</h1>
 							<p className="text-gray-500">
-								{files.length} foto(s) ·{" "}
-								{selectedFiles.size} seleccionada(s)
+								{files.length} photo(s) ·{" "}
+								{selectedFiles.size} selected
 							</p>
 						</div>
 					</div>
@@ -413,7 +413,7 @@ export default function PhotosPage() {
 								className="rounded-xl"
 							>
 								<X className="h-4 w-4 mr-2" />{" "}
-								Deseleccionar
+								Clear selection
 							</Button>
 							<Button
 								variant="destructive"
@@ -421,7 +421,7 @@ export default function PhotosPage() {
 								className="rounded-xl"
 							>
 								<Trash2 className="h-4 w-4 mr-2" />{" "}
-								Eliminar ({selectedFiles.size})
+								Delete ({selectedFiles.size})
 							</Button>
 						</div>
 					)}
@@ -433,7 +433,7 @@ export default function PhotosPage() {
 					<div className="relative flex-1 max-w-md">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 						<Input
-							placeholder="Buscar fotos..."
+							placeholder="Search photos..."
 							value={searchQuery}
 							onChange={(e) =>
 								setSearchQuery(e.target.value)
@@ -453,7 +453,7 @@ export default function PhotosPage() {
 							onClick={() => setActiveFolder(null)}
 							className="rounded-xl"
 						>
-							Todas
+							All
 						</Button>
 						{folders.map((folder) => (
 							<Button
@@ -493,13 +493,13 @@ export default function PhotosPage() {
 						<ImageIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
 						<h3 className="text-xl font-semibold text-gray-900 mb-2">
 							{searchQuery
-								? "No se encontraron fotos"
-								: "No tienes fotos todavía"}
+								? "No photos found"
+								: "No photos yet"}
 						</h3>
 						<p className="text-gray-500">
 							{searchQuery
-								? "Prueba con otro término de búsqueda"
-								: "Sube tus primeras fotos de producto"}
+								? "Try a different search term"
+								: "Upload your first product photos"}
 						</p>
 					</div>
 				) : (
@@ -531,14 +531,14 @@ export default function PhotosPage() {
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							¿Eliminar esta foto?
+							Delete this photo?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Esta acción no se puede deshacer.
+							This action cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() =>
 								deleteDialog &&
@@ -546,7 +546,7 @@ export default function PhotosPage() {
 							}
 							className="bg-red-600 hover:bg-red-700"
 						>
-							Eliminar
+							Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

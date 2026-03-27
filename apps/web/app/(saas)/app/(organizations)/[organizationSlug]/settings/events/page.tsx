@@ -775,7 +775,7 @@ export default function EventsPage() {
           setEvents(events.map((e) => (e.id === id ? { ...event, ...result.data } : e)));
           toast.success("Evento actualizado");
         } else {
-          toast.error("Error al actualizar evento");
+          toast.error("Failed to update event");
         }
       } else {
         // Crear evento nuevo
@@ -796,18 +796,18 @@ export default function EventsPage() {
           setEvents([newEvent, ...events]);
           toast.success("Evento creado");
         } else {
-          toast.error("Error al crear evento");
+          toast.error("Failed to create event");
         }
       }
     } catch (error) {
       console.error("Error saving event:", error);
-      toast.error("Error al guardar evento");
+      toast.error("Failed to save event");
     }
     setEditingEvent(null);
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (!confirm("¿Eliminar este evento?")) return;
+    if (!confirm("Delete this event?")) return;
 
     try {
       const res = await fetch("/api/marketing/events-delete", {
@@ -819,11 +819,11 @@ export default function EventsPage() {
         setEvents(events.filter((e) => e.id !== id));
         toast.success("Evento eliminado");
       } else {
-        toast.error("Error al eliminar evento");
+        toast.error("Failed to delete event");
       }
     } catch (error) {
       console.error("Error deleting event:", error);
-      toast.error("Error al eliminar evento");
+      toast.error("Failed to delete event");
     }
   };
 
@@ -843,11 +843,11 @@ export default function EventsPage() {
           `Evento ${status === "active" ? "activado" : status === "ended" ? "finalizado" : status}`
         );
       } else {
-        toast.error("Error al cambiar estado");
+        toast.error("Failed to change status");
       }
     } catch (error) {
       console.error("Error changing status:", error);
-      toast.error("Error al cambiar estado");
+      toast.error("Failed to change status");
     }
   };
 

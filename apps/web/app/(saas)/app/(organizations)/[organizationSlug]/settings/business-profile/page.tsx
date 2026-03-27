@@ -74,19 +74,19 @@ function TagInput({
 
 // Labels descriptivos para los niveles
 const formalityLabels: Record<number, string> = {
-  1: "Muy informal",
+  1: "Very informal",
   2: "Informal",
-  3: "Equilibrado",
+  3: "Balanced",
   4: "Formal",
-  5: "Muy formal",
+  5: "Very formal",
 };
 
 const humorLabels: Record<number, string> = {
-  1: "Serio",
-  2: "Poco humor",
-  3: "Equilibrado",
-  4: "Divertido",
-  5: "Muy gracioso",
+  1: "Serious",
+  2: "Light humor",
+  3: "Balanced",
+  4: "Playful",
+  5: "Very funny",
 };
 
 export default function BusinessProfilePage() {
@@ -152,30 +152,30 @@ export default function BusinessProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const industries = [
-    { value: "panaderia", label: "Panadería / Pastelería" },
-    { value: "restaurante", label: "Restaurante / Bar" },
-    { value: "cafeteria", label: "Cafetería" },
-    { value: "barberia", label: "Barbería / Peluquería" },
-    { value: "estetica", label: "Centro de estética" },
-    { value: "gimnasio", label: "Gimnasio / Fitness" },
-    { value: "tienda_ropa", label: "Tienda de ropa" },
-    { value: "tienda_general", label: "Tienda / Comercio" },
-    { value: "servicios", label: "Servicios profesionales" },
-    { value: "salud", label: "Salud / Clínica" },
-    { value: "inmobiliaria", label: "Inmobiliaria" },
-    { value: "educacion", label: "Educación / Academia" },
-    { value: "tecnologia", label: "Tecnología" },
-    { value: "otro", label: "Otro" },
+    { value: "panaderia", label: "Bakery / pastry" },
+    { value: "restaurante", label: "Restaurant / bar" },
+    { value: "cafeteria", label: "Coffee shop" },
+    { value: "barberia", label: "Barbershop / salon" },
+    { value: "estetica", label: "Beauty / aesthetics center" },
+    { value: "gimnasio", label: "Gym / fitness" },
+    { value: "tienda_ropa", label: "Clothing store" },
+    { value: "tienda_general", label: "Retail / shop" },
+    { value: "servicios", label: "Professional services" },
+    { value: "salud", label: "Health / clinic" },
+    { value: "inmobiliaria", label: "Real estate" },
+    { value: "educacion", label: "Education / academy" },
+    { value: "tecnologia", label: "Technology" },
+    { value: "otro", label: "Other" },
   ];
 
   const personalities = [
-    { value: "cercano", label: "Cercano y familiar" },
-    { value: "profesional", label: "Profesional y serio" },
-    { value: "divertido", label: "Divertido y desenfadado" },
-    { value: "tradicional", label: "Tradicional y clásico" },
-    { value: "moderno", label: "Moderno e innovador" },
-    { value: "premium", label: "Premium y exclusivo" },
-    { value: "eco", label: "Ecológico y sostenible" },
+    { value: "cercano", label: "Warm and familiar" },
+    { value: "profesional", label: "Professional and serious" },
+    { value: "divertido", label: "Fun and casual" },
+    { value: "tradicional", label: "Traditional and classic" },
+    { value: "moderno", label: "Modern and innovative" },
+    { value: "premium", label: "Premium and exclusive" },
+    { value: "eco", label: "Eco-friendly and sustainable" },
   ];
 
   // Cargar datos existentes desde la BD
@@ -235,7 +235,7 @@ export default function BusinessProfilePage() {
 
   const handleSave = async () => {
     if (!organizationId) {
-      toast.error("No se encontró la organización");
+      toast.error("Organization not found");
       return;
     }
 
@@ -270,13 +270,13 @@ export default function BusinessProfilePage() {
 
       const allOk = results.every((r) => r.ok);
       if (allOk) {
-        toast.success("Perfil guardado correctamente");
+        toast.success("Profile saved successfully");
       } else {
-        toast.error("Algunos datos no se guardaron correctamente");
+        toast.error("Some data could not be saved");
       }
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error("No se pudo guardar el perfil. Inténtalo de nuevo.");
+      toast.error("Could not save profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -293,9 +293,9 @@ export default function BusinessProfilePage() {
   return (
     <div className="max-w-4xl space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Perfil de tu negocio</h1>
+        <h1 className="text-3xl font-bold">Business profile</h1>
         <p className="text-muted-foreground mt-2">
-          Configura los detalles de tu negocio para generar contenido ultra personalizado
+          Configure your business details to generate highly personalized content
         </p>
       </div>
 
@@ -303,15 +303,15 @@ export default function BusinessProfilePage() {
         <TabsList>
           <TabsTrigger value="identity" className="gap-2">
             <Building2 className="h-4 w-4" />
-            Identidad
+            Identity
           </TabsTrigger>
           <TabsTrigger value="audience" className="gap-2">
             <Users className="h-4 w-4" />
-            Audiencia
+            Audience
           </TabsTrigger>
           <TabsTrigger value="style" className="gap-2">
             <Palette className="h-4 w-4" />
-            Estilo
+            Style
           </TabsTrigger>
         </TabsList>
 
@@ -320,17 +320,17 @@ export default function BusinessProfilePage() {
           {/* Información básica */}
           <Card>
             <CardHeader>
-              <CardTitle>Información básica</CardTitle>
-              <CardDescription>Los datos esenciales de tu negocio</CardDescription>
+              <CardTitle>Basic information</CardTitle>
+              <CardDescription>Essential details about your business</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Nombre del negocio</Label>
+                  <Label>Business name</Label>
                   <Input
                     value={identity.businessName}
                     onChange={(e) => setIdentity({ ...identity, businessName: e.target.value })}
-                    placeholder="Ej: Panadería La Abuela"
+                    placeholder="E.g. Riverside Bakery"
                   />
                 </div>
                 <div className="space-y-2">
@@ -338,20 +338,20 @@ export default function BusinessProfilePage() {
                   <Input
                     value={identity.slogan}
                     onChange={(e) => setIdentity({ ...identity, slogan: e.target.value })}
-                    placeholder="Ej: El sabor de siempre"
+                    placeholder="E.g. The taste you remember"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Industria</Label>
+                  <Label>Industry</Label>
                   <Select
                     value={identity.industry}
                     onValueChange={(v) => setIdentity({ ...identity, industry: v })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona tu industria" />
+                      <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
                       {industries.map((ind) => (
@@ -363,21 +363,21 @@ export default function BusinessProfilePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Sub-industria / Especialización</Label>
+                  <Label>Sub-industry / specialization</Label>
                   <Input
                     value={identity.subIndustry}
                     onChange={(e) => setIdentity({ ...identity, subIndustry: e.target.value })}
-                    placeholder="Ej: Panadería artesanal con masa madre"
+                    placeholder="E.g. Artisan sourdough bakery"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Descripción corta (para posts)</Label>
+                <Label>Short description (for posts)</Label>
                 <Textarea
                   value={identity.shortDescription}
                   onChange={(e) => setIdentity({ ...identity, shortDescription: e.target.value })}
-                  placeholder="Una frase que describe tu negocio (máx 100 caracteres)"
+                  placeholder="One line describing your business (max 100 characters)"
                   maxLength={100}
                   rows={2}
                 />
@@ -387,11 +387,11 @@ export default function BusinessProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Descripción completa</Label>
+                <Label>Full description</Label>
                 <Textarea
                   value={identity.longDescription}
                   onChange={(e) => setIdentity({ ...identity, longDescription: e.target.value })}
-                  placeholder="Cuenta la historia de tu negocio, qué hacéis, cómo lo hacéis..."
+                  placeholder="Tell your business story: what you do and how you do it..."
                   rows={4}
                 />
               </div>
@@ -401,25 +401,25 @@ export default function BusinessProfilePage() {
           {/* Propuesta de valor */}
           <Card>
             <CardHeader>
-              <CardTitle>Propuesta de valor</CardTitle>
-              <CardDescription>¿Qué te hace único?</CardDescription>
+              <CardTitle>Value proposition</CardTitle>
+              <CardDescription>What makes you unique?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>¿Qué te hace especial?</Label>
+                <Label>What makes you special?</Label>
                 <Textarea
                   value={identity.uniqueValue}
                   onChange={(e) => setIdentity({ ...identity, uniqueValue: e.target.value })}
-                  placeholder="Ej: Usamos recetas tradicionales de mi abuela con ingredientes 100% locales"
+                  placeholder="E.g. We use traditional recipes with 100% local ingredients"
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label>¿Qué te diferencia de la competencia?</Label>
+                <Label>What sets you apart from competitors?</Label>
                 <Textarea
                   value={identity.competitorDiff}
                   onChange={(e) => setIdentity({ ...identity, competitorDiff: e.target.value })}
-                  placeholder="Ej: Somos los únicos que hacemos pan con masa madre de 48h de fermentación"
+                  placeholder="E.g. We are the only bakery with 48-hour sourdough fermentation"
                   rows={3}
                 />
               </div>
@@ -429,12 +429,12 @@ export default function BusinessProfilePage() {
           {/* Personalidad de marca */}
           <Card>
             <CardHeader>
-              <CardTitle>Personalidad de marca</CardTitle>
-              <CardDescription>¿Cómo quieres que te perciban?</CardDescription>
+              <CardTitle>Brand personality</CardTitle>
+              <CardDescription>How do you want to be perceived?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Personalidad principal</Label>
+                <Label>Primary personality</Label>
                 <Select
                   value={identity.brandPersonality}
                   onValueChange={(v) => setIdentity({ ...identity, brandPersonality: v })}
@@ -453,11 +453,11 @@ export default function BusinessProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Valores de marca</Label>
+                <Label>Brand values</Label>
                 <TagInput
                   value={identity.brandValues}
                   onChange={(v) => setIdentity({ ...identity, brandValues: v })}
-                  placeholder="Añade un valor (ej: calidad, tradición, innovación)"
+                  placeholder="Add a value (e.g. quality, tradition, innovation)"
                 />
               </div>
             </CardContent>
@@ -466,13 +466,13 @@ export default function BusinessProfilePage() {
           {/* Historia y origen */}
           <Card>
             <CardHeader>
-              <CardTitle>Historia y origen</CardTitle>
-              <CardDescription>Tu historia conecta con los clientes</CardDescription>
+              <CardTitle>History and origin</CardTitle>
+              <CardDescription>Your story connects with customers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Año de fundación</Label>
+                  <Label>Year founded</Label>
                   <Input
                     type="number"
                     value={identity.foundingYear}
@@ -482,31 +482,31 @@ export default function BusinessProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Nombre del propietario/fundador</Label>
+                  <Label>Owner / founder name</Label>
                   <Input
                     value={identity.ownerName}
                     onChange={(e) => setIdentity({ ...identity, ownerName: e.target.value })}
-                    placeholder="Ej: María García"
+                    placeholder="E.g. Jane Smith"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Historia del negocio</Label>
+                <Label>Business story</Label>
                 <Textarea
                   value={identity.foundingStory}
                   onChange={(e) => setIdentity({ ...identity, foundingStory: e.target.value })}
-                  placeholder="¿Cómo empezó todo? ¿Por qué decidiste abrir este negocio?"
+                  placeholder="How did it start? Why did you open this business?"
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Historia personal del fundador (opcional)</Label>
+                <Label>Founder personal story (optional)</Label>
                 <Textarea
                   value={identity.ownerStory}
                   onChange={(e) => setIdentity({ ...identity, ownerStory: e.target.value })}
-                  placeholder="Una historia personal que conecte con los clientes"
+                  placeholder="A personal story that resonates with customers"
                   rows={3}
                 />
               </div>
@@ -516,45 +516,45 @@ export default function BusinessProfilePage() {
           {/* Ubicación y contacto */}
           <Card>
             <CardHeader>
-              <CardTitle>Ubicación y contacto</CardTitle>
-              <CardDescription>Dónde encontrarte</CardDescription>
+              <CardTitle>Location and contact</CardTitle>
+              <CardDescription>Where to find you</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Ciudad</Label>
+                  <Label>City</Label>
                   <Input
                     value={identity.city}
                     onChange={(e) => setIdentity({ ...identity, city: e.target.value })}
-                    placeholder="Ej: Barcelona"
+                    placeholder="E.g. Austin"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Barrio</Label>
+                  <Label>Neighborhood</Label>
                   <Input
                     value={identity.neighborhood}
                     onChange={(e) => setIdentity({ ...identity, neighborhood: e.target.value })}
-                    placeholder="Ej: Gracia"
+                    placeholder="E.g. Downtown"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Dirección completa</Label>
+                <Label>Full address</Label>
                 <Input
                   value={identity.fullAddress}
                   onChange={(e) => setIdentity({ ...identity, fullAddress: e.target.value })}
-                  placeholder="Ej: Calle Mayor 15, 08001 Barcelona"
+                  placeholder="E.g. 123 Main St, 78701 Austin"
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Teléfono</Label>
+                  <Label>Phone</Label>
                   <Input
                     value={identity.phone}
                     onChange={(e) => setIdentity({ ...identity, phone: e.target.value })}
-                    placeholder="Ej: 93 123 45 67"
+                    placeholder="E.g. (512) 555-0100"
                   />
                 </div>
                 <div className="space-y-2">
@@ -562,7 +562,7 @@ export default function BusinessProfilePage() {
                   <Input
                     value={identity.whatsapp}
                     onChange={(e) => setIdentity({ ...identity, whatsapp: e.target.value })}
-                    placeholder="Ej: +34 612 345 678"
+                    placeholder="E.g. +1 512 555 0100"
                   />
                 </div>
               </div>
@@ -574,15 +574,15 @@ export default function BusinessProfilePage() {
                     type="email"
                     value={identity.email}
                     onChange={(e) => setIdentity({ ...identity, email: e.target.value })}
-                    placeholder="Ej: info@tupanaderia.com"
+                    placeholder="E.g. hello@yourbusiness.com"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Web</Label>
+                  <Label>Website</Label>
                   <Input
                     value={identity.website}
                     onChange={(e) => setIdentity({ ...identity, website: e.target.value })}
-                    placeholder="Ej: www.tupanaderia.com"
+                    placeholder="E.g. www.yourbusiness.com"
                   />
                 </div>
               </div>
@@ -594,13 +594,13 @@ export default function BusinessProfilePage() {
         <TabsContent value="audience" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Demografía</CardTitle>
-              <CardDescription>¿Quiénes son tus clientes típicos?</CardDescription>
+              <CardTitle>Demographics</CardTitle>
+              <CardDescription>Who are your typical customers?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>
-                  Rango de edad: {audience.ageRangeMin} - {audience.ageRangeMax} años
+                  Age range: {audience.ageRangeMin} - {audience.ageRangeMax} years
                 </Label>
                 <div className="flex gap-4 items-center">
                   <Input
@@ -613,7 +613,7 @@ export default function BusinessProfilePage() {
                     min={1}
                     max={100}
                   />
-                  <span className="text-muted-foreground">a</span>
+                  <span className="text-muted-foreground">to</span>
                   <Input
                     type="number"
                     value={audience.ageRangeMax}
@@ -628,7 +628,7 @@ export default function BusinessProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Género principal</Label>
+                <Label>Primary gender</Label>
                 <Select
                   value={audience.gender}
                   onValueChange={(v) => setAudience({ ...audience, gender: v })}
@@ -637,19 +637,19 @@ export default function BusinessProfilePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="female">Mayormente mujeres</SelectItem>
-                    <SelectItem value="male">Mayormente hombres</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="female">Mostly women</SelectItem>
+                    <SelectItem value="male">Mostly men</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Ubicaciones objetivo (ciudades, barrios)</Label>
+                <Label>Target locations (cities, neighborhoods)</Label>
                 <TagInput
                   value={audience.targetLocations}
                   onChange={(v) => setAudience({ ...audience, targetLocations: v })}
-                  placeholder="Añade ubicación (ej: Barcelona, Gracia)"
+                  placeholder="Add a location (e.g. Austin, Downtown)"
                 />
               </div>
             </CardContent>
@@ -657,44 +657,44 @@ export default function BusinessProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Cliente ideal</CardTitle>
-              <CardDescription>Describe a tu cliente perfecto</CardDescription>
+              <CardTitle>Ideal customer</CardTitle>
+              <CardDescription>Describe your perfect customer</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Descripción del cliente ideal</Label>
+                <Label>Ideal customer description</Label>
                 <Textarea
                   value={audience.idealCustomer}
                   onChange={(e) => setAudience({ ...audience, idealCustomer: e.target.value })}
-                  placeholder="Ej: Familias jóvenes del barrio que buscan productos frescos y de calidad para el desayuno..."
+                  placeholder="E.g. Young families nearby looking for fresh, quality breakfast options..."
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Problemas que tienen (dolores)</Label>
+                <Label>Pain points</Label>
                 <TagInput
                   value={audience.customerPains}
                   onChange={(v) => setAudience({ ...audience, customerPains: v })}
-                  placeholder="Ej: No encuentran pan de calidad cerca"
+                  placeholder="E.g. They cannot find quality bread nearby"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Qué desean conseguir</Label>
+                <Label>What they want to achieve</Label>
                 <TagInput
                   value={audience.customerDesires}
                   onChange={(v) => setAudience({ ...audience, customerDesires: v })}
-                  placeholder="Ej: Desayunos especiales los fines de semana"
+                  placeholder="E.g. Special weekend breakfasts"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Intereses</Label>
+                <Label>Interests</Label>
                 <TagInput
                   value={audience.interests}
                   onChange={(v) => setAudience({ ...audience, interests: v })}
-                  placeholder="Ej: gastronomía, productos locales, vida sana"
+                  placeholder="E.g. food, local products, wellness"
                 />
               </div>
             </CardContent>
@@ -702,12 +702,12 @@ export default function BusinessProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Comportamiento de compra</CardTitle>
+              <CardTitle>Purchase behavior</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Frecuencia de compra</Label>
+                  <Label>Purchase frequency</Label>
                   <Select
                     value={audience.buyingFrequency}
                     onValueChange={(v) => setAudience({ ...audience, buyingFrequency: v })}
@@ -716,23 +716,23 @@ export default function BusinessProfilePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="diario">Diario</SelectItem>
-                      <SelectItem value="semanal">Semanal</SelectItem>
-                      <SelectItem value="quincenal">Quincenal</SelectItem>
-                      <SelectItem value="mensual">Mensual</SelectItem>
-                      <SelectItem value="ocasional">Ocasional</SelectItem>
+                      <SelectItem value="diario">Daily</SelectItem>
+                      <SelectItem value="semanal">Weekly</SelectItem>
+                      <SelectItem value="quincenal">Biweekly</SelectItem>
+                      <SelectItem value="mensual">Monthly</SelectItem>
+                      <SelectItem value="ocasional">Occasional</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Ticket medio (€)</Label>
+                  <Label>Average ticket (€)</Label>
                   <Input
                     type="number"
                     value={audience.averageTicket}
                     onChange={(e) =>
                       setAudience({ ...audience, averageTicket: parseFloat(e.target.value) || 0 })
                     }
-                    placeholder="Ej: 15"
+                    placeholder="E.g. 15"
                   />
                 </div>
               </div>
@@ -744,13 +744,13 @@ export default function BusinessProfilePage() {
         <TabsContent value="style" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Tono y personalidad</CardTitle>
-              <CardDescription>¿Cómo quieres sonar en tus publicaciones?</CardDescription>
+              <CardTitle>Tone and personality</CardTitle>
+              <CardDescription>How do you want to sound in your posts?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <Label>Nivel de formalidad</Label>
+                  <Label>Formality level</Label>
                   <span className="text-sm text-muted-foreground">
                     {formalityLabels[style.formalityLevel]}
                   </span>
@@ -765,14 +765,14 @@ export default function BusinessProfilePage() {
                   className="w-full accent-primary h-2 rounded-lg cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>¡Ey! ¿Qué tal?</span>
-                  <span>Estimado cliente...</span>
+                  <span>Hey! What&apos;s up?</span>
+                  <span>Dear customer...</span>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <Label>Nivel de humor</Label>
+                  <Label>Humor level</Label>
                   <span className="text-sm text-muted-foreground">
                     {humorLabels[style.humorLevel]}
                   </span>
@@ -789,7 +789,7 @@ export default function BusinessProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Uso de emojis</Label>
+                <Label>Emoji usage</Label>
                 <Select
                   value={style.emojiUsage}
                   onValueChange={(v) => setStyle({ ...style, emojiUsage: v })}
@@ -798,20 +798,20 @@ export default function BusinessProfilePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin emojis</SelectItem>
-                    <SelectItem value="minimal">Mínimo (1-2 por post)</SelectItem>
-                    <SelectItem value="moderate">Moderado (3-5 por post)</SelectItem>
-                    <SelectItem value="heavy">Muchos emojis 🎉✨🔥</SelectItem>
+                    <SelectItem value="none">No emojis</SelectItem>
+                    <SelectItem value="minimal">Minimal (1–2 per post)</SelectItem>
+                    <SelectItem value="moderate">Moderate (3–5 per post)</SelectItem>
+                    <SelectItem value="heavy">Heavy on emojis 🎉✨🔥</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Emojis favoritos</Label>
+                <Label>Favorite emojis</Label>
                 <TagInput
                   value={style.favoriteEmojis}
                   onChange={(v) => setStyle({ ...style, favoriteEmojis: v })}
-                  placeholder="Añade emoji (ej: 🥐 ❤️ ✨)"
+                  placeholder="Add an emoji (e.g. 🥐 ❤️ ✨)"
                 />
               </div>
             </CardContent>
@@ -819,25 +819,25 @@ export default function BusinessProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Frases y vocabulario</CardTitle>
-              <CardDescription>Palabras que te definen</CardDescription>
+              <CardTitle>Phrases and vocabulary</CardTitle>
+              <CardDescription>Words that define you</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Frases características (que siempre usas)</Label>
+                <Label>Signature phrases you often use</Label>
                 <TagInput
                   value={style.signaturePhrases}
                   onChange={(v) => setStyle({ ...style, signaturePhrases: v })}
-                  placeholder="Ej: ¡Buenos días!, Hecho con amor, Como en casa"
+                  placeholder="E.g. Good morning!, Made with love, Like home"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Palabras prohibidas (que NUNCA usarías)</Label>
+                <Label>Banned words (never use)</Label>
                 <TagInput
                   value={style.bannedWords}
                   onChange={(v) => setStyle({ ...style, bannedWords: v })}
-                  placeholder="Ej: barato, ofertón, chollazo"
+                  placeholder="E.g. cheap, steal, rock-bottom"
                 />
               </div>
 
@@ -850,7 +850,7 @@ export default function BusinessProfilePage() {
                   className="h-4 w-4 rounded border-border accent-primary"
                 />
                 <Label htmlFor="useLocalSlang" className="cursor-pointer">
-                  Usar expresiones locales / jerga del barrio
+                  Use local expressions / neighborhood slang
                 </Label>
               </div>
             </CardContent>
@@ -858,25 +858,25 @@ export default function BusinessProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>CTAs y Hashtags</CardTitle>
-              <CardDescription>Llamadas a la acción y etiquetas</CardDescription>
+              <CardTitle>CTAs and hashtags</CardTitle>
+              <CardDescription>Calls to action and tags</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>CTAs favoritos (llamadas a la acción)</Label>
+                <Label>Favorite CTAs</Label>
                 <TagInput
                   value={style.favoriteCTAs}
                   onChange={(v) => setStyle({ ...style, favoriteCTAs: v })}
-                  placeholder="Ej: ¡Te esperamos!, Reserva ya, Link en bio"
+                  placeholder="E.g. See you soon!, Book now, Link in bio"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Hashtags fijos (siempre incluir)</Label>
+                <Label>Fixed hashtags (always include)</Label>
                 <TagInput
                   value={style.fixedHashtags}
                   onChange={(v) => setStyle({ ...style, fixedHashtags: v })}
-                  placeholder="Ej: #panartesanal #barcelonafoodie #gracia"
+                  placeholder="E.g. #artisanbread #yourcity #neighborhood"
                 />
               </div>
             </CardContent>
@@ -884,11 +884,11 @@ export default function BusinessProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Estructura de posts</CardTitle>
+              <CardTitle>Post structure</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Longitud preferida</Label>
+                <Label>Preferred length</Label>
                 <Select
                   value={style.preferredLength}
                   onValueChange={(v) => setStyle({ ...style, preferredLength: v })}
@@ -897,9 +897,9 @@ export default function BusinessProfilePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="short">Corto (1-2 líneas)</SelectItem>
-                    <SelectItem value="medium">Medio (3-5 líneas)</SelectItem>
-                    <SelectItem value="long">Largo (6+ líneas)</SelectItem>
+                    <SelectItem value="short">Short (1–2 lines)</SelectItem>
+                    <SelectItem value="medium">Medium (3–5 lines)</SelectItem>
+                    <SelectItem value="long">Long (6+ lines)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -913,7 +913,7 @@ export default function BusinessProfilePage() {
                   className="h-4 w-4 rounded border-border accent-primary"
                 />
                 <Label htmlFor="useLineBreaks" className="cursor-pointer">
-                  Usar saltos de línea para separar ideas
+                  Use line breaks to separate ideas
                 </Label>
               </div>
             </CardContent>
@@ -929,7 +929,7 @@ export default function BusinessProfilePage() {
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {saving ? "Guardando..." : "Guardar todo"}
+          {saving ? "Saving..." : "Save all"}
         </Button>
       </div>
     </div>

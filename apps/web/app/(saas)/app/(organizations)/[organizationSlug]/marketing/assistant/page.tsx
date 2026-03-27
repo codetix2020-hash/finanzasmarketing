@@ -24,11 +24,11 @@ interface Conversation {
 }
 
 const SUGGESTED_PROMPTS = [
-	"Hazme un post para Instagram sobre...",
-	"¿Qué debería publicar hoy?",
-	"Dame ideas para stories esta semana",
-	"Analiza mi competencia",
-	"¿Cuál es mi mejor hora para publicar?",
+	"Write me an Instagram post about...",
+	"What should I post today?",
+	"Give me story ideas for this week",
+	"Analyze my competition",
+	"What is the best time for me to post?",
 ];
 
 export default function MarketingAssistantPage() {
@@ -101,14 +101,14 @@ export default function MarketingAssistantPage() {
 				// Manejo especial para rate limit
 				if (response.status === 429 || errorData.error === 'rate_limit') {
 					setError({
-						message: errorData.message || 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+						message: errorData.message || 'The service is busy. Please wait a few seconds and try again.',
 						retryAfter: errorData.retryAfter || 30
 					});
 					setMessages((prev) => prev.slice(0, -1)); // Remover mensaje de usuario
 					return;
 				}
 				
-				throw new Error(errorData.error || errorData.message || "Error al enviar mensaje");
+				throw new Error(errorData.error || errorData.message || "Failed to send message");
 			}
 
 			// Leer stream
@@ -165,7 +165,7 @@ export default function MarketingAssistantPage() {
 			}
 		} catch (error) {
 			console.error("Error sending message:", error);
-			const errorMessage = error instanceof Error ? error.message : "Error al enviar mensaje";
+			const errorMessage = error instanceof Error ? error.message : "Failed to send message";
 			setError({ message: errorMessage });
 			toast.error(errorMessage);
 			setMessages((prev) => prev.slice(0, -1)); // Remover mensaje de usuario si falló
@@ -221,7 +221,7 @@ export default function MarketingAssistantPage() {
 				<div className="p-4 border-b">
 					<Button onClick={createNewConversation} className="w-full" size="sm">
 						<Plus className="mr-2 h-4 w-4" />
-						Nueva conversación
+						New conversation
 					</Button>
 				</div>
 				<div className="flex-1 overflow-y-auto p-2">
@@ -231,7 +231,7 @@ export default function MarketingAssistantPage() {
 						</div>
 					) : conversations.length === 0 ? (
 						<p className="text-sm text-muted-foreground p-4 text-center">
-							No hay conversaciones aún
+							No conversations yet
 						</p>
 					) : (
 						conversations.map((conv) => (
@@ -256,9 +256,9 @@ export default function MarketingAssistantPage() {
 			<Card className="flex-1 flex flex-col">
 				{/* Header */}
 				<div className="p-4 border-b">
-					<h2 className="text-lg font-semibold">Asistente de Marketing</h2>
+					<h2 className="text-lg font-semibold">Marketing assistant</h2>
 					<p className="text-sm text-muted-foreground">
-						Tu social media manager personal
+						Your personal social media manager
 					</p>
 				</div>
 
@@ -266,8 +266,8 @@ export default function MarketingAssistantPage() {
 				<div className="flex-1 overflow-y-auto p-4 space-y-4">
 					{error && (
 						<ErrorMessage
-							title="No pudimos procesar tu mensaje"
-							message={error.retryAfter ? `${error.message} (Reintentar en ${error.retryAfter}s)` : error.message}
+							title="We could not process your message"
+							message={error.retryAfter ? `${error.message} (Retry in ${error.retryAfter}s)` : error.message}
 							onRetry={handleRetry}
 						/>
 					)}
@@ -276,10 +276,10 @@ export default function MarketingAssistantPage() {
 							<div className="text-center py-8">
 								<MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
 								<h3 className="text-lg font-semibold mb-2">
-									¿En qué puedo ayudarte hoy?
+									What can I help you with today?
 								</h3>
 								<p className="text-sm text-muted-foreground mb-6">
-									Pregúntame sobre contenido, estrategias o ideas para tu negocio
+									Ask about content, strategy, or ideas for your business
 								</p>
 							</div>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-2xl mx-auto">
@@ -315,13 +315,13 @@ export default function MarketingAssistantPage() {
 													const errorData = await response.json();
 													if (response.status === 429 || errorData.error === 'rate_limit') {
 														setError({
-															message: errorData.message || 'El servicio está ocupado. Por favor, espera unos segundos e intenta de nuevo.',
+															message: errorData.message || 'The service is busy. Please wait a few seconds and try again.',
 															retryAfter: errorData.retryAfter || 30
 														});
 														setMessages((prev) => prev.slice(0, -1));
 														return;
 													}
-													throw new Error(errorData.error || errorData.message || "Error al enviar mensaje");
+													throw new Error(errorData.error || errorData.message || "Failed to send message");
 												}
 												const reader = response.body?.getReader();
 												const decoder = new TextDecoder();
@@ -361,7 +361,7 @@ export default function MarketingAssistantPage() {
 												}
 											} catch (error) {
 												console.error("Error sending message:", error);
-												const errorMessage = error instanceof Error ? error.message : "Error al enviar mensaje";
+												const errorMessage = error instanceof Error ? error.message : "Failed to send message";
 												setError({ message: errorMessage });
 												toast.error(errorMessage);
 												setMessages((prev) => prev.slice(0, -1));
@@ -399,7 +399,7 @@ export default function MarketingAssistantPage() {
 						<div className="flex justify-start">
 							<div className="bg-muted rounded-lg p-3 flex items-center gap-2">
 								<Loader2 className="h-4 w-4 animate-spin" />
-								<span className="text-sm text-muted-foreground">Pensando...</span>
+								<span className="text-sm text-muted-foreground">Thinking...</span>
 							</div>
 						</div>
 					)}
@@ -415,7 +415,7 @@ export default function MarketingAssistantPage() {
 							value={input}
 							onChange={(e) => setInput(e.target.value)}
 							onKeyDown={handleKeyDown}
-							placeholder="Escribe tu mensaje..."
+							placeholder="Type your message..."
 							className="min-h-[60px] resize-none"
 							disabled={isLoading}
 						/>

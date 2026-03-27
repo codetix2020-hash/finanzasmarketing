@@ -40,7 +40,7 @@ export default function AnalyticsPage() {
 			setTopPosts(data.topPosts || []);
 		} catch (error) {
 			console.error("Error fetching analytics:", error);
-			toast.error("Error al cargar analytics");
+			toast.error("Failed to load analytics");
 			// Usar datos mock si falla
 			setStats({
 				totalReach: 12450,
@@ -52,9 +52,9 @@ export default function AnalyticsPage() {
 				followersChange: 120,
 			});
 			setTopPosts([
-				{ id: 1, content: "Post sobre productos...", likes: 234, comments: 45, shares: 12, reach: 3200 },
-				{ id: 2, content: "Detrás de cámaras...", likes: 189, comments: 32, shares: 8, reach: 2800 },
-				{ id: 3, content: "Promoción especial...", likes: 156, comments: 28, shares: 15, reach: 2400 },
+				{ id: 1, content: "Post about products...", likes: 234, comments: 45, shares: 12, reach: 3200 },
+				{ id: 2, content: "Behind the scenes...", likes: 189, comments: 32, shares: 8, reach: 2800 },
+				{ id: 3, content: "Special promotion...", likes: 156, comments: 28, shares: 15, reach: 2400 },
 			]);
 		} finally {
 			setIsLoading(false);
@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
 		<div className="space-y-6 p-6">
 			<div>
 				<h1 className="text-2xl font-bold">Analytics</h1>
-				<p className="text-muted-foreground">Analiza el rendimiento de tu contenido</p>
+				<p className="text-muted-foreground">Review how your content is performing</p>
 			</div>
 
 			{/* KPIs */}
@@ -82,9 +82,9 @@ export default function AnalyticsPage() {
 					<CardContent className="pt-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-muted-foreground">Alcance Total</p>
+								<p className="text-sm text-muted-foreground">Total reach</p>
 								<p className="text-2xl font-bold">{stats.totalReach.toLocaleString()}</p>
-								<p className="text-sm text-green-500">+{stats.reachChange}% vs mes anterior</p>
+								<p className="text-sm text-green-500">+{stats.reachChange}% vs last month</p>
 							</div>
 							<div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
 								<Eye className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
 							<div>
 								<p className="text-sm text-muted-foreground">Engagement Rate</p>
 								<p className="text-2xl font-bold">{stats.totalEngagement}%</p>
-								<p className="text-sm text-green-500">+{stats.engagementChange}% vs mes anterior</p>
+								<p className="text-sm text-green-500">+{stats.engagementChange}% vs last month</p>
 							</div>
 							<div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center">
 								<Heart className="w-6 h-6 text-pink-600 dark:text-pink-400" />
@@ -112,9 +112,9 @@ export default function AnalyticsPage() {
 					<CardContent className="pt-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-muted-foreground">Seguidores</p>
+								<p className="text-sm text-muted-foreground">Followers</p>
 								<p className="text-2xl font-bold">{stats.totalFollowers.toLocaleString()}</p>
-								<p className="text-sm text-green-500">+{stats.followersChange} este mes</p>
+								<p className="text-sm text-green-500">+{stats.followersChange} this month</p>
 							</div>
 							<div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
 								<Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -127,9 +127,9 @@ export default function AnalyticsPage() {
 					<CardContent className="pt-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-muted-foreground">Posts Este Mes</p>
+								<p className="text-sm text-muted-foreground">Posts this month</p>
 								<p className="text-2xl font-bold">{stats.postsThisMonth}</p>
-								<p className="text-sm text-muted-foreground">de 30 recomendados</p>
+								<p className="text-sm text-muted-foreground">of 30 recommended</p>
 							</div>
 							<div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
 								<BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -144,15 +144,15 @@ export default function AnalyticsPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<TrendingUp className="w-5 h-5" />
-						Crecimiento de Seguidores
+						Follower growth
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<div className="h-64 bg-muted rounded-lg flex items-center justify-center">
 						<div className="text-center text-muted-foreground">
 							<BarChart3 className="w-12 h-12 mx-auto mb-2" />
-							<p>Gráfico de crecimiento</p>
-							<p className="text-sm">Conecta tus redes para ver datos reales</p>
+							<p>Growth chart</p>
+							<p className="text-sm">Connect your social accounts to see real data</p>
 						</div>
 					</div>
 				</CardContent>
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
 			{/* Top Posts */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Top Posts del Mes</CardTitle>
+					<CardTitle>Top posts this month</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{topPosts.length > 0 ? (
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
 						</div>
 					) : (
 						<p className="text-muted-foreground text-center py-8">
-							No hay posts para mostrar. Publica contenido para ver analytics.
+							No posts to show yet. Publish content to see analytics.
 						</p>
 					)}
 				</CardContent>

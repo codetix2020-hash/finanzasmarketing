@@ -37,7 +37,7 @@ import {
 import { toast } from "sonner";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { formatDistanceToNow, format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 // Tipos
 interface SocialConnection {
@@ -51,7 +51,6 @@ interface SocialConnection {
 	createdAt: string;
 }
 
-// Configuración de plataformas
 const platforms = [
 	{
 		id: "instagram",
@@ -60,13 +59,8 @@ const platforms = [
 		color: "from-purple-600 via-pink-500 to-orange-400",
 		bgColor: "bg-gradient-to-br from-purple-100 to-pink-100",
 		textColor: "text-pink-600",
-		description: "Publica fotos y carruseles automáticamente",
-		features: [
-			"Publicación de fotos",
-			"Carruseles",
-			"Programación",
-			"Métricas",
-		],
+		description: "Publish photos and carousels automatically",
+		features: ["Photo posts", "Carousels", "Scheduling", "Metrics"],
 		comingSoon: false,
 	},
 	{
@@ -76,8 +70,8 @@ const platforms = [
 		color: "from-blue-600 to-blue-400",
 		bgColor: "bg-blue-100",
 		textColor: "text-blue-600",
-		description: "Publica en tu página de Facebook",
-		features: ["Posts en página", "Fotos", "Programación"],
+		description: "Publish to your Facebook Page",
+		features: ["Page posts", "Photos", "Scheduling"],
 		comingSoon: true,
 	},
 	{
@@ -95,8 +89,8 @@ const platforms = [
 		color: "from-gray-900 to-gray-700",
 		bgColor: "bg-gray-100",
 		textColor: "text-gray-900",
-		description: "Comparte videos cortos automáticamente",
-		features: ["Videos", "Programación"],
+		description: "Share short videos automatically",
+		features: ["Videos", "Scheduling"],
 		comingSoon: true,
 	},
 ];
@@ -151,7 +145,7 @@ function PlatformCard({
 										variant="secondary"
 										className="text-xs"
 									>
-										Próximamente
+										Coming soon
 									</Badge>
 								)}
 							</h3>
@@ -165,7 +159,7 @@ function PlatformCard({
 					{isConnected ? (
 						<Badge className="bg-green-100 text-green-700 border-green-200">
 							<CheckCircle className="h-3 w-3 mr-1" />
-							Conectado
+							Connected
 						</Badge>
 					) : (
 						<Badge
@@ -173,7 +167,7 @@ function PlatformCard({
 							className="text-gray-500"
 						>
 							<XCircle className="h-3 w-3 mr-1" />
-							No conectado
+							Not connected
 						</Badge>
 					)}
 				</div>
@@ -204,13 +198,13 @@ function PlatformCard({
 								<p className="font-medium">
 									@
 									{connection.platformUsername ||
-										"Usuario"}
+										"user"}
 								</p>
 								{connection.followersCount !== null && (
 									<p className="text-sm text-gray-500 flex items-center gap-1">
 										<Users className="h-3 w-3" />
 										{connection.followersCount.toLocaleString()}{" "}
-										seguidores
+										followers
 									</p>
 								)}
 							</div>
@@ -221,8 +215,7 @@ function PlatformCard({
 							<div className="mt-3 p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2 text-amber-800 text-sm">
 								<AlertTriangle className="h-4 w-4" />
 								<span>
-									Token expira pronto. Reconecta para
-									mantener la publicación automática.
+									Token expiring soon. Reconnect to keep automatic publishing.
 								</span>
 							</div>
 						)}
@@ -230,21 +223,21 @@ function PlatformCard({
 						<div className="mt-3 flex items-center justify-between text-xs text-gray-500">
 							<span className="flex items-center gap-1">
 								<Clock className="h-3 w-3" />
-								Conectado{" "}
+								Connected{" "}
 								{formatDistanceToNow(
 									new Date(connection.createdAt),
-									{ addSuffix: true, locale: es },
+									{ addSuffix: true, locale: enUS },
 								)}
 							</span>
 							{connection.tokenExpiresAt && (
 								<span>
-									Expira:{" "}
+									Expires:{" "}
 									{format(
 										new Date(
 											connection.tokenExpiresAt,
 										),
 										"d MMM yyyy",
-										{ locale: es },
+										{ locale: enUS },
 									)}
 								</span>
 							)}
@@ -270,7 +263,7 @@ function PlatformCard({
 				{/* Botón de acción */}
 				{platform.comingSoon ? (
 					<Button disabled className="w-full rounded-xl">
-						Próximamente
+						Coming soon
 					</Button>
 				) : isConnected ? (
 					<div className="flex gap-2">
@@ -280,7 +273,7 @@ function PlatformCard({
 							onClick={onConnect}
 						>
 							<RefreshCw className="h-4 w-4 mr-2" />
-							Reconectar
+							Reconnect
 						</Button>
 						<Button
 							variant="outline"
@@ -299,12 +292,12 @@ function PlatformCard({
 						{isConnecting ? (
 							<>
 								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-								Conectando...
+								Connecting...
 							</>
 						) : (
 							<>
 								<Plug className="h-4 w-4 mr-2" />
-								Conectar {platform.name}
+								Connect {platform.name}
 							</>
 						)}
 					</Button>
@@ -337,7 +330,7 @@ export default function IntegrationsPage() {
 		const error = searchParams.get("error");
 
 		if (success === "instagram_connected") {
-			toast.success("¡Instagram conectado correctamente!");
+			toast.success("Instagram connected successfully.");
 			window.history.replaceState(
 				{},
 				"",
@@ -348,16 +341,16 @@ export default function IntegrationsPage() {
 		if (error) {
 			const errorMessages: Record<string, string> = {
 				instagram_auth_failed:
-					"No se pudo conectar Instagram",
+					"Could not connect Instagram",
 				no_pages:
-					"No tienes páginas de Facebook. Necesitas una página para conectar Instagram Business.",
+					"You have no Facebook Pages. A Page is required to connect Instagram Business.",
 				no_instagram_business:
-					"No se encontró cuenta de Instagram Business vinculada a tus páginas.",
+					"No Instagram Business account was found linked to your Pages.",
 				instagram_auth_error:
-					"Error durante la autenticación",
+					"Authentication error",
 			};
 			toast.error(
-				errorMessages[error] || "Error desconocido",
+				errorMessages[error] || "Unknown error",
 			);
 			window.history.replaceState(
 				{},
@@ -411,7 +404,7 @@ export default function IntegrationsPage() {
 			window.location.href = authUrl;
 		} catch (error) {
 			console.error("Connect error:", error);
-			toast.error("Error al iniciar la conexión");
+			toast.error("Could not start connection");
 			setConnecting(null);
 		}
 	};
@@ -432,9 +425,9 @@ export default function IntegrationsPage() {
 			setConnections(
 				connections.filter((c) => c.id !== connectionId),
 			);
-			toast.success("Cuenta desconectada");
+			toast.success("Account disconnected");
 		} catch (error) {
-			toast.error("Error al desconectar");
+			toast.error("Could not disconnect");
 		} finally {
 			setDisconnectDialog(null);
 		}
@@ -457,11 +450,10 @@ export default function IntegrationsPage() {
 						</div>
 						<div>
 							<h1 className="text-3xl font-bold text-gray-900">
-								Integraciones
+								Integrations
 							</h1>
 							<p className="text-gray-500">
-								Conecta tus redes sociales para publicar
-								automáticamente
+								Connect your social accounts to publish automatically
 							</p>
 						</div>
 					</div>
@@ -474,13 +466,11 @@ export default function IntegrationsPage() {
 							<Shield className="h-5 w-5 text-blue-600 mt-0.5" />
 							<div>
 								<p className="font-medium text-blue-900">
-									Tus datos están seguros
+									Your data is secure
 								</p>
 								<p className="text-sm text-blue-700">
-									Usamos OAuth oficial de cada
-									plataforma. Nunca almacenamos tus
-									contraseñas y puedes revocar el
-									acceso en cualquier momento.
+									We use each platform&apos;s official OAuth. We never store your
+									passwords, and you can revoke access at any time.
 								</p>
 							</div>
 						</div>
@@ -524,7 +514,7 @@ export default function IntegrationsPage() {
 				<Card className="mt-8">
 					<CardHeader>
 						<CardTitle className="text-lg">
-							Requisitos para conectar
+							Requirements to connect
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-4">
@@ -538,13 +528,12 @@ export default function IntegrationsPage() {
 								</p>
 								<ul className="text-sm text-gray-600 list-disc list-inside">
 									<li>
-										Cuenta de Instagram Business o
-										Creator
+										Instagram Business or Creator account
 									</li>
 									<li>
-										Página de Facebook vinculada
+										Linked Facebook Page
 									</li>
-									<li>Permisos de publicación</li>
+									<li>Publishing permissions</li>
 								</ul>
 							</div>
 						</div>
@@ -557,12 +546,10 @@ export default function IntegrationsPage() {
 								<p className="font-medium">Facebook</p>
 								<ul className="text-sm text-gray-600 list-disc list-inside">
 									<li>
-										Página de Facebook (no perfil
-										personal)
+										Facebook Page (not a personal profile)
 									</li>
 									<li>
-										Rol de administrador en la
-										página
+										Admin role on the Page
 									</li>
 								</ul>
 							</div>
@@ -579,16 +566,15 @@ export default function IntegrationsPage() {
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							¿Desconectar esta cuenta?
+							Disconnect this account?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Se detendrán las publicaciones automáticas.
-							Los posts ya publicados no se verán
-							afectados.
+							Automatic publishing will stop. Posts already published will not be
+							affected.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() =>
 								disconnectDialog &&
@@ -596,7 +582,7 @@ export default function IntegrationsPage() {
 							}
 							className="bg-red-600 hover:bg-red-700"
 						>
-							Desconectar
+							Disconnect
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

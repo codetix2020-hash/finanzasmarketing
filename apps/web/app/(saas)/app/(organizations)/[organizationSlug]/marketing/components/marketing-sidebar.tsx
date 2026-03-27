@@ -140,13 +140,13 @@ export function MarketingSidebar({
 				<NavItem
 					href={`${basePath}/automation`}
 					icon={Zap}
-					label="Automatización"
+					label="Automation"
 					isActive={isActive("automation")}
 				/>
 				<NavItem
 					href={`${basePath}/assistant`}
 					icon={Bot}
-					label="Asistente AI"
+					label="AI assistant"
 					isActive={isActive("assistant")}
 					badge={
 						<span className="flex h-2 w-2">
@@ -158,50 +158,50 @@ export function MarketingSidebar({
 				<NavItem
 					href={`${basePath}/generate`}
 					icon={Sparkles}
-					label="Generar contenido"
+					label="Generate content"
 					isActive={isActive("generate")}
 				/>
 
-				<SectionLabel>Contenido</SectionLabel>
+				<SectionLabel>Content</SectionLabel>
 
 				<NavItem
 					href={`${basePath}/content`}
 					icon={FileText}
-					label="Contenido"
+					label="Content"
 					isActive={isActive("content") && !isActive("content/calendar") && !isActive("content/create")}
 				/>
 				<NavItem
 					href={`${basePath}/content/create`}
 					icon={Sparkles}
-					label="Crear contenido"
+					label="Create content"
 					isActive={isActive("content/create")}
 				/>
 				<NavItem
 					href={`${basePath}/content/calendar`}
 					icon={Calendar}
-					label="Calendario"
+					label="Calendar"
 					isActive={isActive("content/calendar")}
 				/>
 				<NavItem
 					href={`${basePath}/published`}
 					icon={Send}
-					label="Publicados"
+					label="Published"
 					isActive={isActive("published")}
 				/>
 				<NavItem
 					href={`${basePath}/media`}
 					icon={ImageIcon}
-					label="Banco de Fotos"
+					label="Photo library"
 					isActive={isActive("media")}
 				/>
 				<NavItem
 					href={`${basePath}/brand-photos`}
 					icon={Camera}
-					label="Fotos de Marca"
+					label="Brand photos"
 					isActive={isActive("brand-photos")}
 				/>
 
-				<SectionLabel>Análisis</SectionLabel>
+				<SectionLabel>Analytics</SectionLabel>
 
 				<NavItem
 					href={`${basePath}/seo`}
@@ -222,19 +222,19 @@ export function MarketingSidebar({
 				<NavItem
 					href={`${basePath}/profile`}
 					icon={Building2}
-					label="Perfil empresa"
+					label="Company profile"
 					isActive={isActive("profile")}
 				/>
 				<NavItem
 					href={`/app/${organizationSlug}/settings/integrations`}
 					icon={Plug}
-					label="Integraciones"
+					label="Integrations"
 					isActive={pathname.includes("/settings/integrations")}
 				/>
 				<NavItem
 					href={`/app/${organizationSlug}/settings/billing`}
 					icon={CreditCard}
-					label="Facturación"
+					label="Billing"
 					isActive={pathname.includes("/settings/billing")}
 				/>
 			</div>
@@ -259,7 +259,7 @@ export function MarketingSidebar({
 						<button
 							onClick={onLogout}
 							className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-							title="Cerrar sesión"
+							title="Log out"
 						>
 							<LogOut className="h-4 w-4" />
 						</button>

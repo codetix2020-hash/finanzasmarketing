@@ -23,7 +23,7 @@ export default function ApiConfigPage() {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al probar Slack');
+      alert('❌ Failed to test Slack');
     } finally {
       setTesting({ ...testing, slack: false });
     }
@@ -46,7 +46,7 @@ export default function ApiConfigPage() {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al probar Email');
+      alert('❌ Failed to test Email');
     } finally {
       setTesting({ ...testing, resend: false });
     }
@@ -69,7 +69,7 @@ export default function ApiConfigPage() {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al probar Stripe');
+      alert('❌ Failed to test Stripe');
     } finally {
       setTesting({ ...testing, stripe: false });
     }

@@ -27,7 +27,7 @@ import {
 import { toast } from "sonner";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 // Planes
 const plans = [
@@ -35,34 +35,34 @@ const plans = [
     id: "pro",
     name: "Pro",
     price: 29,
-    description: "Para tu marca",
+    description: "For your brand",
     icon: Zap,
     color: "from-purple-500 to-pink-500",
     popular: true,
     features: [
-      "60 posts/mes",
-      "1 marca",
+      "60 posts/month",
+      "1 brand",
       "Instagram + Facebook",
-      "Programacion de posts",
-      "Publicacion automatica",
-      "Calendario visual",
-      "Banco de fotos",
-      "Soporte por email",
+      "Post scheduling",
+      "Automatic publishing",
+      "Visual calendar",
+      "Photo library",
+      "Email support",
     ],
   },
   {
     id: "agency",
     name: "Agency",
     price: 79,
-    description: "Para gestionar clientes",
+    description: "For managing clients",
     icon: Building2,
     color: "from-orange-500 to-red-500",
     features: [
-      "Posts ilimitados",
-      "5 marcas",
-      "Todo de Pro",
-      "Soporte prioritario",
-      "Reportes (proximamente)",
+      "Unlimited posts",
+      "5 brands",
+      "Everything in Pro",
+      "Priority support",
+      "Reports (coming soon)",
     ],
   },
 ];
@@ -88,11 +88,11 @@ export default function BillingPage() {
     const canceled = searchParams.get("canceled");
 
     if (success === "true") {
-      toast.success("Suscripcion activada! Bienvenido a PilotSocials Pro");
+      toast.success("Subscription activated. Welcome to PilotSocials Pro");
       window.history.replaceState({}, "", window.location.pathname);
     }
     if (canceled === "true") {
-      toast.info("Checkout cancelado");
+      toast.info("Checkout canceled");
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [searchParams]);
@@ -138,7 +138,7 @@ export default function BillingPage() {
       const { url } = await response.json();
       window.location.href = url;
     } catch (error) {
-      toast.error("Error al iniciar el checkout");
+      toast.error("Could not start checkout");
       setCheckingOut(null);
     }
   };
@@ -158,7 +158,7 @@ export default function BillingPage() {
       const { url } = await response.json();
       window.location.href = url;
     } catch (error) {
-      toast.error("Error al abrir el portal de facturacion");
+      toast.error("Could not open billing portal");
     }
   };
 
@@ -180,10 +180,10 @@ export default function BillingPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Facturacion
+            Billing
           </h1>
           <p className="text-gray-500">
-            Gestiona tu suscripcion y facturacion
+            Manage your subscription and billing
           </p>
         </div>
 
@@ -193,14 +193,14 @@ export default function BillingPage() {
             <CardContent className="p-4 flex items-center gap-4">
               <AlertCircle className="h-6 w-6 text-red-600" />
               <div className="flex-1">
-                <p className="font-medium text-red-900">Pago pendiente</p>
+                <p className="font-medium text-red-900">Payment past due</p>
                 <p className="text-sm text-red-700">
-                  Tu ultimo pago fallo. Actualiza tu metodo de pago para
-                  mantener tu suscripcion.
+                  Your last payment failed. Update your payment method to keep
+                  your subscription active.
                 </p>
               </div>
               <Button variant="destructive" onClick={handleManageBilling}>
-                Actualizar pago
+                Update payment
               </Button>
             </CardContent>
           </Card>
@@ -212,7 +212,7 @@ export default function BillingPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Tu plan</span>
+                <span>Your plan</span>
                 {isTrialing && (
                   <Badge className="bg-purple-100 text-purple-700">
                     <Sparkles className="h-3 w-3 mr-1" />
@@ -240,8 +240,8 @@ export default function BillingPage() {
                   </p>
                   <p className="text-gray-500">
                     {currentPlan === "free"
-                      ? "Trial gratuito - 14 dias"
-                      : `${plans.find((p) => p.id === currentPlan)?.price || 0}€/mes`}
+                      ? "Free trial — 14 days"
+                      : `${plans.find((p) => p.id === currentPlan)?.price || 0}€/month`}
                   </p>
                 </div>
               </div>
@@ -251,12 +251,12 @@ export default function BillingPage() {
                   <Calendar className="h-4 w-4" />
                   <span>
                     {subscription.cancelAtPeriodEnd
-                      ? "Cancela el"
-                      : "Proxima factura:"}{" "}
+                      ? "Cancels on"
+                      : "Next invoice:"}{" "}
                     {format(
                       new Date(subscription.currentPeriodEnd as string),
-                      "d 'de' MMMM, yyyy",
-                      { locale: es }
+                      "MMMM d, yyyy",
+                      { locale: enUS }
                     )}
                   </span>
                 </div>
@@ -269,7 +269,7 @@ export default function BillingPage() {
                   onClick={handleManageBilling}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Gestionar suscripcion
+                  Manage subscription
                 </Button>
               )}
             </CardContent>
@@ -278,8 +278,8 @@ export default function BillingPage() {
           {/* Uso */}
           <Card>
             <CardHeader>
-              <CardTitle>Uso este mes</CardTitle>
-              <CardDescription>Posts generados</CardDescription>
+              <CardTitle>Usage this month</CardTitle>
+              <CardDescription>Posts generated</CardDescription>
             </CardHeader>
             <CardContent>
               {usage && (
@@ -291,7 +291,7 @@ export default function BillingPage() {
                     <span className="text-gray-500">
                       /{" "}
                       {usage.postsLimit === Infinity
-                        ? "ilimitados"
+                        ? "unlimited"
                         : usage.postsLimit}{" "}
                       posts
                     </span>
@@ -307,7 +307,7 @@ export default function BillingPage() {
                   {usage.postsLimit !== Infinity &&
                     usage.postsUsed >= usage.postsLimit * 0.8 && (
                       <p className="text-sm text-amber-600 mt-2">
-                        Estas cerca del limite. Considera actualizar tu plan.
+                        You are close to your limit. Consider upgrading your plan.
                       </p>
                     )}
                 </>
@@ -318,7 +318,7 @@ export default function BillingPage() {
 
         {/* Planes */}
         <h2 className="text-2xl font-bold mb-6">
-          {currentPlan === "free" ? "Elige tu plan" : "Cambiar plan"}
+          {currentPlan === "free" ? "Choose your plan" : "Change plan"}
         </h2>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -338,7 +338,7 @@ export default function BillingPage() {
                 {plan.popular && (
                   <div className="absolute top-0 right-0">
                     <Badge className="rounded-none rounded-bl-lg bg-purple-600">
-                      Mas popular
+                      Most popular
                     </Badge>
                   </div>
                 )}
@@ -353,7 +353,7 @@ export default function BillingPage() {
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">{plan.price}€</span>
-                    <span className="text-gray-500">/mes</span>
+                    <span className="text-gray-500">/month</span>
                   </div>
                 </CardHeader>
 
@@ -372,7 +372,7 @@ export default function BillingPage() {
 
                   {isCurrent ? (
                     <Button disabled className="w-full">
-                      Plan actual
+                      Current plan
                     </Button>
                   ) : (
                     <Button
@@ -388,7 +388,7 @@ export default function BillingPage() {
                       {checkingOut === plan.id ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Cargando...
+                          Loading...
                         </>
                       ) : (
                         <>
@@ -397,7 +397,7 @@ export default function BillingPage() {
                             (plans.find((p) => p.id === currentPlan)?.price ||
                               0)
                             ? "Upgrade"
-                            : "Empezar"}
+                            : "Get started"}
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </>
                       )}
@@ -411,9 +411,9 @@ export default function BillingPage() {
 
         {/* FAQ */}
         <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Preguntas? Escribenos a billing@pilotsocials.com</p>
+          <p>Questions? Email billing@pilotsocials.com</p>
           <p className="mt-1">
-            14 dias de prueba gratis - Cancela cuando quieras - Sin permanencia
+            14-day free trial — cancel anytime — no long-term commitment
           </p>
         </div>
       </div>

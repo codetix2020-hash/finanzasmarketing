@@ -34,79 +34,79 @@ import { useActiveOrganization } from "@saas/organizations/hooks/use-active-orga
 
 // Categorías de producto
 const productCategories = [
-  { value: "moda_ropa", label: "Moda y Ropa", emoji: "👗" },
-  { value: "skincare", label: "Skincare y Cosmética", emoji: "🧴" },
-  { value: "joyeria", label: "Joyería y Accesorios", emoji: "💍" },
-  { value: "bolsos", label: "Bolsos y Carteras", emoji: "👜" },
-  { value: "calzado", label: "Calzado", emoji: "👟" },
-  { value: "perfumeria", label: "Perfumería", emoji: "🌸" },
-  { value: "fitness", label: "Fitness y Deporte", emoji: "💪" },
-  { value: "hogar", label: "Hogar y Decoración", emoji: "🏠" },
-  { value: "mascotas", label: "Productos para Mascotas", emoji: "🐕" },
-  { value: "bebes", label: "Bebés y Niños", emoji: "👶" },
-  { value: "tech", label: "Accesorios Tech", emoji: "📱" },
-  { value: "arte", label: "Arte y Prints", emoji: "🎨" },
-  { value: "otro", label: "Otro", emoji: "✨" },
+  { value: "moda_ropa", label: "Fashion & apparel", emoji: "👗" },
+  { value: "skincare", label: "Skincare & cosmetics", emoji: "🧴" },
+  { value: "joyeria", label: "Jewelry & accessories", emoji: "💍" },
+  { value: "bolsos", label: "Bags & wallets", emoji: "👜" },
+  { value: "calzado", label: "Footwear", emoji: "👟" },
+  { value: "perfumeria", label: "Fragrance", emoji: "🌸" },
+  { value: "fitness", label: "Fitness & sports", emoji: "💪" },
+  { value: "hogar", label: "Home & decor", emoji: "🏠" },
+  { value: "mascotas", label: "Pet products", emoji: "🐕" },
+  { value: "bebes", label: "Baby & kids", emoji: "👶" },
+  { value: "tech", label: "Tech accessories", emoji: "📱" },
+  { value: "arte", label: "Art & prints", emoji: "🎨" },
+  { value: "otro", label: "Other", emoji: "✨" },
 ];
 
 // Personalidades de marca
 const brandPersonalities = [
-  { value: "minimal_elegante", label: "Minimal y Elegante", description: "Sofisticado, limpio, premium" },
-  { value: "fun_colorful", label: "Fun y Colorful", description: "Alegre, juvenil, energético" },
-  { value: "eco_conscious", label: "Eco-Conscious", description: "Sostenible, natural, responsable" },
-  { value: "bold_edgy", label: "Bold y Edgy", description: "Atrevido, urbano, diferente" },
-  { value: "romantic_soft", label: "Romántico y Soft", description: "Delicado, femenino, soñador" },
-  { value: "urban_street", label: "Urban Street", description: "Streetwear, casual, moderno" },
-  { value: "luxury_premium", label: "Luxury Premium", description: "Exclusivo, lujoso, aspiracional" },
-  { value: "artesanal_handmade", label: "Artesanal", description: "Hecho a mano, único, auténtico" },
+  { value: "minimal_elegante", label: "Minimal & elegant", description: "Sophisticated, clean, premium" },
+  { value: "fun_colorful", label: "Fun & colorful", description: "Cheerful, youthful, energetic" },
+  { value: "eco_conscious", label: "Eco-conscious", description: "Sustainable, natural, responsible" },
+  { value: "bold_edgy", label: "Bold & edgy", description: "Daring, urban, different" },
+  { value: "romantic_soft", label: "Romantic & soft", description: "Delicate, feminine, dreamy" },
+  { value: "urban_street", label: "Urban street", description: "Streetwear, casual, modern" },
+  { value: "luxury_premium", label: "Luxury premium", description: "Exclusive, luxurious, aspirational" },
+  { value: "artesanal_handmade", label: "Artisanal", description: "Handmade, unique, authentic" },
 ];
 
 // Rangos de precio
 const priceRanges = [
-  { value: "economico", label: "Económico", description: "Accesible para todos" },
-  { value: "medio", label: "Medio", description: "Relación calidad-precio" },
-  { value: "premium", label: "Premium", description: "Calidad superior" },
-  { value: "lujo", label: "Lujo", description: "Exclusivo y aspiracional" },
+  { value: "economico", label: "Budget", description: "Accessible to everyone" },
+  { value: "medio", label: "Mid-range", description: "Strong value for money" },
+  { value: "premium", label: "Premium", description: "Superior quality" },
+  { value: "lujo", label: "Luxury", description: "Exclusive and aspirational" },
 ];
 
 // Tags de USP
 const uspTags = [
-  "Hecho a mano", "Sostenible", "Edición limitada", "Materiales premium",
-  "Diseño exclusivo", "Envío gratis", "Personalizable", "Local",
-  "Vegano", "Orgánico", "Reciclado", "Sin crueldad animal",
+  "Handmade", "Sustainable", "Limited edition", "Premium materials",
+  "Exclusive design", "Free shipping", "Customizable", "Local",
+  "Vegan", "Organic", "Recycled", "Cruelty-free",
 ];
 
 // Pains comunes
 const commonPains = [
-  "No encuentran su estilo", "Todo es muy caro", "Calidad decepcionante",
-  "Poca variedad", "No encuentran su talla", "Productos genéricos",
-  "Malas experiencias anteriores", "Envíos lentos",
+  "Can't find their style", "Everything is too expensive", "Disappointing quality",
+  "Limited variety", "Can't find their size", "Generic products",
+  "Bad past experiences", "Slow shipping",
 ];
 
 // Desires comunes
 const commonDesires = [
-  "Sentirse únicas", "Verse profesionales", "Destacar del resto",
-  "Calidad duradera", "Productos éticos", "Buen servicio",
-  "Envío rápido", "Precios justos",
+  "Feel unique", "Look professional", "Stand out",
+  "Lasting quality", "Ethical products", "Great service",
+  "Fast shipping", "Fair prices",
 ];
 
 // Estilos de foto
 const photoStyles = [
-  { value: "minimal", label: "Minimal", description: "Fondo blanco, limpio" },
-  { value: "lifestyle", label: "Lifestyle", description: "En uso, contexto real" },
-  { value: "flatlay", label: "Flat Lay", description: "Vista cenital, composición" },
-  { value: "editorial", label: "Editorial", description: "Estilo revista, modelos" },
-  { value: "ugc", label: "UGC Style", description: "Natural, como usuario" },
-  { value: "mixed", label: "Mixto", description: "Combino varios estilos" },
+  { value: "minimal", label: "Minimal", description: "White background, clean" },
+  { value: "lifestyle", label: "Lifestyle", description: "In use, real context" },
+  { value: "flatlay", label: "Flat lay", description: "Overhead view, styled setup" },
+  { value: "editorial", label: "Editorial", description: "Magazine-style, models" },
+  { value: "ugc", label: "UGC style", description: "Natural, user-like" },
+  { value: "mixed", label: "Mixed", description: "Combination of styles" },
 ];
 
 // Pasos del onboarding
 const steps = [
-  { id: 1, title: "Tu Marca", icon: Building2, description: "Cuéntanos sobre tu negocio" },
-  { id: 2, title: "Tu Producto", icon: ShoppingBag, description: "Qué vendes y cómo" },
-  { id: 3, title: "Tu Cliente", icon: Users, description: "A quién le vendes" },
-  { id: 4, title: "Tu Voz", icon: MessageSquare, description: "Cómo te comunicas" },
-  { id: 5, title: "Tus Fotos", icon: Camera, description: "Tu estilo visual" },
+  { id: 1, title: "Your brand", icon: Building2, description: "Tell us about your business" },
+  { id: 2, title: "Your product", icon: ShoppingBag, description: "What you sell and how" },
+  { id: 3, title: "Your customer", icon: Users, description: "Who you sell to" },
+  { id: 4, title: "Your voice", icon: MessageSquare, description: "How you communicate" },
+  { id: 5, title: "Your photos", icon: Camera, description: "Your visual style" },
 ];
 
 export default function OnboardingPage() {
@@ -209,7 +209,7 @@ export default function OnboardingPage() {
 
       return true;
     } catch (error) {
-      toast.error("Error al guardar");
+      toast.error("Failed to save");
       return false;
     } finally {
       setSaving(false);
@@ -223,7 +223,7 @@ export default function OnboardingPage() {
       if (currentStep < 5) {
         setCurrentStep(currentStep + 1);
       } else {
-        toast.success("¡Perfil completado! Ya puedes generar contenido personalizado.");
+        toast.success("Profile complete! You can now generate personalized content.");
         router.push(`/app/${organizationSlug}/marketing/generate`);
       }
     }
@@ -260,11 +260,11 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-medium mb-4">
             <Sparkles className="h-4 w-4" />
-            Configuración inicial
+            Initial setup
           </div>
-          <h1 className="text-3xl font-bold mb-2">Configura tu marca</h1>
+          <h1 className="text-3xl font-bold mb-2">Set up your brand</h1>
           <p className="text-gray-500">
-            Cuéntanos sobre tu negocio para generar contenido personalizado
+            Tell us about your business to generate personalized content
           </p>
         </div>
 
@@ -330,29 +330,29 @@ export default function OnboardingPage() {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="brandName">Nombre de tu marca *</Label>
+                  <Label htmlFor="brandName">Your brand name *</Label>
                   <Input
                     id="brandName"
                     value={formData.brandName}
                     onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                    placeholder="Ej: Luna Joyas"
+                    placeholder="e.g. Luna Jewelry"
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="tagline">Tagline o eslogan</Label>
+                  <Label htmlFor="tagline">Tagline or slogan</Label>
                   <Input
                     id="tagline"
                     value={formData.tagline || ""}
                     onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                    placeholder="Ej: Joyería que cuenta tu historia"
+                    placeholder="e.g. Jewelry that tells your story"
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label>Categoría de producto *</Label>
+                  <Label>Product category *</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                     {productCategories.map((cat) => (
                       <button
@@ -372,12 +372,12 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="brandStory">Historia de tu marca</Label>
+                  <Label htmlFor="brandStory">Your brand story</Label>
                   <Textarea
                     id="brandStory"
                     value={formData.brandStory || ""}
                     onChange={(e) => setFormData({ ...formData, brandStory: e.target.value })}
-                    placeholder="¿Cómo empezó todo? ¿Qué te motivó a crear esta marca?"
+                    placeholder="How did it start? What motivated you to create this brand?"
                     rows={4}
                     className="mt-1"
                   />
@@ -389,7 +389,7 @@ export default function OnboardingPage() {
             {currentStep === 2 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Rango de precios *</Label>
+                  <Label>Price range *</Label>
                   <div className="grid grid-cols-2 gap-3 mt-2">
                     {priceRanges.map((range) => (
                       <button
@@ -409,19 +409,19 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="avgPrice">Precio medio de tus productos (EUR)</Label>
+                  <Label htmlFor="avgPrice">Average product price (EUR)</Label>
                   <Input
                     id="avgPrice"
                     type="number"
                     value={formData.avgPrice || ""}
                     onChange={(e) => setFormData({ ...formData, avgPrice: parseFloat(e.target.value) || 0 })}
-                    placeholder="Ej: 45"
+                    placeholder="e.g. 45"
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label>Que hace especial a tus productos?</Label>
+                  <Label>What makes your products special?</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {uspTags.map((tag) => (
                       <Badge
@@ -437,12 +437,12 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="madeIn">Donde se fabrican?</Label>
+                  <Label htmlFor="madeIn">Where are they made?</Label>
                   <Input
                     id="madeIn"
                     value={formData.madeIn || ""}
                     onChange={(e) => setFormData({ ...formData, madeIn: e.target.value })}
-                    placeholder="Ej: España, Barcelona"
+                    placeholder="e.g. Spain, Barcelona"
                     className="mt-1"
                   />
                 </div>
@@ -453,7 +453,7 @@ export default function OnboardingPage() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Rango de edad de tu cliente ideal</Label>
+                  <Label>Ideal customer age range</Label>
                   <div className="flex items-center gap-4 mt-2">
                     <Input
                       type="number"
@@ -463,7 +463,7 @@ export default function OnboardingPage() {
                       min={13}
                       max={99}
                     />
-                    <span>a</span>
+                    <span>to</span>
                     <Input
                       type="number"
                       value={formData.targetAgeMax}
@@ -472,12 +472,12 @@ export default function OnboardingPage() {
                       min={13}
                       max={99}
                     />
-                    <span>anios</span>
+                    <span>years</span>
                   </div>
                 </div>
 
                 <div>
-                  <Label>Genero principal</Label>
+                  <Label>Primary gender</Label>
                   <Select
                     value={formData.targetGender || "all"}
                     onValueChange={(value) => setFormData({ ...formData, targetGender: value })}
@@ -486,15 +486,15 @@ export default function OnboardingPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="female">Principalmente mujeres</SelectItem>
-                      <SelectItem value="male">Principalmente hombres</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="female">Primarily women</SelectItem>
+                      <SelectItem value="male">Primarily men</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label>Que problemas tienen tus clientes?</Label>
+                  <Label>What problems do your customers have?</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {commonPains.map((pain) => (
                       <Badge
@@ -510,7 +510,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label>Que desean tus clientes?</Label>
+                  <Label>What do your customers want?</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {commonDesires.map((desire) => (
                       <Badge
@@ -531,7 +531,7 @@ export default function OnboardingPage() {
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Personalidad de tu marca *</Label>
+                  <Label>Your brand personality *</Label>
                   <div className="grid grid-cols-2 gap-3 mt-2">
                     {brandPersonalities.map((p) => (
                       <button
@@ -551,7 +551,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label>Nivel de formalidad (1 = muy informal, 5 = muy formal)</Label>
+                  <Label>Formality level (1 = very casual, 5 = very formal)</Label>
                   <div className="mt-4 px-2">
                     <Slider
                       value={[formData.toneFormality]}
@@ -561,16 +561,16 @@ export default function OnboardingPage() {
                       step={1}
                     />
                     <div className="flex justify-between mt-2 text-xs text-gray-500">
-                      <span>Muy cercano</span>
-                      <span>Muy formal</span>
+                      <span>Very casual</span>
+                      <span>Very formal</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                   <div>
-                    <p className="font-medium">Usas emojis?</p>
-                    <p className="text-sm text-gray-500">En tus captions y stories</p>
+                    <p className="font-medium">Use emojis?</p>
+                    <p className="text-sm text-gray-500">In captions and stories</p>
                   </div>
                   <Switch
                     checked={formData.useEmojis}
@@ -579,15 +579,15 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="sampleCaption">Caption de ejemplo (opcional)</Label>
+                  <Label htmlFor="sampleCaption">Sample caption (optional)</Label>
                   <p className="text-sm text-gray-500 mb-2">
-                    Pega un caption que hayas escrito y te guste. La IA aprendera tu estilo.
+                    Paste a caption you wrote and like. The AI will learn your style.
                   </p>
                   <Textarea
                     id="sampleCaption"
                     value={formData.sampleCaption || ""}
                     onChange={(e) => setFormData({ ...formData, sampleCaption: e.target.value })}
-                    placeholder="Pega aqui un caption de ejemplo..."
+                    placeholder="Paste a sample caption here..."
                     rows={4}
                   />
                 </div>
@@ -599,8 +599,8 @@ export default function OnboardingPage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                   <div>
-                    <p className="font-medium">Tienes fotos profesionales de tus productos?</p>
-                    <p className="text-sm text-gray-500">Fotos propias, no de stock</p>
+                    <p className="font-medium">Do you have professional product photos?</p>
+                    <p className="text-sm text-gray-500">Your own photos, not stock</p>
                   </div>
                   <Switch
                     checked={formData.hasProPhotos}
@@ -609,7 +609,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <Label>Estilo de tus fotos</Label>
+                  <Label>Your photo style</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                     {photoStyles.map((style) => (
                       <button
@@ -630,8 +630,8 @@ export default function OnboardingPage() {
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                   <div>
-                    <p className="font-medium">Necesitas fotos de stock complementarias?</p>
-                    <p className="text-sm text-gray-500">Te sugeriremos fotos lifestyle de Pexels</p>
+                    <p className="font-medium">Need complementary stock photos?</p>
+                    <p className="text-sm text-gray-500">We will suggest lifestyle photos from Pexels</p>
                   </div>
                   <Switch
                     checked={formData.needStockPhotos}
@@ -642,11 +642,11 @@ export default function OnboardingPage() {
                 <div className="p-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
                   <div className="flex items-center gap-3 mb-2">
                     <Sparkles className="h-5 w-5 text-purple-600" />
-                    <p className="font-semibold text-purple-900">Ya casi esta!</p>
+                    <p className="font-semibold text-purple-900">Almost there!</p>
                   </div>
                   <p className="text-purple-700 text-sm">
-                    Con esta informacion, la IA generara contenido que suena exactamente a tu marca.
-                    Podras ajustar estos datos en cualquier momento.
+                    With this information, the AI will generate content that sounds exactly like your brand.
+                    You can adjust these details anytime.
                   </p>
                 </div>
               </div>
@@ -663,7 +663,7 @@ export default function OnboardingPage() {
             className="rounded-xl"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Anterior
+            Back
           </Button>
 
           <Button
@@ -674,16 +674,16 @@ export default function OnboardingPage() {
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Guardando...
+                Saving...
               </>
             ) : currentStep === 5 ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Completar
+                Complete
               </>
             ) : (
               <>
-                Siguiente
+                Next
                 <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}

@@ -127,7 +127,7 @@ export default function LoginPage() {
       if (error?.message) {
         errorMessage = error.message;
       } else if (error?.status === 500) {
-        errorMessage = 'Google OAuth no está configurado. Por favor, configura GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en el archivo .env';
+        errorMessage = 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.';
       }
       
       toast.error(errorMessage);
@@ -148,10 +148,10 @@ export default function LoginPage() {
 
           <div className="space-y-6">
             <h2 className="text-4xl font-bold text-foreground leading-tight">
-              Automatiza tu marketing con IA
+              Automate your marketing with AI
             </h2>
             <p className="text-lg text-muted-foreground">
-              Gestiona todas tus redes sociales, campañas y contenido desde un solo lugar.
+              Manage all your social channels, campaigns, and content from one place.
             </p>
           </div>
 
@@ -166,10 +166,10 @@ export default function LoginPage() {
         {/* Testimonial */}
         <div className="mt-8 p-6 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-lg border">
           <p className="text-foreground italic mb-2">
-            "Pasé de 2 horas diarias en redes a 15 minutos"
+            &ldquo;I went from two hours a day on social to fifteen minutes.&rdquo;
           </p>
           <p className="text-sm text-muted-foreground">
-            - María López, La Quilmeña
+            — Alex M., Riverside Goods Co.
           </p>
         </div>
       </div>

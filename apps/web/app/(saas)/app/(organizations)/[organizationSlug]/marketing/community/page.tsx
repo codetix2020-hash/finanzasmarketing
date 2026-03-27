@@ -120,7 +120,7 @@ export default function CommunityManagerPage() {
 			}
 		} catch (error) {
 			console.error("Error fetching data:", error);
-			toast.error("Error al cargar datos");
+			toast.error("Failed to load data");
 		} finally {
 			setLoading(false);
 		}
@@ -136,11 +136,11 @@ export default function CommunityManagerPage() {
 				body: JSON.stringify({ organizationId: activeOrganization.id }),
 			});
 			if (!res.ok) throw new Error("Failed to sync");
-			toast.success("Sincronización completada");
+			toast.success("Sync completed");
 			fetchData();
 		} catch (error) {
 			console.error("Error syncing:", error);
-			toast.error("Error al sincronizar");
+			toast.error("Failed to sync");
 		} finally {
 			setSyncing(false);
 		}
@@ -159,10 +159,10 @@ export default function CommunityManagerPage() {
 			const data = await res.json();
 			setReplyText(data.reply || "");
 			setSelectedComment(commentId);
-			toast.success("Respuesta generada");
+			toast.success("Reply generated");
 		} catch (error) {
 			console.error("Error generating reply:", error);
-			toast.error("Error al generar respuesta");
+			toast.error("Failed to generate reply");
 		} finally {
 			setGeneratingReply(false);
 		}
@@ -180,13 +180,13 @@ export default function CommunityManagerPage() {
 				}),
 			});
 			if (!res.ok) throw new Error("Failed to send reply");
-			toast.success("Respuesta enviada");
+			toast.success("Reply sent");
 			setReplyText("");
 			setSelectedComment(null);
 			fetchData();
 		} catch (error) {
 			console.error("Error sending reply:", error);
-			toast.error("Error al enviar respuesta");
+			toast.error("Failed to send reply");
 		}
 	};
 
@@ -199,11 +199,11 @@ export default function CommunityManagerPage() {
 				body: JSON.stringify({ organizationId: activeOrganization.id, ...updates }),
 			});
 			if (!res.ok) throw new Error("Failed to update");
-			toast.success("Actualizado");
+			toast.success("Updated");
 			fetchData();
 		} catch (error) {
 			console.error("Error updating:", error);
-			toast.error("Error al actualizar");
+			toast.error("Failed to update");
 		}
 	};
 
@@ -212,7 +212,7 @@ export default function CommunityManagerPage() {
 			<>
 				<PageHeader
 					title="Community Manager"
-					subtitle="Gestiona comentarios, mensajes y menciones"
+					subtitle="Manage comments, messages, and mentions"
 				/>
 				<div className="flex items-center justify-center p-12">
 					<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -225,18 +225,18 @@ export default function CommunityManagerPage() {
 		<>
 			<PageHeader
 				title="Community Manager"
-				subtitle="Gestiona comentarios, mensajes y menciones"
+				subtitle="Manage comments, messages, and mentions"
 			>
 				<Button onClick={handleSync} disabled={syncing} variant="outline">
 					{syncing ? (
 						<>
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-							Sincronizando...
+							Syncing...
 						</>
 					) : (
 						<>
 							<RefreshCw className="mr-2 h-4 w-4" />
-							Sincronizar
+							Sync
 						</>
 					)}
 				</Button>
@@ -246,7 +246,7 @@ export default function CommunityManagerPage() {
 				<TabsList>
 					<TabsTrigger value="comments">
 						<MessageSquare className="mr-2 h-4 w-4" />
-						Comentarios
+						Comments
 						{comments.filter((c) => c.needsReply).length > 0 && (
 							<Badge variant="destructive" className="ml-2">
 								{comments.filter((c) => c.needsReply).length}
@@ -255,7 +255,7 @@ export default function CommunityManagerPage() {
 					</TabsTrigger>
 					<TabsTrigger value="messages">
 						<Mail className="mr-2 h-4 w-4" />
-						Mensajes
+						Messages
 						{messages.filter((m) => !m.isRead).length > 0 && (
 							<Badge variant="destructive" className="ml-2">
 								{messages.filter((m) => !m.isRead).length}
@@ -264,7 +264,7 @@ export default function CommunityManagerPage() {
 					</TabsTrigger>
 					<TabsTrigger value="mentions">
 						<AtSign className="mr-2 h-4 w-4" />
-						Menciones
+						Mentions
 					</TabsTrigger>
 				</TabsList>
 
@@ -280,10 +280,10 @@ export default function CommunityManagerPage() {
 							}
 							className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
 						>
-							<option value="all">Todos</option>
-							<option value="unreplied">Sin responder</option>
-							<option value="positive">Positivos</option>
-							<option value="negative">Negativos</option>
+							<option value="all">All</option>
+							<option value="unreplied">Unanswered</option>
+							<option value="positive">Positive</option>
+							<option value="negative">Negative</option>
 						</select>
 					</div>
 
@@ -294,7 +294,7 @@ export default function CommunityManagerPage() {
 					) : comments.length === 0 ? (
 						<Card>
 							<CardContent className="py-12 text-center">
-								<p className="text-muted-foreground">No hay comentarios</p>
+								<p className="text-muted-foreground">No comments yet</p>
 							</CardContent>
 						</Card>
 					) : (
@@ -342,7 +342,7 @@ export default function CommunityManagerPage() {
 																disabled={generatingReply}
 															>
 																<Sparkles className="mr-2 h-4 w-4" />
-																IA
+																AI
 															</Button>
 														)}
 														<Button
@@ -366,7 +366,7 @@ export default function CommunityManagerPage() {
 												{selectedComment === comment.id && (
 													<div className="space-y-2 mb-4">
 														<Textarea
-															placeholder="Escribe tu respuesta..."
+															placeholder="Write your reply..."
 															value={replyText}
 															onChange={(e) => setReplyText(e.target.value)}
 															rows={3}
@@ -378,7 +378,7 @@ export default function CommunityManagerPage() {
 																disabled={!replyText.trim()}
 															>
 																<Reply className="mr-2 h-4 w-4" />
-																Enviar
+																Send
 															</Button>
 															<Button
 																size="sm"
@@ -388,14 +388,14 @@ export default function CommunityManagerPage() {
 																	setReplyText("");
 																}}
 															>
-																Cancelar
+																Cancel
 															</Button>
 														</div>
 													</div>
 												)}
 												{comment.replied && (
 													<div className="mt-2 p-3 bg-muted rounded-lg">
-														<p className="text-sm font-medium mb-1">Tu respuesta:</p>
+														<p className="text-sm font-medium mb-1">Your reply:</p>
 														<p className="text-sm">{comment.replyContent}</p>
 													</div>
 												)}
@@ -418,9 +418,9 @@ export default function CommunityManagerPage() {
 							}
 							className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
 						>
-							<option value="all">Todos</option>
-							<option value="unread">No leídos</option>
-							<option value="unreplied">Sin responder</option>
+							<option value="all">All</option>
+							<option value="unread">Unread</option>
+							<option value="unreplied">Unanswered</option>
 						</select>
 					</div>
 
@@ -431,7 +431,7 @@ export default function CommunityManagerPage() {
 					) : messages.length === 0 ? (
 						<Card>
 							<CardContent className="py-12 text-center">
-								<p className="text-muted-foreground">No hay mensajes</p>
+								<p className="text-muted-foreground">No messages yet</p>
 							</CardContent>
 						</Card>
 					) : (
@@ -465,7 +465,7 @@ export default function CommunityManagerPage() {
 																{PLATFORM_ICONS[message.platform] || "📱"}
 															</span>
 															{message.isFromBusiness && (
-																<Badge variant="secondary">Tú</Badge>
+																<Badge variant="secondary">You</Badge>
 															)}
 														</div>
 														<p className="text-sm text-muted-foreground mt-1">
@@ -487,7 +487,7 @@ export default function CommunityManagerPage() {
 				<TabsContent value="mentions" className="space-y-4">
 					<Card>
 						<CardContent className="py-12 text-center">
-							<p className="text-muted-foreground">Las menciones se mostrarán aquí</p>
+							<p className="text-muted-foreground">Mentions will appear here</p>
 						</CardContent>
 					</Card>
 				</TabsContent>
