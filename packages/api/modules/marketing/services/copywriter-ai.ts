@@ -1,19 +1,19 @@
 /**
- * Copywriter AI - Sistema avanzado de copywriting con frameworks profesionales
+ * Copywriter AI - Advanced copywriting system with professional frameworks
  * 
- * Genera copy persuasivo usando frameworks probados:
+ * Generates persuasive copy using proven frameworks:
  * - AIDA (Attention, Interest, Desire, Action)
  * - PAS (Problem, Agitate, Solution)
  * - BAB (Before, After, Bridge)
  * - FAB (Features, Advantages, Benefits)
  * - 4Ps (Picture, Promise, Prove, Push)
  * 
- * Capacidades:
- * - Variaciones A/B automáticas
- * - Optimización por plataforma
+ * Capabilities:
+ * - Automatic A/B variations
+ * - Platform optimization
  * - Secuencias de email
  * - Landing page copy
- * - Análisis de sentiment y readability
+ * - Sentiment and readability analysis
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -82,7 +82,7 @@ export class CopywriterAI {
   private anthropic: Anthropic | null = null;
 
   constructor() {
-    // Lazy initialization - solo se crea cuando se usa
+    // Lazy initialization - only created when needed
   }
 
   private getAnthropic(): Anthropic {
@@ -97,7 +97,7 @@ export class CopywriterAI {
   }
 
   /**
-   * Genera copy persuasivo con variaciones A/B
+   * Generates persuasive copy with A/B variations
    */
   async generateCopy(params: CopyGenerationParams): Promise<CopyResult> {
     logger.info('✍️ Generating copy', { 
@@ -107,7 +107,7 @@ export class CopywriterAI {
     });
 
     try {
-      // Obtener info del producto
+      // Get product info
       const product = await prisma.saasProduct.findUnique({
         where: { id: params.productId }
       });
@@ -117,11 +117,11 @@ export class CopywriterAI {
       }
 
       const frameworkDescriptions = {
-        AIDA: 'Attention (gancho) → Interest (generar interés) → Desire (crear deseo) → Action (llamada a la acción)',
-        PAS: 'Problem (identificar problema) → Agitate (agitar el dolor) → Solution (presentar solución)',
-        BAB: 'Before (situación actual problemática) → After (visión de mejora) → Bridge (cómo llegar)',
-        FAB: 'Features (características) → Advantages (ventajas) → Benefits (beneficios reales)',
-        '4Ps': 'Picture (pintar escenario) → Promise (promesa) → Prove (probar con evidencia) → Push (impulsar acción)'
+        AIDA: 'Attention (hook) → Interest (build interest) → Desire (create desire) → Action (call to action)',
+        PAS: 'Problem (identify the problem) → Agitate (intensify the pain) → Solution (present the solution)',
+        BAB: 'Before (current problematic situation) → After (improved outcome) → Bridge (how to get there)',
+        FAB: 'Features (characteristics) → Advantages (advantages) → Benefits (real benefits)',
+        '4Ps': 'Picture (paint the scenario) → Promise (promise) → Prove (prove with evidence) → Push (drive action)'
       };
 
       const platformLimits: Record<Platform, number> = {
@@ -135,49 +135,49 @@ export class CopywriterAI {
 
       const maxLength = params.maxLength || platformLimits[params.platform];
 
-      const prompt = `Eres un copywriter profesional experto en persuasión. Genera copy usando el framework ${params.framework}.
+      const prompt = `You are a professional copywriter expert in persuasion. Generate copy using the ${params.framework} framework.
 
 FRAMEWORK: ${params.framework}
-Estructura: ${frameworkDescriptions[params.framework]}
+Structure: ${frameworkDescriptions[params.framework]}
 
-PRODUCTO:
-- Nombre: ${product.name}
-- Descripción: ${product.description}
-- Target: ${product.targetAudience || 'Emprendedores y startups'}
-- Precio: ${product.price ? `€${product.price}` : 'Freemium'}
+PRODUCT:
+- Name: ${product.name}
+- Description: ${product.description}
+- Target: ${product.targetAudience || 'Entrepreneurs and startups'}
+- Price: ${product.price ? `€${product.price}` : 'Freemium'}
 
-TEMA: ${params.topic}
+TOPIC: ${params.topic}
 
-REQUISITOS:
-- Tono: ${params.tone}
-- Plataforma: ${params.platform}
-- Máximo caracteres: ${maxLength}
-- Emojis: ${params.includeEmojis !== false ? 'Sí (máximo 3, estratégicos)' : 'No'}
-- Hashtags: ${params.includeHashtags !== false ? 'Sí (5-8 relevantes)' : 'No'}
-- CTA: ${params.ctaType || 'medium'} (soft=suave, medium=directo, hard=urgente)
+REQUIREMENTS:
+- Tone: ${params.tone}
+- Platform: ${params.platform}
+- Max characters: ${maxLength}
+- Emojis: ${params.includeEmojis !== false ? 'Yes (max 3, strategic)' : 'No'}
+- Hashtags: ${params.includeHashtags !== false ? 'Yes (5-8 relevant)' : 'No'}
+- CTA: ${params.ctaType || 'medium'} (soft=subtle, medium=direct, hard=urgent)
 
-GENERA 3 VARIACIONES A/B diferentes del mismo mensaje.
-Cada variación debe:
-1. Seguir el framework ${params.framework}
-2. Tener un hook diferente y poderoso
-3. Ser genuinamente persuasiva
-4. Incluir CTA clara
-5. Ser natural, no spam
+GENERATE 3 different A/B variations of the same message.
+Each variation must:
+1. Follow the ${params.framework} framework
+2. Use a different and powerful hook
+3. Be genuinely persuasive
+4. Include a clear CTA
+5. Feel natural, not spammy
 
-Retorna JSON EXACTO:
+Return EXACT JSON:
 {
   "versions": [
     {
-      "text": "Copy completo aquí...",
-      "hooks": ["Hook principal usado"],
-      "cta": "CTA específico",
+      "text": "Full copy here...",
+      "hooks": ["Main hook used"],
+      "cta": "Specific CTA",
       "hashtags": ["hashtag1", "hashtag2"],
       "estimatedPerformance": 8.5
     }
   ]
 }
 
-Performance es 0-10 estimando engagement esperado.`;
+Performance is 0-10 estimating expected engagement.`;
 
       const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
@@ -203,7 +203,7 @@ Performance es 0-10 estimando engagement esperado.`;
           framework: params.framework,
           tone: params.tone,
           platform: params.platform,
-          readabilityScore: 85, // Simplificado, en producción usar algoritmo real
+          readabilityScore: 85, // Simplified, use a real algorithm in production
           sentiment: 'positive'
         }
       };
@@ -221,7 +221,7 @@ Performance es 0-10 estimando engagement esperado.`;
   }
 
   /**
-   * Genera secuencia completa de emails para nurturing
+   * Generates a complete email sequence for nurturing
    */
   async generateEmailSequence(
     productId: string,
@@ -239,43 +239,43 @@ Performance es 0-10 estimando engagement esperado.`;
       }
 
       const goalDescriptions = {
-        onboarding: 'Guiar al usuario a completar setup y usar el producto',
-        conversion: 'Convertir trial/freemium a plan pago',
-        retention: 'Re-enganchar usuarios inactivos',
-        upsell: 'Upgrade a plan superior'
+        onboarding: 'Guide users to complete setup and start using the product',
+        conversion: 'Convert trial/freemium users to a paid plan',
+        retention: 'Re-engage inactive users',
+        upsell: 'Upgrade to a higher-tier plan'
       };
 
-      const prompt = `Genera una secuencia estratégica de emails para ${goal}.
+      const prompt = `Generate a strategic email sequence for ${goal}.
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
-OBJETIVO: ${goalDescriptions[goal]}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
+GOAL: ${goalDescriptions[goal]}
 
-CREA UNA SECUENCIA DE 5-7 EMAILS:
+CREATE A 5-7 EMAIL SEQUENCE:
 
-Timing sugerido:
-- Día 1: Bienvenida/introducción
-- Día 3: Valor/educación
-- Día 7: Social proof/testimonios
-- Día 14: Beneficios/características
-- Día 21: Urgencia/oferta
-- Día 28: Último push
+Suggested timing:
+- Day 1: Welcome/introduction
+- Day 3: Value/education
+- Day 7: Social proof/testimonials
+- Day 14: Benefits/features
+- Day 21: Urgency/offer
+- Day 28: Final push
 
-Cada email debe tener:
-1. Subject line irresistible (< 50 caracteres)
-2. Preheader text (< 90 caracteres)
-3. Body copy persuasivo pero conversacional
-4. CTA clara y específica
+Each email must include:
+1. Irresistible subject line (< 50 characters)
+2. Preheader text (< 90 characters)
+3. Persuasive but conversational body copy
+4. Clear and specific CTA
 
-Retorna JSON:
+Return JSON:
 {
   "emails": [
     {
       "day": 1,
-      "subject": "Subject line aquí",
+      "subject": "Subject line here",
       "preheader": "Preheader text",
-      "body": "Body completo del email...",
-      "cta": "CTA específico"
+      "body": "Full email body...",
+      "cta": "Specific CTA"
     }
   ],
   "expectedConversion": 0.15
@@ -318,7 +318,7 @@ Retorna JSON:
   }
 
   /**
-   * Genera copy completo para landing page
+   * Generates complete landing page copy
    */
   async generateLandingPageCopy(productId: string): Promise<LandingPageCopy> {
     logger.info('🌐 Generating landing page copy', { productId });
@@ -332,35 +332,35 @@ Retorna JSON:
         throw new Error(`Product ${productId} not found`);
       }
 
-      const prompt = `Genera copy completo para una landing page de conversión.
+      const prompt = `Generate complete copy for a conversion-focused landing page.
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
-TARGET: ${product.targetAudience || 'Emprendedores'}
-PRECIO: ${product.price ? `€${product.price}` : 'Desde €0'}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
+TARGET: ${product.targetAudience || 'Entrepreneurs'}
+PRICE: ${product.price ? `€${product.price}` : 'From €0'}
 
-GENERA:
+GENERATE:
 
-1. HEADLINE: Propuesta de valor clara y poderosa (< 80 caracteres)
-2. SUBHEADLINE: Amplifica el headline (< 150 caracteres)
-3. BENEFITS: 5 beneficios principales (NO features, BENEFICIOS reales)
-4. FEATURES: 6 características destacadas con descripción
-5. TESTIMONIALS: 3 testimonios sugeridos (ficticios pero realistas)
-6. FAQ: 6 preguntas frecuentes con respuestas
-7. CTAs: 4 llamadas a la acción para distintas secciones
-8. SEO KEYWORDS: 10 keywords principales
+1. HEADLINE: Clear and powerful value proposition (< 80 characters)
+2. SUBHEADLINE: Amplify the headline (< 150 characters)
+3. BENEFITS: 5 main benefits (NOT features, real BENEFITS)
+4. FEATURES: 6 highlighted features with descriptions
+5. TESTIMONIALS: 3 suggested testimonials (fictional but realistic)
+6. FAQ: 6 frequently asked questions with answers
+7. CTAs: 4 calls to action for different sections
+8. SEO KEYWORDS: 10 primary keywords
 
-Retorna JSON:
+Return JSON:
 {
-  "headline": "Headline poderoso",
-  "subheadline": "Subheadline descriptivo",
-  "benefits": ["Beneficio 1", "Beneficio 2", ...],
+  "headline": "Powerful headline",
+  "subheadline": "Descriptive subheadline",
+  "benefits": ["Benefit 1", "Benefit 2", ...],
   "features": [
-    {"title": "Feature 1", "description": "Descripción..."}
+    {"title": "Feature 1", "description": "Description..."}
   ],
   "testimonialSuggestions": ["Testimonial 1...", ...],
   "faq": [
-    {"question": "Pregunta?", "answer": "Respuesta..."}
+    {"question": "Question?", "answer": "Answer..."}
   ],
   "ctas": [
     {"position": "Hero", "text": "CTA text"}
@@ -400,7 +400,7 @@ Retorna JSON:
   }
 
   /**
-   * Optimiza copy existente para una plataforma específica
+   * Optimizes existing copy for a specific platform
    */
   async optimizeCopy(text: string, platform: Platform): Promise<{
     optimized: string;
@@ -414,22 +414,22 @@ Retorna JSON:
     logger.info('🔧 Optimizing copy', { platform, originalLength: text.length });
 
     try {
-      const prompt = `Optimiza este copy para ${platform}:
+      const prompt = `Optimize this copy for ${platform}:
 
-COPY ORIGINAL:
+ORIGINAL COPY:
 "${text}"
 
-OPTIMIZA PARA:
-- Character limits de ${platform}
-- Mejora readability
-- Elimina spam words
-- Mejora sentiment positivo
-- Optimiza para engagement
+OPTIMIZE FOR:
+- Character limits on ${platform}
+- Better readability
+- Remove spam words
+- Improve positive sentiment
+- Optimize for engagement
 
-Retorna JSON:
+Return JSON:
 {
-  "optimized": "Copy optimizado aquí",
-  "changes": ["Cambio 1", "Cambio 2"],
+  "optimized": "Optimized copy here",
+  "changes": ["Change 1", "Change 2"],
   "scores": {
     "readability": 8.5,
     "sentiment": 9.0,
@@ -437,7 +437,7 @@ Retorna JSON:
   }
 }
 
-Scores de 0-10. Spam likelihood debe ser < 3.`;
+Scores from 0-10. Spam likelihood must be < 3.`;
 
       const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',

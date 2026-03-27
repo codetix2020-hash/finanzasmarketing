@@ -1,56 +1,56 @@
 /**
- * Configuración de schedules para jobs de MarketingOS
- * Usar con Trigger.dev o cron jobs
+ * Schedule configuration for MarketingOS jobs
+ * Use with Trigger.dev or cron jobs
  */
 
 export const MARKETING_SCHEDULES = {
-  // Orquestación principal - cada 6 horas
+  // Main orchestration - every 6 hours
   orchestration: {
     name: 'marketing-orchestration',
-    cron: '0 */6 * * *', // Cada 6 horas
-    description: 'Orquesta estrategia de marketing para todos los productos'
+    cron: '0 */6 * * *', // Every 6 hours
+    description: 'Orchestrates marketing strategy for all products'
   },
   
-  // Procesamiento de jobs - cada 5 minutos
+  // Job processing - every 5 minutes
   jobProcessor: {
     name: 'marketing-job-processor',
-    cron: '*/5 * * * *', // Cada 5 minutos
-    description: 'Procesa jobs de contenido, imágenes, emails, etc.'
+    cron: '*/5 * * * *', // Every 5 minutes
+    description: 'Processes content, image, email jobs, etc.'
   },
   
-  // Verificación de guardias - cada 30 minutos
+  // Guard checks - every 30 minutes
   guardsCheck: {
     name: 'marketing-guards-check',
-    cron: '*/30 * * * *', // Cada 30 minutos
-    description: 'Verifica guardias financieras, reputacionales y legales'
+    cron: '*/30 * * * *', // Every 30 minutes
+    description: 'Checks financial, reputational, and legal guards'
   },
   
-  // Análisis de competidores - semanal
+  // Competitor analysis - weekly
   competitorAnalysis: {
     name: 'marketing-competitor-analysis',
-    cron: '0 8 * * 1', // Lunes a las 8:00
-    description: 'Analiza competidores y actualiza insights'
+    cron: '0 8 * * 1', // Monday at 8:00
+    description: 'Analyzes competitors and updates insights'
   },
   
-  // Reporte semanal - domingos
+  // Weekly report - Sundays
   weeklyReport: {
     name: 'marketing-weekly-report',
-    cron: '0 18 * * 0', // Domingo a las 18:00
-    description: 'Genera reporte semanal de marketing'
+    cron: '0 18 * * 0', // Sunday at 18:00
+    description: 'Generates weekly marketing report'
   },
   
-  // Sincronización de métricas de ads - cada hora
+  // Ad metrics sync - every hour
   adMetricsSync: {
     name: 'marketing-ad-metrics-sync',
-    cron: '0 * * * *', // Cada hora
-    description: 'Sincroniza métricas de Facebook/Google Ads'
+    cron: '0 * * * *', // Every hour
+    description: 'Syncs Facebook/Google Ads metrics'
   }
 }
 
-// Helper para ejecutar jobs manualmente
+// Helper to run jobs manually
 export async function runScheduledJob(jobName: keyof typeof MARKETING_SCHEDULES) {
   const schedule = MARKETING_SCHEDULES[jobName]
-  console.log(`🕐 Ejecutando job: ${schedule.name}`)
+  console.log(`🕐 Running job: ${schedule.name}`)
   console.log(`   ${schedule.description}`)
   
   switch (jobName) {
@@ -67,11 +67,11 @@ export async function runScheduledJob(jobName: keyof typeof MARKETING_SCHEDULES)
       return guardsCheckJob()
       
     default:
-      console.log(`⚠️ Job ${jobName} no implementado aún`)
-      return { message: `Job ${jobName} pendiente de implementación` }
+      console.log(`⚠️ Job ${jobName} not implemented yet`)
+      return { message: `Job ${jobName} implementation pending` }
   }
 }
 
-// Exportar para uso con Trigger.dev
+// Export for Trigger.dev usage
 export default MARKETING_SCHEDULES
 
