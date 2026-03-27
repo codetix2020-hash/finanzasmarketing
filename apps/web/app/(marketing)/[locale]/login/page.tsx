@@ -127,7 +127,7 @@ export default function LoginPage() {
       if (error?.message) {
         errorMessage = error.message;
       } else if (error?.status === 500) {
-        errorMessage = 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.';
+        errorMessage = 'Google sign-in is not available yet. Please use email and password.';
       }
       
       toast.error(errorMessage);
@@ -155,10 +155,20 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Screenshot placeholder */}
+          {/* Dashboard-style gradient illustration */}
           <div className="mt-12 rounded-lg border bg-white dark:bg-gray-900 p-8 shadow-xl">
-            <div className="aspect-video bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground text-sm">Dashboard Preview</p>
+            <div className="aspect-video rounded-lg bg-gradient-to-br from-violet-100 via-purple-100 to-fuchsia-100 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-fuchsia-900/40 p-5">
+              <div className="h-full rounded-md border border-violet-200/70 bg-white/70 p-4 dark:border-violet-700/50 dark:bg-black/20">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="h-12 rounded-md bg-gradient-to-br from-violet-300 to-purple-300 dark:from-violet-500/40 dark:to-purple-500/40" />
+                  <div className="h-12 rounded-md bg-gradient-to-br from-purple-300 to-fuchsia-300 dark:from-purple-500/40 dark:to-fuchsia-500/40" />
+                  <div className="h-12 rounded-md bg-gradient-to-br from-fuchsia-300 to-violet-300 dark:from-fuchsia-500/40 dark:to-violet-500/40" />
+                </div>
+                <div className="mt-5 space-y-2">
+                  <div className="h-3 w-3/4 rounded bg-violet-200 dark:bg-violet-600/40" />
+                  <div className="h-3 w-1/2 rounded bg-purple-200 dark:bg-purple-600/40" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -523,14 +523,14 @@ export default function MarketingDashboard() {
                   <CostCard icon="🎙️" name="ElevenLabs" cost={costs?.elevenlabs || 0} color="blue" />
                 </div>
 
-                {/* Send to FinanzaDIOS */}
+                {/* Export Costs */}
                 <div className="bg-white/5 rounded-3xl border border-white/10 p-6">
-                  <h3 className="text-lg font-bold mb-4">📤 Enviar a FinanzaDIOS</h3>
+                  <h3 className="text-lg font-bold mb-4">📤 Export Costs</h3>
                   <p className="text-gray-400 text-sm mb-4">
-                    Exporta los costos de marketing al sistema de finanzas para tracking centralizado.
+                    Export your marketing costs for centralized reporting.
                   </p>
                   <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 font-medium hover:opacity-90 transition-opacity">
-                    Exportar Costos →
+                    Export Costs →
                   </button>
                 </div>
               </div>
