@@ -20,11 +20,11 @@ export async function getDashboardMetrics(params: {
   productId?: string
   dateRange?: { start: Date; end: Date }
 }) {
-  console.log('📊 Obteniendo métricas del dashboard...')
+  console.log('📊 Fetching dashboard metrics...')
 
   const { organizationId, productId } = params
   const dateFilter = params.dateRange || {
-    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 días
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days
     end: new Date()
   }
 
@@ -37,7 +37,7 @@ export async function getDashboardMetrics(params: {
     }
   }
 
-  // Obtener métricas en paralelo
+  // Fetch metrics in parallel
   const [
     contentStats,
     campaignStats,
@@ -74,11 +74,11 @@ export async function getDashboardMetrics(params: {
     })
   ])
 
-  // Calcular totales de contenido
+  // Calculate content totals
   const contentTotal = contentStats.reduce((sum, s) => sum + s._count, 0)
   const contentByStatus = Object.fromEntries(contentStats.map(s => [s.status, s._count]))
 
-  // Calcular métricas de campañas
+  // Calculate campaign metrics
   let totalSpend = 0
   let totalImpressions = 0
   let totalClicks = 0
@@ -96,7 +96,7 @@ export async function getDashboardMetrics(params: {
   const avgCTR = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : 0
   const avgCPA = totalConversions > 0 ? (totalSpend / totalConversions).toFixed(2) : 0
 
-  // Leads por temperatura
+  // Leads by temperature
   const leadsByTemp = Object.fromEntries(leadStats.map(l => [l.temperature, l._count]))
   const totalLeads = leadStats.reduce((sum, l) => sum + l._count, 0)
 
@@ -143,7 +143,7 @@ export async function getContentPerformance(params: {
   productId?: string
   limit?: number
 }) {
-  console.log('📈 Analizando performance de contenido...')
+  console.log('📈 Analyzing content performance...')
 
   const content = await prisma.marketingContent.findMany({
     where: {
@@ -164,7 +164,7 @@ export async function getContentPerformance(params: {
     take: params.limit || 20
   })
 
-  // Calcular métricas
+  // Calculate metrics
   const analyzed = content.map(c => {
     const perf = c.performance as any || {}
     return {
@@ -223,7 +223,7 @@ export async function getContentPerformance(params: {
 // CAMPAIGN ROI
 // ============================================
 export async function getCampaignROI(organizationId: string) {
-  console.log('💰 Calculando ROI de campañas...')
+  console.log('💰 Calculating campaign ROI...')
 
   const campaigns = await prisma.marketingAdCampaign.findMany({
     where: { organizationId },
@@ -238,7 +238,7 @@ export async function getCampaignROI(organizationId: string) {
     
     const spent = budget.spent || 0
     const conversions = perf.conversions || 0
-    const revenue = perf.revenue || (conversions * 100) // Fallback: €100 por conversión
+    const revenue = perf.revenue || (conversions * 100) // Fallback: €100 per conversion
     
     const roi = spent > 0 ? (((revenue - spent) / spent) * 100).toFixed(1) : 0
     const roas = spent > 0 ? (revenue / spent).toFixed(2) : 0
@@ -289,12 +289,12 @@ export async function getCampaignROI(organizationId: string) {
 // AI INSIGHTS
 // ============================================
 export async function generateAIInsights(organizationId: string) {
-  console.log('🤖 Generando insights con IA...')
+  console.log('🤖 Generating AI insights...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // Obtener datos
+  // Fetch data
   const [metrics, contentPerf, campaignROI] = await Promise.all([
     getDashboardMetrics({ organizationId }),
     getContentPerformance({ organizationId, limit: 50 }),
@@ -302,49 +302,49 @@ export async function generateAIInsights(organizationId: string) {
   ])
 
   const prompt = `
-Analiza estos datos de marketing y genera insights accionables:
+Analyze this marketing data and generate actionable insights:
 
-MÉTRICAS GENERALES:
+GENERAL METRICS:
 ${JSON.stringify(metrics, null, 2)}
 
-PERFORMANCE DE CONTENIDO:
+CONTENT PERFORMANCE:
 - Top performers: ${JSON.stringify(contentPerf.topPerformers)}
-- Por plataforma: ${JSON.stringify(contentPerf.byPlatform)}
-- Por tipo: ${JSON.stringify(contentPerf.byType)}
+- By platform: ${JSON.stringify(contentPerf.byPlatform)}
+- By type: ${JSON.stringify(contentPerf.byType)}
 
-ROI DE CAMPAÑAS:
+CAMPAIGN ROI:
 ${JSON.stringify(campaignROI.summary)}
 
-Genera un análisis con:
-1. 3-5 insights principales
-2. Áreas de mejora
-3. Recomendaciones prioritarias
-4. Predicciones para el próximo mes
+Generate an analysis with:
+1. 3-5 key insights
+2. Areas for improvement
+3. Priority recommendations
+4. Predictions for next month
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "insights": [
     {
       "type": "positive | negative | opportunity | warning",
-      "title": "Título del insight",
-      "description": "Explicación detallada",
-      "metric": "Métrica relacionada",
+      "title": "Insight title",
+      "description": "Detailed explanation",
+      "metric": "Related metric",
       "impact": "high | medium | low"
     }
   ],
   "improvements": [
     {
       "area": "content | campaigns | leads | budget",
-      "issue": "Problema detectado",
-      "recommendation": "Cómo mejorarlo",
-      "expectedImpact": "+20% conversiones"
+      "issue": "Detected issue",
+      "recommendation": "How to improve it",
+      "expectedImpact": "+20% conversions"
     }
   ],
   "priorities": [
     {
-      "action": "Acción prioritaria",
-      "reason": "Por qué es prioritaria",
-      "timeline": "Esta semana | Este mes"
+      "action": "Priority action",
+      "reason": "Why it is a priority",
+      "timeline": "This week | This month"
     }
   ],
   "predictions": {
@@ -354,7 +354,7 @@ Responde SOLO con JSON:
     "confidence": "high | medium | low",
     "assumptions": ["assumption 1", "assumption 2"]
   },
-  "summary": "Resumen ejecutivo en 2-3 oraciones"
+  "summary": "Executive summary in 2-3 sentences"
 }
 `
 
@@ -367,7 +367,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const insights = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar insights en decisiones
+  // Save insights as decisions
   await prisma.marketingDecision.create({
     data: {
       organizationId,
@@ -382,7 +382,7 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ ${insights.insights.length} insights generados`)
+  console.log(`✅ ${insights.insights.length} insights generated`)
 
   return insights
 }
@@ -391,12 +391,12 @@ Responde SOLO con JSON:
 // WEEKLY REPORT
 // ============================================
 export async function generateWeeklyReport(organizationId: string) {
-  console.log('📋 Generando reporte semanal...')
+  console.log('📋 Generating weekly report...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // Datos de esta semana vs semana pasada
+  // This week vs last week data
   const thisWeekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
   const lastWeekStart = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
   const lastWeekEnd = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -412,7 +412,7 @@ export async function generateWeeklyReport(organizationId: string) {
     })
   ])
 
-  // Calcular variaciones
+  // Calculate variations
   const variations = {
     content: calculateVariation(thisWeek.content.total, lastWeek.content.total),
     leads: calculateVariation(thisWeek.leads.total, lastWeek.leads.total),
@@ -421,48 +421,48 @@ export async function generateWeeklyReport(organizationId: string) {
   }
 
   const prompt = `
-Genera un reporte semanal de marketing ejecutivo:
+Generate an executive weekly marketing report:
 
-ESTA SEMANA:
+THIS WEEK:
 ${JSON.stringify(thisWeek, null, 2)}
 
-SEMANA PASADA:
+LAST WEEK:
 ${JSON.stringify(lastWeek, null, 2)}
 
-VARIACIONES:
-- Contenido: ${variations.content}%
+VARIATIONS:
+- Content: ${variations.content}%
 - Leads: ${variations.leads}%
-- Gasto: ${variations.spend}%
-- Conversiones: ${variations.conversions}%
+- Spend: ${variations.spend}%
+- Conversions: ${variations.conversions}%
 
-Genera un reporte con:
-1. Resumen ejecutivo (3-4 líneas)
-2. Highlights de la semana
-3. Áreas de preocupación
-4. Acciones para la próxima semana
+Generate a report with:
+1. Executive summary (3-4 lines)
+2. Weekly highlights
+3. Areas of concern
+4. Actions for next week
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "title": "Weekly Marketing Report - [fecha]",
-  "executiveSummary": "Resumen ejecutivo de 3-4 oraciones",
+  "executiveSummary": "Executive summary in 3-4 sentences",
   "highlights": [
     {
-      "metric": "Nombre de métrica",
-      "value": "Valor actual",
+      "metric": "Metric name",
+      "value": "Current value",
       "change": "+/-X%",
       "status": "up | down | stable"
     }
   ],
   "concerns": [
     {
-      "issue": "Problema identificado",
+      "issue": "Identified issue",
       "severity": "high | medium | low",
-      "suggestedAction": "Qué hacer"
+      "suggestedAction": "What to do"
     }
   ],
   "nextWeekActions": [
     {
-      "action": "Acción específica",
+      "action": "Specific action",
       "owner": "marketing | sales | product",
       "priority": "P0 | P1 | P2"
     }
@@ -486,7 +486,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const report = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  console.log('✅ Reporte semanal generado')
+  console.log('✅ Weekly report generated')
 
   return {
     ...report,

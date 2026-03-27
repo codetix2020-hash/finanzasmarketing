@@ -17,14 +17,14 @@ interface CompetitorAnalysisParams {
   competitors?: string[]
 }
 
-// Analizar competidores
+// Analyze competitors
 export async function analyzeCompetitors(params: CompetitorAnalysisParams) {
-  console.log('🔍 Analizando competidores...')
+  console.log('🔍 Analyzing competitors...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // Obtener producto
+  // Get product
   const product = await prisma.saasProduct.findUnique({
     where: { id: params.productId }
   })
@@ -32,66 +32,66 @@ export async function analyzeCompetitors(params: CompetitorAnalysisParams) {
   if (!product) throw new Error('Product not found')
 
   const prompt = `
-Eres un experto en MARKETING DIGITAL y ANÁLISIS COMPETITIVO.
-Tu objetivo es analizar la competencia y encontrar oportunidades de diferenciación.
+You are an expert in DIGITAL MARKETING and COMPETITIVE ANALYSIS.
+Your goal is to analyze competitors and find differentiation opportunities.
 
-NUESTRO PRODUCTO:
-- Nombre: ${product.name}
-- Descripción: ${product.description}
+OUR PRODUCT:
+- Name: ${product.name}
+- Description: ${product.description}
 - Target: ${product.targetAudience}
 - USP: ${product.usp}
 - Pricing: ${JSON.stringify(product.pricing)}
 
-${params.competitors?.length ? `COMPETIDORES CONOCIDOS: ${params.competitors.join(', ')}` : 'IDENTIFICA LOS 5 PRINCIPALES COMPETIDORES'}
+${params.competitors?.length ? `KNOWN COMPETITORS: ${params.competitors.join(', ')}` : 'IDENTIFY THE TOP 5 COMPETITORS'}
 
-Analiza el panorama competitivo y genera:
+Analyze the competitive landscape and generate:
 
-1. Perfil de cada competidor principal
-2. Análisis de sus estrategias de marketing
-3. Gaps y oportunidades para nosotros
-4. Recomendaciones de posicionamiento
+1. Profile of each main competitor
+2. Analysis of their marketing strategies
+3. Gaps and opportunities for us
+4. Positioning recommendations
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "competitors": [
     {
-      "name": "nombre del competidor",
+      "name": "competitor name",
       "website": "url",
-      "positioning": "cómo se posicionan",
-      "targetAudience": "a quién van dirigidos",
-      "pricingModel": "modelo de precios",
-      "strengths": ["fortaleza 1", "fortaleza 2"],
-      "weaknesses": ["debilidad 1", "debilidad 2"],
-      "marketingChannels": ["canal 1", "canal 2"],
-      "contentStrategy": "descripción de su estrategia de contenido",
-      "messagingAngle": "su ángulo de mensajes principal"
+      "positioning": "how they are positioned",
+      "targetAudience": "who they target",
+      "pricingModel": "pricing model",
+      "strengths": ["strength 1", "strength 2"],
+      "weaknesses": ["weakness 1", "weakness 2"],
+      "marketingChannels": ["channel 1", "channel 2"],
+      "contentStrategy": "description of their content strategy",
+      "messagingAngle": "their main messaging angle"
     }
   ],
   "marketGaps": [
     {
-      "gap": "descripción del gap",
-      "opportunity": "cómo podemos aprovecharlo",
+      "gap": "gap description",
+      "opportunity": "how we can leverage it",
       "priority": "high | medium | low"
     }
   ],
   "positioningRecommendations": [
     {
-      "recommendation": "recomendación específica",
-      "reasoning": "por qué",
-      "expectedImpact": "impacto esperado en conversiones o engagement"
+      "recommendation": "specific recommendation",
+      "reasoning": "why",
+      "expectedImpact": "expected impact on conversions or engagement"
     }
   ],
   "contentOpportunities": [
     {
-      "topic": "tema que competidores no cubren bien",
-      "format": "tipo de contenido recomendado",
-      "platform": "dónde publicar"
+      "topic": "topic competitors do not cover well",
+      "format": "recommended content format",
+      "platform": "where to publish"
     }
   ],
   "differentiators": [
-    "diferenciador clave 1",
-    "diferenciador clave 2",
-    "diferenciador clave 3"
+    "key differentiator 1",
+    "key differentiator 2",
+    "key differentiator 3"
   ]
 }
 `
@@ -105,16 +105,16 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const analysis = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar análisis en memoria (importancia alta)
+  // Save analysis to memory (high importance)
   await saveMemory(
     params.organizationId,
     'learning',
     `Competitive Analysis for ${product.name}: ${analysis.differentiators.join(', ')}. Key gaps: ${analysis.marketGaps.map((g: any) => g.gap).join(', ')}`,
     { type: 'competitor_analysis', productId: params.productId, competitors: analysis.competitors.map((c: any) => c.name) },
-    8 // Alta importancia
+    8 // High importance
   )
 
-  // Guardar decisión
+  // Save decision
   await prisma.marketingDecision.create({
     data: {
       organizationId: params.organizationId,
@@ -129,19 +129,19 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Análisis completado: ${analysis.competitors.length} competidores analizados`)
+  console.log(`✅ Analysis completed: ${analysis.competitors.length} competitors analyzed`)
 
   return analysis
 }
 
-// Monitorear cambios de competidores
+// Monitor competitor changes
 export async function monitorCompetitorChanges(params: {
   organizationId: string
   productId: string
 }) {
-  console.log('👀 Monitoreando cambios de competidores...')
+  console.log('👀 Monitoring competitor changes...')
 
-  // Obtener análisis previo
+  // Get previous analysis
   const previousAnalysis = await prisma.marketingDecision.findFirst({
     where: {
       organizationId: params.organizationId,
@@ -152,14 +152,14 @@ export async function monitorCompetitorChanges(params: {
   })
 
   if (!previousAnalysis) {
-    console.log('⚠️ No hay análisis previo, ejecutando análisis inicial')
+    console.log('⚠️ No previous analysis found, running initial analysis')
     return analyzeCompetitors(params)
   }
 
-  // Ejecutar nuevo análisis
+  // Run new analysis
   const newAnalysis = await analyzeCompetitors(params)
 
-  // Comparar y detectar cambios
+  // Compare and detect changes
   const previousCompetitors = (previousAnalysis.decision as any).competitors || []
   const newCompetitors = newAnalysis.competitors || []
 
@@ -175,7 +175,7 @@ export async function monitorCompetitorChanges(params: {
     ) || []
   }
 
-  console.log(`✅ Monitoreo completado: ${changes.newGaps.length} nuevas oportunidades detectadas`)
+  console.log(`✅ Monitoring completed: ${changes.newGaps.length} new opportunities detected`)
 
   return {
     currentAnalysis: newAnalysis,
