@@ -68,6 +68,10 @@ const plans = [
 ];
 
 export default function BillingPage() {
+  useEffect(() => {
+    document.title = "Billing | PilotSocials";
+  }, []);
+
   const params = useParams();
   const searchParams = useSearchParams();
   const organizationSlug = params.organizationSlug as string;

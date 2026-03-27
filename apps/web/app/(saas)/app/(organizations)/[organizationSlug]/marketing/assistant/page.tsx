@@ -32,6 +32,10 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function MarketingAssistantPage() {
+	useEffect(() => {
+		document.title = "AI Assistant | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const organizationSlug = params.organizationSlug as string;
 	const { activeOrganization, loaded } = useActiveOrganization();

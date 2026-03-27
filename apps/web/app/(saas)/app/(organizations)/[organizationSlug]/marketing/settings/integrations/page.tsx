@@ -309,6 +309,10 @@ function PlatformCard({
 
 // Página principal
 export default function IntegrationsPage() {
+	useEffect(() => {
+		document.title = "Integrations | PilotSocials";
+	}, []);
+
 	const params = useParams();
 	const searchParams = useSearchParams();
 	const organizationSlug = params.organizationSlug as string;

@@ -6,6 +6,10 @@ import { Building2, Users, Megaphone, Package, Target, Edit, CheckCircle, MapPin
 import { toast } from "sonner";
 
 export default function ProfilePage() {
+  useEffect(() => {
+    document.title = "Company Profile | PilotSocials";
+  }, []);
+
   const params = useParams();
   const router = useRouter();
   const orgSlug = params.organizationSlug as string;

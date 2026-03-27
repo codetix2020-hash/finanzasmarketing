@@ -74,6 +74,10 @@ const PLATFORMS = [
 ];
 
 export default function SeoPage() {
+  useEffect(() => {
+    document.title = "SEO | PilotSocials";
+  }, []);
+
   const params = useParams();
   const organizationSlug = params.organizationSlug as string;
   
