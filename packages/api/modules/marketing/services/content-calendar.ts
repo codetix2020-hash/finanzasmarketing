@@ -1,13 +1,13 @@
 /**
- * Content Calendar - Calendario Editorial Inteligente
+ * Content Calendar - Smart Editorial Calendar
  * 
- * Genera planes de contenido mensuales para redes sociales
- * considerando:
- * - Balance de tipos de contenido (educativo, promocional, testimonial)
- * - Timing óptimo por plataforma
- * - Eventos y fechas relevantes
- * - Análisis de competidores
- * - Performance histórica
+ * Generates monthly social media content plans
+ * considering:
+ * - Balanced content types (educational, promotional, testimonial)
+ * - Optimal timing by platform
+ * - Relevant events and key dates
+ * - Competitor analysis
+ * - Historical performance
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -61,8 +61,8 @@ export class ContentCalendar {
   private anthropic: Anthropic | null = null;
 
   constructor() {
-    // Lazy initialization - solo se crea cuando se usa
-    // Esto permite que el módulo se importe durante el build
+    // Lazy initialization - only created when used
+    // This allows importing the module during build
   }
 
   private getAnthropic(): Anthropic {
@@ -77,7 +77,7 @@ export class ContentCalendar {
   }
 
   /**
-   * Genera un calendario editorial completo para un mes
+   * Generates a full monthly editorial calendar
    */
   async generateMonthlyCalendar(
     productId: string, 
@@ -86,7 +86,7 @@ export class ContentCalendar {
     logger.info('📅 Generating monthly content calendar', { productId, month });
 
     try {
-      // 1. Obtener información del producto
+      // 1. Get product information
       const product = await prisma.saasProduct.findUnique({
         where: { id: productId },
         include: {
@@ -98,46 +98,46 @@ export class ContentCalendar {
         throw new Error(`Product ${productId} not found`);
       }
 
-      // 2. Analizar performance histórica
+      // 2. Analyze historical performance
       const historicalPerformance = await this.analyzeHistoricalPerformance(
         product.organizationId
       );
 
-      // 3. Generar calendario con Claude
-      const prompt = `Eres un Content Manager experto. Genera un calendario editorial para el mes de ${month}.
+      // 3. Generate calendar with Claude
+      const prompt = `You are an expert Content Manager. Generate an editorial calendar for the month of ${month}.
 
-INFORMACIÓN DEL PRODUCTO:
-- Nombre: ${product.name}
-- Descripción: ${product.description}
-- Target: ${product.targetAudience || 'General'}
-- Precio: ${product.price ? `€${product.price}` : 'Freemium'}
+PRODUCT INFORMATION:
+- Name: ${product.name}
+- Description: ${product.description}
+- Target audience: ${product.targetAudience || 'General'}
+- Price: ${product.price ? `€${product.price}` : 'Freemium'}
 
-PERFORMANCE HISTÓRICA:
+HISTORICAL PERFORMANCE:
 ${historicalPerformance}
 
-REQUISITOS:
-1. Balance de contenido:
-   - 70% educativo/valor (tips, tutoriales, insights)
-   - 20% social proof (testimonios, casos de éxito, reviews)
-   - 10% promocional (ofertas, features, CTAs directos)
+REQUIREMENTS:
+1. Content balance:
+   - 70% educational/value content (tips, tutorials, insights)
+   - 20% social proof (testimonials, success stories, reviews)
+   - 10% promotional (offers, features, direct CTAs)
 
-2. Frecuencia:
-   - 2 posts por día (1 Instagram + 1 TikTok)
-   - Variar formatos (carousel, reel, post estático)
+2. Frequency:
+   - 2 posts per day (1 Instagram + 1 TikTok)
+   - Vary formats (carousel, reel, static post)
 
-3. Timing óptimo:
-   - Instagram: 18:00-20:00 (mejor engagement)
+3. Optimal timing:
+   - Instagram: 18:00-20:00 (best engagement)
    - TikTok: 12:00-14:00 y 19:00-21:00
 
-4. Considerar eventos relevantes:
-   - Black Friday (si aplica)
-   - Navidad/Año Nuevo
-   - Fechas del sector tecnológico
-   - Lanzamientos de features
+4. Consider relevant events:
+   - Black Friday (if applicable)
+   - Christmas/New Year
+   - Tech industry dates
+   - Feature launches
 
-5. Temas variados y engaging
+5. Diverse and engaging topics
 
-Genera un JSON con este formato EXACTO:
+Generate JSON using this EXACT format:
 {
   "days": [
     {
@@ -146,7 +146,7 @@ Genera un JSON con este formato EXACTO:
         {
           "platform": "instagram",
           "type": "carousel",
-          "topic": "5 errores comunes al...",
+          "topic": "5 common mistakes when...",
           "time": "18:00",
           "priority": "high",
           "contentType": "educational"
@@ -154,13 +154,13 @@ Genera un JSON con este formato EXACTO:
         {
           "platform": "tiktok",
           "type": "reel",
-          "topic": "Tutorial rápido de...",
+          "topic": "Quick tutorial on...",
           "time": "13:00",
           "priority": "medium",
           "contentType": "educational"
         }
       ],
-      "specialEvent": "Inicio de mes - recap enero"
+      "specialEvent": "Start of month - January recap"
     }
   ],
   "themes": ["Product education", "Customer success", "Industry trends"],
@@ -171,7 +171,7 @@ Genera un JSON con este formato EXACTO:
   }
 }
 
-Genera 30 días completos de contenido.`;
+Generate 30 full days of content.`;
 
       const response = await this.getAnthropic().messages.create({
         model: 'claude-sonnet-4-20250514',
@@ -184,7 +184,7 @@ Genera 30 días completos de contenido.`;
         throw new Error('No text response from Claude');
       }
 
-      // Extraer JSON de la respuesta
+      // Extract JSON from the response
       const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No JSON found in Claude response');
@@ -192,10 +192,10 @@ Genera 30 días completos de contenido.`;
 
       const calendarData = JSON.parse(jsonMatch[0]);
 
-      // 4. Calcular resumen
+      // 4. Calculate summary
       const summary = this.calculateSummary(calendarData.days);
 
-      // 5. Guardar en memoria del sistema
+      // 5. Save in system memory
       await prisma.marketingMemory.upsert({
         where: {
           key: `calendar_${productId}_${month}`
@@ -235,7 +235,7 @@ Genera 30 días completos de contenido.`;
   }
 
   /**
-   * Analiza performance histórica para informar el calendario
+   * Analyze historical performance to inform the calendar
    */
   private async analyzeHistoricalPerformance(organizationId: string): Promise<string> {
     const thirtyDaysAgo = new Date();
@@ -254,7 +254,7 @@ Genera 30 días completos de contenido.`;
     });
 
     if (recentPosts.length === 0) {
-      return 'Sin datos históricos disponibles (producto nuevo)';
+      return 'No historical data available (new product)';
     }
 
     const avgEngagement = recentPosts.reduce((sum, post: any) => {
@@ -267,13 +267,13 @@ Genera 30 días completos de contenido.`;
       return acc;
     }, {});
 
-    return `Posts últimos 30 días: ${recentPosts.length}
-Engagement promedio: ${avgEngagement.toFixed(0)}
-Distribución: ${JSON.stringify(platformDistribution)}`;
+    return `Posts in last 30 days: ${recentPosts.length}
+Average engagement: ${avgEngagement.toFixed(0)}
+Distribution: ${JSON.stringify(platformDistribution)}`;
   }
 
   /**
-   * Calcula resumen estadístico del calendario
+   * Calculates statistical calendar summary
    */
   private calculateSummary(days: CalendarDay[]): MonthlyCalendar['summary'] {
     let totalPosts = 0;
@@ -292,7 +292,7 @@ Distribución: ${JSON.stringify(platformDistribution)}`;
   }
 
   /**
-   * Sugiere campañas publicitarias basadas en estacionalidad y performance
+   * Suggests ad campaigns based on seasonality and performance
    */
   async suggestCampaigns(productId: string): Promise<CampaignSuggestion[]> {
     logger.info('🎯 Generating campaign suggestions', { productId });
@@ -307,7 +307,7 @@ Distribución: ${JSON.stringify(platformDistribution)}`;
         throw new Error(`Product ${productId} not found`);
       }
 
-      // Analizar campañas históricas
+      // Analyze historical campaigns
       const pastCampaigns = await prisma.marketingAdCampaign.findMany({
         where: {
           organizationId: product.organizationId
@@ -322,35 +322,35 @@ Distribución: ${JSON.stringify(platformDistribution)}`;
         orderBy: { createdAt: 'desc' }
       });
 
-      const prompt = `Eres un Ads Manager experto. Sugiere 3-5 campañas publicitarias para:
+      const prompt = `You are an expert Ads Manager. Suggest 3-5 ad campaigns for:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
-PRECIO: ${product.price ? `€${product.price}` : 'Freemium'}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
+PRICE: ${product.price ? `€${product.price}` : 'Freemium'}
 
-CAMPAÑAS PREVIAS:
-${pastCampaigns.length > 0 ? JSON.stringify(pastCampaigns, null, 2) : 'Sin campañas previas'}
+PREVIOUS CAMPAIGNS:
+${pastCampaigns.length > 0 ? JSON.stringify(pastCampaigns, null, 2) : 'No previous campaigns'}
 
-MES ACTUAL: ${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+CURRENT MONTH: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
 
-Considera:
-1. Estacionalidad (eventos del mes)
-2. Performance de campañas pasadas
-3. Presupuesto realista (€50-500/día)
-4. ROI esperado basado en industria SaaS
+Consider:
+1. Seasonality (monthly events)
+2. Past campaign performance
+3. Realistic budget (€50-500/day)
+4. Expected ROI based on SaaS industry benchmarks
 
-Retorna JSON:
+Return JSON:
 {
   "campaigns": [
     {
-      "name": "Nombre descriptivo",
+      "name": "Descriptive name",
       "objective": "CONVERSIONS | TRAFFIC | AWARENESS",
       "platform": "google | facebook",
       "budget": 100,
       "duration": 14,
       "expectedROI": 2.5,
       "confidence": 0.75,
-      "reasoning": "Por qué esta campaña funcionará"
+      "reasoning": "Why this campaign will work"
     }
   ]
 }`;
@@ -385,7 +385,7 @@ Retorna JSON:
   }
 
   /**
-   * Obtiene calendario guardado
+   * Gets saved calendar
    */
   async getCalendar(productId: string, month: string): Promise<MonthlyCalendar | null> {
     try {

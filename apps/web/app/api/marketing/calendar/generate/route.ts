@@ -1,7 +1,7 @@
 /**
  * POST /api/marketing/calendar/generate
  * 
- * Genera un calendario editorial mensual para un producto
+ * Generates a monthly editorial calendar for a product
  */
 
 import { NextResponse } from 'next/server';
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 /**
  * GET /api/marketing/calendar/generate?productId=X&month=2025-02
  * 
- * Obtiene un calendario guardado
+ * Retrieves a saved calendar
  */
 export async function GET(request: Request) {
   try {

@@ -14,7 +14,7 @@ function getAnthropicClient() {
 }
 
 // ============================================
-// TIPOS
+// TYPES
 // ============================================
 interface CreateCampaignParams {
   productId: string
@@ -52,15 +52,15 @@ interface AdCreativeParams {
 }
 
 // ============================================
-// GENERAR ESTRATEGIA DE CAMPAÑA CON IA
+// GENERATE CAMPAIGN STRATEGY WITH AI
 // ============================================
 export async function generateCampaignStrategy(productId: string) {
-  console.log('🎯 Generando estrategia de campaña FB...')
+  console.log('🎯 Generating FB campaign strategy...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
 
-  // Obtener producto
+  // Get product
   const product = await prisma.saasProduct.findUnique({
     where: { id: productId }
   })
@@ -68,26 +68,26 @@ export async function generateCampaignStrategy(productId: string) {
   if (!product) throw new Error('Product not found')
 
   const prompt = `
-Genera una estrategia de Facebook Ads para este producto SaaS:
+Generate a Facebook Ads strategy for this SaaS product:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
 TARGET: ${product.targetAudience}
 USP: ${product.usp}
 PRICING: ${JSON.stringify(product.pricing)}
 
-Crea una estrategia completa con:
-1. 3 campañas con diferentes objetivos (awareness, consideration, conversion)
-2. Targeting específico para cada campaña
-3. Presupuesto sugerido
-4. Creatividades recomendadas
-5. Copy para cada anuncio
+Create a complete strategy with:
+1. 3 campaigns with different objectives (awareness, consideration, conversion)
+2. Specific targeting for each campaign
+3. Suggested budget
+4. Recommended creatives
+5. Ad copy for each ad
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "campaigns": [
     {
-      "name": "nombre de la campaña",
+      "name": "campaign name",
       "objective": "awareness | traffic | engagement | leads | sales",
       "stage": "tofu | mofu | bofu",
       "targeting": {
@@ -105,12 +105,12 @@ Responde SOLO con JSON:
       "creatives": [
         {
           "format": "image | video | carousel",
-          "headline": "Headline potente (max 40 chars)",
-          "primaryText": "Texto principal (max 125 chars)",
-          "description": "Descripción (max 30 chars)",
+          "headline": "Strong headline (max 40 chars)",
+          "primaryText": "Primary text (max 125 chars)",
+          "description": "Description (max 30 chars)",
           "callToAction": "Learn More | Sign Up | Get Started | Shop Now",
-          "imagePrompt": "descripción de imagen a generar",
-          "hook": "primer segundo de video si aplica"
+          "imagePrompt": "image description to generate",
+          "hook": "first second of video if applicable"
         }
       ]
     }
@@ -126,8 +126,8 @@ Responde SOLO con JSON:
     "cpa": "€15-25"
   },
   "recommendations": [
-    "recomendación 1",
-    "recomendación 2"
+    "recommendation 1",
+    "recommendation 2"
   ]
 }
 `
@@ -141,7 +141,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const strategy = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar estrategia en BD
+  // Save strategy in DB
   await prisma.marketingContent.create({
     data: {
       organizationId: product.organizationId,
@@ -158,16 +158,16 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Estrategia generada: ${strategy.campaigns.length} campañas`)
+  console.log(`✅ Strategy generated: ${strategy.campaigns.length} campaigns`)
 
   return strategy
 }
 
 // ============================================
-// CREAR CAMPAÑA CON FACEBOOK ADS API (REAL)
+// CREATE CAMPAIGN WITH FACEBOOK ADS API (REAL)
 // ============================================
 export async function createCampaign(params: CreateCampaignParams) {
-  console.log('📢 Creando campaña FB...', params.objective)
+  console.log('📢 Creating FB campaign...', params.objective)
 
   const product = await prisma.saasProduct.findUnique({
     where: { id: params.productId }
@@ -175,10 +175,10 @@ export async function createCampaign(params: CreateCampaignParams) {
 
   if (!product) throw new Error('Product not found')
 
-  // Crear campaña en Facebook Ads API (mock o real)
+  // Create campaign in Facebook Ads API (mock or real)
   const fbClient = new FacebookAdsClient()
   
-  // Mapear objective
+  // Map objective
   const fbObjective = {
     'awareness': 'REACH',
     'traffic': 'LINK_CLICKS',
@@ -194,14 +194,14 @@ export async function createCampaign(params: CreateCampaignParams) {
     status: 'PAUSED'
   })
 
-  // Crear registro de campaña en BD
+  // Create campaign record in DB
   const campaign = await prisma.marketingAdCampaign.create({
     data: {
       organizationId: product.organizationId,
       productId: params.productId,
       name: `${product.name} - ${params.objective} Campaign`,
       platform: 'facebook',
-      facebookCampaignId: fbCampaign.id, // ID de Facebook Ads
+      facebookCampaignId: fbCampaign.id, // Facebook Ads ID
       status: 'ACTIVE',
       budget: {
         daily: params.budget.daily,
@@ -223,20 +223,20 @@ export async function createCampaign(params: CreateCampaignParams) {
     }
   })
 
-  console.log(`✅ Campaña creada: ${campaign.id} (Facebook ID: ${fbCampaign.id})`)
+  console.log(`✅ Campaign created: ${campaign.id} (Facebook ID: ${fbCampaign.id})`)
 
   return campaign
 }
 
 // ============================================
-// GENERAR CREATIVIDADES CON IA
+// GENERATE CREATIVES WITH AI
 // ============================================
 export async function generateAdCreatives(params: {
   productId: string
   campaignObjective: string
   count?: number
 }) {
-  console.log('🎨 Generando creatividades de anuncios...')
+  console.log('🎨 Generating ad creatives...')
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -250,33 +250,33 @@ export async function generateAdCreatives(params: {
   const count = params.count || 3
 
   const prompt = `
-Genera ${count} creatividades de anuncios de Facebook para:
+Generate ${count} Facebook ad creatives for:
 
-PRODUCTO: ${product.name}
-DESCRIPCIÓN: ${product.description}
+PRODUCT: ${product.name}
+DESCRIPTION: ${product.description}
 TARGET: ${product.targetAudience}
-OBJETIVO: ${params.campaignObjective}
+OBJECTIVE: ${params.campaignObjective}
 
-Para cada creatividad genera:
-1. Headline (max 40 chars) - debe captar atención inmediata
+For each creative, generate:
+1. Headline (max 40 chars) - must capture immediate attention
 2. Primary text (max 125 chars) - beneficio principal
 3. Description (max 30 chars) - refuerzo
-4. CTA apropiado
-5. Descripción de imagen para generar con IA
-6. Variante de hook para video (primeros 3 segundos)
+4. Appropriate CTA
+5. Image description to generate with AI
+6. Video hook variation (first 3 seconds)
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "creatives": [
     {
       "variant": "A",
-      "angle": "problema | solución | beneficio | social_proof | urgency",
+      "angle": "problem | solution | benefit | social_proof | urgency",
       "headline": "...",
       "primaryText": "...",
       "description": "...",
       "callToAction": "Learn More | Sign Up | Get Started | Shop Now | Download",
-      "imagePrompt": "descripción detallada para generar imagen",
-      "videoHook": "texto para primeros 3 segundos de video",
+      "imagePrompt": "detailed description to generate image",
+      "videoHook": "text for first 3 seconds of video",
       "expectedCTR": "1.5-2.5%"
     }
   ],
@@ -297,7 +297,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const creatives = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar creatividades en BD
+  // Save creatives in DB
   for (const creative of creatives.creatives) {
     await prisma.marketingContent.create({
       data: {
@@ -318,16 +318,16 @@ Responde SOLO con JSON:
     })
   }
 
-  console.log(`✅ ${creatives.creatives.length} creatividades generadas`)
+  console.log(`✅ ${creatives.creatives.length} creatives generated`)
 
   return creatives
 }
 
 // ============================================
-// OPTIMIZAR CAMPAÑA EXISTENTE
+// OPTIMIZE EXISTING CAMPAIGN
 // ============================================
 export async function optimizeCampaign(campaignId: string) {
-  console.log('⚡ Optimizando campaña...', campaignId)
+  console.log('⚡ Optimizing campaign...', campaignId)
 
   const anthropic = getAnthropicClient()
   if (!anthropic) throw new Error('Anthropic not configured')
@@ -342,14 +342,14 @@ export async function optimizeCampaign(campaignId: string) {
   const performance = campaign.performance as any || {}
 
   const prompt = `
-Analiza esta campaña de Facebook Ads y sugiere optimizaciones:
+Analyze this Facebook Ads campaign and suggest optimizations:
 
-CAMPAÑA: ${campaign.name}
-PRODUCTO: ${campaign.product?.name}
-ESTADO: ${campaign.status}
+CAMPAIGN: ${campaign.name}
+PRODUCT: ${campaign.product?.name}
+STATUS: ${campaign.status}
 PLATAFORMA: ${campaign.platform}
 
-PERFORMANCE ACTUAL:
+CURRENT PERFORMANCE:
 - Impressions: ${performance.impressions || 0}
 - Clicks: ${performance.clicks || 0}
 - CTR: ${performance.ctr || 0}%
@@ -363,13 +363,13 @@ ${JSON.stringify(campaign.budget)}
 TARGETING:
 ${JSON.stringify(campaign.targeting)}
 
-Analiza y sugiere:
-1. Qué ajustes hacer al targeting
-2. Qué creatividades probar
-3. Ajustes de presupuesto
+Analyze and suggest:
+1. Targeting adjustments to make
+2. Creatives to test
+3. Budget adjustments
 4. Cambios en bidding strategy
 
-Responde SOLO con JSON:
+Respond ONLY with JSON:
 {
   "analysis": {
     "strengths": ["..."],
@@ -379,16 +379,16 @@ Responde SOLO con JSON:
   "optimizations": [
     {
       "area": "targeting | creative | budget | bidding",
-      "current": "estado actual",
-      "recommended": "cambio recomendado",
+      "current": "current state",
+      "recommended": "recommended change",
       "expectedImpact": "+15% CTR",
       "priority": "high | medium | low"
     }
   ],
   "actionItems": [
     {
-      "action": "acción específica",
-      "timeline": "inmediato | esta semana | próxima semana"
+      "action": "specific action",
+      "timeline": "immediate | this week | next week"
     }
   ],
   "projectedResults": {
@@ -408,7 +408,7 @@ Responde SOLO con JSON:
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const optimization = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
 
-  // Guardar recomendación en decisiones
+  // Save recommendation in decisions
   await prisma.marketingDecision.create({
     data: {
       organizationId: campaign.organizationId,
@@ -423,19 +423,19 @@ Responde SOLO con JSON:
     }
   })
 
-  console.log(`✅ Optimización generada: ${optimization.optimizations.length} recomendaciones`)
+  console.log(`✅ Optimization generated: ${optimization.optimizations.length} recommendations`)
 
   return optimization
 }
 
 // ============================================
-// PAUSAR/REACTIVAR CAMPAÑA
+// PAUSE/REACTIVATE CAMPAIGN
 // ============================================
 export async function updateCampaignStatus(
   campaignId: string, 
   status: 'ACTIVE' | 'PAUSED' | 'DRAFT'
 ) {
-  console.log(`📢 Actualizando campaña ${campaignId} a ${status}`)
+  console.log(`📢 Updating campaign ${campaignId} a ${status}`)
 
   const campaign = await prisma.marketingAdCampaign.update({
     where: { id: campaignId },
@@ -446,10 +446,10 @@ export async function updateCampaignStatus(
 }
 
 // ============================================
-// SYNC CAMPAIGN METRICS (IMPLEMENTACIÓN REAL)
+// SYNC CAMPAIGN METRICS (REAL IMPLEMENTATION)
 // ============================================
 export async function syncCampaignMetrics(campaignId: string) {
-  console.log('📊 Sincronizando métricas de Facebook Ads...')
+  console.log('📊 Syncing Facebook Ads metrics...')
 
   const campaign = await prisma.marketingAdCampaign.findUnique({
     where: { id: campaignId }
@@ -461,11 +461,11 @@ export async function syncCampaignMetrics(campaignId: string) {
     throw new Error('No Facebook Campaign ID found')
   }
 
-  // Obtener insights de Facebook Ads API
+  // Fetch insights from Facebook Ads API
   const fbClient = new FacebookAdsClient()
   const insights = await fbClient.syncInsights(campaign.facebookCampaignId)
 
-  // Actualizar en BD
+  // Update in DB
   await prisma.marketingAdCampaign.update({
     where: { id: campaignId },
     data: {
@@ -477,14 +477,14 @@ export async function syncCampaignMetrics(campaignId: string) {
         cpc: insights.cpc,
         cpm: insights.cpm,
         cpa: insights.spend / (insights.conversions || 1),
-        roas: 0, // Calcular según revenue tracking
+        roas: 0, // Calculate based on revenue tracking
         spend: insights.spend,
         lastSyncAt: new Date().toISOString()
       }
     }
   })
 
-  console.log(`✅ Métricas sincronizadas para campaña ${campaignId}`)
+  console.log(`✅ Metrics synced for campaign ${campaignId}`)
 
   return insights
 }
